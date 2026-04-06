@@ -4,6 +4,10 @@ Central hub for Sovereign Core — autonomous AI agent platform architecture, sy
 
 ---
 
+## Research Tracks
+
+- [RES-11: Google DeepMind SIMA — Cross-Environment Skill Transfer](docs/RES-11-cross-environment-skill-transfer.md) — transferable resource rebalancing skill across VRAM, RAM, CPU, and network bottlenecks.
+
 ## Heterogeneous Compute Gateway (KAN-86)
 
 A latency-aware, capability-aware HTTP gateway that orchestrates the tri-GPU inference mesh.
