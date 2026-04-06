@@ -761,3 +761,112 @@ class TestAuctionAPIMetrics:
         assert data["total_auctions"] == 1
         assert data["utilization_by_resource"]["vram"] == 1
         assert data["utilization_by_backend"]["rtx5050"] == 1
+
+
+# ===========================================================================
+# End-to-end: auction settlement → /v1/* routing
+# ===========================================================================
+
+
+class TestAuctionRoutingE2E:
+    """End-to-end: settled auction priority drives /v1/* inference routing.
+
+    Flow:
+      1. Top up alice's credits.
+      2. Alice places the only bid on rtx5050 → wins with zero second-price payment.
+      3. Settle the auction via the REST endpoint.
+      4. POST /v1/chat/completions — the gateway calls proxy_inference() which
+         reads Auctioneer.allocation_priority() and passes the result to
+         GatewayRouter.route().
+      5. Assert the underlying HTTP request was forwarded to the rtx5050 backend
+         URL (http://localhost:8001).
+    """
+
+    def test_settled_auction_routes_inference_to_winning_backend(
+        self, auction_client: tuple[TestClient, Auctioneer]
+    ) -> None:
+        from unittest.mock import AsyncMock, MagicMock
+
+        import gateway.main as gm
+        from gateway.health import BackendStatus
+
+        client, mgr = auction_client
+
+        # Mark rtx5050 HEALTHY so the router's candidate-selection includes it.
+        gm._health_monitor.states["rtx5050"].status = BackendStatus.HEALTHY
+
+        # Build a mock HTTP session: returns a 200 JSON response from any backend.
+        mock_resp = AsyncMock()
+        mock_resp.status = 200
+        mock_resp.read = AsyncMock(return_value=b'{"choices": []}')
+        mock_resp.headers = {"content-type": "application/json"}
+        mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = AsyncMock(return_value=False)
+        mock_session = MagicMock()
+        mock_session.request = MagicMock(return_value=mock_resp)
+        gm._router._session = mock_session
+
+        # 1. Top up alice and place a winning bid on rtx5050.
+        client.post("/auction/credits?agent_id=alice&amount=500")
+        client.post(
+            "/auction/bid?agent_id=alice&resource_type=compute_time"
+            "&backend_id=rtx5050&votes=5"
+        )
+
+        # 2. Settle — alice wins the rtx5050 slot.
+        settle_resp = client.post("/auction/settle")
+        assert settle_resp.status_code == 200
+        settled = settle_resp.json()["settled"][0]
+        assert settled["winner_agent_id"] == "alice"
+        assert settled["backend_id"] == "rtx5050"
+
+        # The Auctioneer now maps rtx5050 → alice.
+        assert mgr.allocation_priority() == {"rtx5050": "alice"}
+
+        # 3. Send an inference request through the gateway proxy.
+        infer_resp = client.post("/v1/chat/completions", content=b"{}")
+        assert infer_resp.status_code == 200
+
+        # 4. Verify the request was forwarded to the rtx5050 backend.
+        #    _try_backend calls: session.request(method, url, headers=..., data=...)
+        #    so the URL is the second positional argument.
+        mock_session.request.assert_called_once()
+        called_url: str = mock_session.request.call_args.args[1]
+        assert "localhost:8001" in called_url  # rtx5050 → http://localhost:8001
+
+    def test_no_auction_does_not_block_routing(
+        self, auction_client: tuple[TestClient, Auctioneer]
+    ) -> None:
+        """Without any settled auction, /v1/* routing still works via normal selection."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        import gateway.main as gm
+        from gateway.health import BackendStatus
+
+        client, mgr = auction_client
+
+        # Make rtx5050 and radeon780m healthy so normal routing has candidates.
+        gm._health_monitor.states["rtx5050"].status = BackendStatus.HEALTHY
+        gm._health_monitor.states["radeon780m"].status = BackendStatus.HEALTHY
+
+        mock_resp = AsyncMock()
+        mock_resp.status = 200
+        mock_resp.read = AsyncMock(return_value=b'{"choices": []}')
+        mock_resp.headers = {"content-type": "application/json"}
+        mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = AsyncMock(return_value=False)
+        mock_session = MagicMock()
+        mock_session.request = MagicMock(return_value=mock_resp)
+        gm._router._session = mock_session
+
+        # No auction settled → allocation_priority() returns {}
+        assert mgr.allocation_priority() == {}
+
+        infer_resp = client.post("/v1/chat/completions", content=b"{}")
+        assert infer_resp.status_code == 200
+
+        # Normal capability-then-latency routing picks a healthy backend.
+        mock_session.request.assert_called_once()
+        called_url: str = mock_session.request.call_args.args[1]
+        # rtx5050 has highest weight (3.0) → selected first when equal latency
+        assert "localhost:8001" in called_url
