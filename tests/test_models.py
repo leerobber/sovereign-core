@@ -10,6 +10,7 @@ from gateway.models import (
     ModelSize,
     _LARGE_VRAM_GIB,
     _MEDIUM_VRAM_GIB,
+    _PRIMARY_BRAIN_MODEL,
     infer_model_size,
 )
 
@@ -138,3 +139,63 @@ class TestModelAssigner:
         result = assigner.assign(model_id="deepseek-v3")
         # Higher weight should be first
         assert result[0].id == "gpu_high"
+
+
+# ---------------------------------------------------------------------------
+# Primary Brain (nemotron-3-nano) — RES-05
+# ---------------------------------------------------------------------------
+class TestNemotronPrimaryBrain:
+    """Validate that nemotron-3-nano is registered as SMALL and always
+    routes to NVIDIA_GPU first regardless of its size bucket."""
+
+    def test_nemotron_registered_as_small(self):
+        assert infer_model_size(_PRIMARY_BRAIN_MODEL) == ModelSize.SMALL
+
+    def test_nemotron_registered_as_small_case_insensitive(self):
+        assert infer_model_size("Nemotron-3-Nano") == ModelSize.SMALL
+
+    def test_nemotron_with_suffix_registered_as_small(self):
+        assert infer_model_size("nemotron-3-nano-8b") == ModelSize.SMALL
+
+    def test_primary_brain_constant_value(self):
+        assert _PRIMARY_BRAIN_MODEL == "nemotron-3-nano"
+
+    def test_nemotron_assign_prefers_nvidia(self):
+        assigner = ModelAssigner()
+        result = assigner.assign(model_id="nemotron-3-nano")
+        assert result[0].device_type == DeviceType.NVIDIA_GPU
+
+    def test_nemotron_assign_prefers_nvidia_with_suffix(self):
+        assigner = ModelAssigner()
+        result = assigner.assign(model_id="nemotron-3-nano-instruct")
+        assert result[0].device_type == DeviceType.NVIDIA_GPU
+
+    def test_nemotron_assign_prefers_nvidia_case_insensitive(self):
+        assigner = ModelAssigner()
+        result = assigner.assign(model_id="Nemotron-3-Nano")
+        assert result[0].device_type == DeviceType.NVIDIA_GPU
+
+    def test_nemotron_assign_all_backends_included(self):
+        assigner = ModelAssigner()
+        result = assigner.assign(model_id="nemotron-3-nano")
+        assert len(result) == 3
+
+    def test_nemotron_assign_no_duplicates(self):
+        assigner = ModelAssigner()
+        result = assigner.assign(model_id="nemotron-3-nano")
+        ids = [b.id for b in result]
+        assert len(ids) == len(set(ids))
+
+    def test_nemotron_device_hint_still_overrides(self):
+        """An explicit device_hint should still override the Primary Brain preference."""
+        assigner = ModelAssigner()
+        result = assigner.assign(model_id="nemotron-3-nano", device_hint=DeviceType.CPU)
+        assert result[0].device_type == DeviceType.CPU
+
+    def test_nemotron_differs_from_plain_small_model(self):
+        """Unlike other SMALL models (CPU-first), nemotron-3-nano prefers NVIDIA."""
+        assigner = ModelAssigner()
+        tinyllama_result = assigner.assign(model_id="tinyllama")
+        nemotron_result = assigner.assign(model_id="nemotron-3-nano")
+        assert tinyllama_result[0].device_type == DeviceType.CPU
+        assert nemotron_result[0].device_type == DeviceType.NVIDIA_GPU
