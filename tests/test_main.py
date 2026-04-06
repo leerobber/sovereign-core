@@ -53,11 +53,13 @@ def patched_app():
     overwrite the manually-assigned module-level state.
     """
     import gateway.main as gm
+    from gateway.diffusion_router import DiffusionRouter
 
     monitor, benchmark, router = _patch_app_state(["rtx5050", "radeon780m"])
     gm._health_monitor = monitor
     gm._benchmark = benchmark
     gm._router = router
+    gm._diffusion_router = DiffusionRouter()
 
     # Swap the lifespan so TestClient doesn't recreate globals on __enter__
     original_lifespan = gm.app.router.lifespan_context

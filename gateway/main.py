@@ -35,6 +35,7 @@ from gateway.auction import (
 )
 from gateway.benchmark import ThroughputBenchmark
 from gateway.config import BACKENDS, BACKEND_MAP, settings
+from gateway.diffusion_router import DecodeMode, DiffusionConfig, DiffusionRouter
 from gateway.health import HealthMonitor
 from gateway.models import ModelAssigner
 from gateway.router import GatewayRouter
@@ -51,11 +52,12 @@ logger = logging.getLogger(__name__)
 _health_monitor: HealthMonitor
 _benchmark: ThroughputBenchmark
 _router: GatewayRouter
+_diffusion_router: DiffusionRouter
 
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
-    global _health_monitor, _benchmark, _router
+    global _health_monitor, _benchmark, _router, _diffusion_router
 
     _health_monitor = HealthMonitor(cfg=settings)
     _benchmark = ThroughputBenchmark()
@@ -65,6 +67,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         benchmark=_benchmark,
         cfg=settings,
     )
+    _diffusion_router = DiffusionRouter()
 
     await _health_monitor.start()
     await _router.start()
@@ -304,6 +307,76 @@ async def auction_metrics() -> JSONResponse:
             "utilization_by_resource": m.utilization_by_resource,
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Diffusion LM prototype endpoints (RES-10)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/diffusion/metrics", summary="Diffusion LM prototype — accumulated metrics")
+async def diffusion_metrics() -> JSONResponse:
+    """Return accumulated tokens-per-watt statistics for both decode modes.
+
+    The default shared router targets the ``nvidia_gpu`` device class and
+    accumulates statistics across all calls to ``/diffusion/generate`` and
+    ``/diffusion/compare`` that use the default device.
+    """
+    return JSONResponse(_diffusion_router.metrics())
+
+
+@app.post("/diffusion/generate", summary="Simulate diffusion LM token generation")
+async def diffusion_generate(
+    num_tokens: int = Query(
+        default=256, ge=1, description="Number of tokens to generate"
+    ),
+    mode: DecodeMode = Query(
+        default=DecodeMode.PARALLEL, description="Decode mode (parallel or autoregressive)"
+    ),
+    device: str = Query(
+        default="nvidia_gpu",
+        description="Target device class: nvidia_gpu | amd_gpu | cpu",
+    ),
+) -> JSONResponse:
+    """Estimate latency, throughput, and tokens-per-watt for a generation call.
+
+    Uses the shared default router when *device* matches its configuration;
+    otherwise creates a per-request instance for the requested device.
+    """
+    router = (
+        _diffusion_router
+        if device == _diffusion_router.device
+        else DiffusionRouter(DiffusionConfig(device=device))
+    )
+    try:
+        result = router.generate(num_tokens, mode)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return JSONResponse(result.to_dict())
+
+
+@app.post("/diffusion/compare", summary="Compare parallel vs autoregressive decoding")
+async def diffusion_compare(
+    num_tokens: int = Query(
+        default=256, ge=1, description="Sequence length to compare"
+    ),
+    device: str = Query(
+        default="nvidia_gpu",
+        description="Target device class: nvidia_gpu | amd_gpu | cpu",
+    ),
+) -> JSONResponse:
+    """Run both decode modes head-to-head and return an efficiency comparison.
+
+    Returns tokens-per-watt speedup and latency speedup of parallel over
+    autoregressive decoding at the requested sequence length.
+    """
+    router = (
+        _diffusion_router
+        if device == _diffusion_router.device
+        else DiffusionRouter(DiffusionConfig(device=device))
+    )
+    result = router.compare(num_tokens)
+    return JSONResponse(result.to_dict())
 
 
 # ---------------------------------------------------------------------------
