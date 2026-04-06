@@ -304,7 +304,10 @@ async def test_verification_middleware_audit_records_detail():
     audit = AuditLog()
     mw = VerificationMiddleware(audit)
     bus = MessageBus(audit, verification=mw)
-    bus.subscribe("check", "sub", lambda e: None)  # type: ignore[arg-type]
+    async def _noop(event: KernelEvent) -> None:
+        pass
+
+    bus.subscribe("check", "sub", _noop)
     event = KernelEvent(source="src", type="check", payload=None)
     await bus.publish(event)
 
@@ -396,8 +399,6 @@ async def test_dgmh_mutates_policy_on_failure():
 
     # Directly publish a kernel.task_failed event to the bus (simulating a
     # task that raised an exception in the scheduler).
-    from contentaios.kernel import MessageBus as _MB  # noqa: PLC0415
-
     event = KernelEvent(
         source="kernel",
         type="kernel.task_failed",

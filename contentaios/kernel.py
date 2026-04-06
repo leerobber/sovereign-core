@@ -365,15 +365,15 @@ class ContentKernel:
     async def _scheduler(self) -> None:
         while self._running:
             priority, _, fn = await self._queue.get()
+            prio_name = Priority(priority).name.lower()
             meta_topic = "kernel.task_complete"
-            meta_payload: dict[str, Any] = {}
+            meta_payload: dict[str, Any] = {"priority": prio_name}
             try:
                 await fn()
-                meta_payload = {"priority": Priority(priority).name.lower()}
                 self._audit.record(
                     actor="kernel",
                     action="task_complete",
-                    detail={"priority": Priority(priority).name.lower()},
+                    detail={"priority": prio_name},
                 )
             except Exception as exc:  # pragma: no cover - defensive logging
                 meta_topic = "kernel.task_failed"
