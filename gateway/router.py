@@ -121,8 +121,20 @@ class GatewayRouter:
         body: Optional[bytes],
         model_id: Optional[str] = None,
         vram_required_gib: float = 0.0,
+        auction_priority: Optional[dict[str, str]] = None,
     ) -> tuple[int, dict[str, str], bytes]:
         """Forward *path* to the best available backend and return the response.
+
+        Args:
+            path: Request path to forward.
+            method: HTTP method.
+            headers: Request headers to forward.
+            body: Request body bytes.
+            model_id: Optional model identifier for capability matching.
+            vram_required_gib: Minimum VRAM requirement in GiB.
+            auction_priority: Optional mapping of backend_id -> agent_id from
+                recent auction results. Backends with matching priority agents
+                are ranked higher in candidate selection.
 
         Returns:
             A tuple of ``(status_code, response_headers, response_body)``.
@@ -134,7 +146,7 @@ class GatewayRouter:
         if self._session is None:
             raise RuntimeError("GatewayRouter.start() must be called before routing")
 
-        candidates = self._select_candidates(model_id, vram_required_gib)
+        candidates = self._select_candidates(model_id, vram_required_gib, auction_priority)
         if not candidates:
             logger.warning("No healthy backends available for request path=%s", path)
             return 503, {}, b'{"error": "no healthy backends available"}'
@@ -155,9 +167,22 @@ class GatewayRouter:
     # Internal helpers
     # ------------------------------------------------------------------
     def _select_candidates(
-        self, model_id: Optional[str], vram_required_gib: float
+        self,
+        model_id: Optional[str],
+        vram_required_gib: float,
+        auction_priority: Optional[dict[str, str]] = None,
     ) -> list[BackendConfig]:
-        """Return healthy candidates ordered by capability + latency."""
+        """Return healthy candidates ordered by auction priority, capability + latency.
+
+        Args:
+            model_id: Optional model identifier.
+            vram_required_gib: Minimum VRAM requirement.
+            auction_priority: Optional backend_id -> agent_id mapping from auctions.
+
+        Returns:
+            List of backends ordered by priority (auction winners first), then
+            capability and latency.
+        """
         preferred = self._assigner.assign(
             model_id=model_id, vram_required_gib=vram_required_gib
         )
@@ -178,16 +203,36 @@ class GatewayRouter:
                     "No HEALTHY backends; falling back to %d UNKNOWN backend(s)",
                     len(unknown_candidates),
                 )
-                return self._sort_by_latency(unknown_candidates)
+                return self._sort_by_latency(unknown_candidates, auction_priority)
             return []
 
-        return self._sort_by_latency(healthy_candidates)
+        return self._sort_by_latency(healthy_candidates, auction_priority)
 
-    def _sort_by_latency(self, backends: list[BackendConfig]) -> list[BackendConfig]:
-        """Sort backends by EMA latency (ascending) preserving relative tier order."""
+    def _sort_by_latency(
+        self,
+        backends: list[BackendConfig],
+        auction_priority: Optional[dict[str, str]] = None,
+    ) -> list[BackendConfig]:
+        """Sort backends by auction priority, then EMA latency (ascending) preserving tier order.
+
+        Args:
+            backends: List of backends to sort.
+            auction_priority: Optional backend_id -> agent_id mapping from auctions.
+                Backends in this mapping are prioritized first.
+
+        Returns:
+            Sorted list with auction winners first, then by capability tier and latency.
+        """
         # Group by device weight so high-capability tiers are still preferred
         # but within a tier we pick the faster backend.
-        return sorted(backends, key=lambda b: (round(b.weight * -1, 0), self._latency.get(b.id)))
+        # If auction_priority is provided, backends in that map get priority=0, others get 1
+        def sort_key(b: BackendConfig) -> tuple[int, float, float]:
+            has_auction_priority = 0 if (auction_priority and b.id in auction_priority) else 1
+            capability_tier = round(b.weight * -1, 0)
+            latency = self._latency.get(b.id)
+            return (has_auction_priority, capability_tier, latency)
+
+        return sorted(backends, key=sort_key)
 
     async def _try_backend(
         self,

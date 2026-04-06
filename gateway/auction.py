@@ -171,6 +171,7 @@ class AgentBudget:
         self.agent_id = agent_id
         self._total: int = initial_credits
         self._spent: int = 0
+        self._reserved: int = 0
 
     @property
     def total_credits(self) -> int:
@@ -183,9 +184,14 @@ class AgentBudget:
         return self._spent
 
     @property
+    def reserved_credits(self) -> int:
+        """Credits currently reserved for live bids."""
+        return self._reserved
+
+    @property
     def remaining_credits(self) -> int:
-        """Credits still available."""
-        return self._total - self._spent
+        """Credits still available (excluding reserved)."""
+        return self._total - self._spent - self._reserved
 
     def top_up(self, amount: int) -> None:
         """Add *amount* credits to this agent's balance.
@@ -200,6 +206,51 @@ class AgentBudget:
             raise ValueError("top_up amount must be positive")
         self._total += amount
         logger.debug("Agent %s topped up by %d → balance %d", self.agent_id, amount, self._total)
+
+    def reserve(self, amount: int) -> None:
+        """Reserve *amount* credits for a pending bid.
+
+        Args:
+            amount: Non-negative credits to reserve.
+
+        Raises:
+            InsufficientCreditsError: If the agent cannot afford to reserve *amount*.
+            ValueError: If *amount* is negative.
+        """
+        if amount < 0:
+            raise ValueError("reserve amount must be non-negative")
+        if amount > self.remaining_credits:
+            raise InsufficientCreditsError(
+                f"Agent {self.agent_id!r} has {self.remaining_credits} available credits "
+                f"but tried to reserve {amount}"
+            )
+        self._reserved += amount
+        logger.debug(
+            "Agent %s reserved %d credits (remaining=%d, reserved=%d)",
+            self.agent_id, amount, self.remaining_credits, self._reserved
+        )
+
+    def release_reserved(self, amount: int) -> None:
+        """Release *amount* previously reserved credits.
+
+        Args:
+            amount: Non-negative credits to release.
+
+        Raises:
+            ValueError: If *amount* is negative or exceeds reserved amount.
+        """
+        if amount < 0:
+            raise ValueError("release amount must be non-negative")
+        if amount > self._reserved:
+            raise ValueError(
+                f"Agent {self.agent_id!r} has {self._reserved} reserved credits "
+                f"but tried to release {amount}"
+            )
+        self._reserved -= amount
+        logger.debug(
+            "Agent %s released %d credits (remaining=%d, reserved=%d)",
+            self.agent_id, amount, self.remaining_credits, self._reserved
+        )
 
     def spend(self, amount: int) -> None:
         """Deduct *amount* credits from the agent's balance.
@@ -221,6 +272,29 @@ class AgentBudget:
         self._spent += amount
         logger.debug(
             "Agent %s spent %d credits (remaining=%d)", self.agent_id, amount, self.remaining_credits
+        )
+
+    def spend_from_reserved(self, amount: int) -> None:
+        """Deduct *amount* credits from reserved balance and mark as spent.
+
+        Args:
+            amount: Non-negative credits to spend from reserved.
+
+        Raises:
+            ValueError: If *amount* is negative or exceeds reserved amount.
+        """
+        if amount < 0:
+            raise ValueError("spend amount must be non-negative")
+        if amount > self._reserved:
+            raise ValueError(
+                f"Agent {self.agent_id!r} has {self._reserved} reserved credits "
+                f"but tried to spend {amount}"
+            )
+        self._reserved -= amount
+        self._spent += amount
+        logger.debug(
+            "Agent %s spent %d from reserved (remaining=%d, reserved=%d)",
+            self.agent_id, amount, self.remaining_credits, self._reserved
         )
 
     def can_afford(self, amount: int) -> bool:
@@ -339,6 +413,12 @@ class AllocationFairness:
         rtype = result.resource_type.value
         self._resource_utilization[rtype] = self._resource_utilization.get(rtype, 0) + 1
 
+        # Ensure all bidders are represented in spending tracker (with zero if they didn't win)
+        for auction_bid in result.all_bids:
+            bidder_id = auction_bid.agent_id
+            self._agent_spending[bidder_id] = self._agent_spending.get(bidder_id, 0)
+
+        # Add winner's payment to their spending
         if result.winner_agent_id is not None:
             wid = result.winner_agent_id
             self._winner_counts[wid] = self._winner_counts.get(wid, 0) + 1
@@ -421,6 +501,7 @@ class VickreyQuadraticAuction:
         self._ledger = ledger
         self._bids: list[Bid] = []
         self._settled: bool = False
+        self._reserved_amounts: dict[str, int] = {}  # agent_id -> reserved credit amount
 
     @property
     def auction_id(self) -> str:
@@ -449,9 +530,9 @@ class VickreyQuadraticAuction:
     def place_bid(self, agent_id: str, votes: int) -> Bid:
         """Place a bid of *votes* quadratic votes for this auction.
 
-        Validates that the agent has sufficient credits to cover the quadratic
-        cost (``votes²``) without deducting them yet — credits are only spent
-        at :meth:`settle` time.
+        Reserves credits when the bid is placed. Only one live bid per agent is
+        allowed; placing a new bid replaces any existing bid and adjusts
+        reservations accordingly.
 
         Args:
             agent_id: Bidding agent identifier.
@@ -472,27 +553,67 @@ class VickreyQuadraticAuction:
             raise ValueError("votes must be ≥ 1")
 
         cost = votes * votes
-        if not self._ledger.can_afford(agent_id, cost):
-            balance = self._ledger.balance(agent_id)
-            raise InsufficientCreditsError(
-                f"Agent {agent_id!r} needs {cost} credits for {votes} votes "
-                f"but only has {balance}"
-            )
 
+        # Check for existing bid from this agent
+        existing_bid_idx = None
+        old_reserved = 0
+        for idx, existing_bid in enumerate(self._bids):
+            if existing_bid.agent_id == agent_id:
+                existing_bid_idx = idx
+                old_reserved = self._reserved_amounts.get(agent_id, 0)
+                break
+
+        # Calculate net new reservation needed
+        net_reservation = cost - old_reserved
+
+        # Check if agent can afford the net new reservation
+        if net_reservation > 0:
+            budget = self._ledger.get_budget(agent_id)
+            if not budget.can_afford(net_reservation):
+                available = budget.remaining_credits
+                raise InsufficientCreditsError(
+                    f"Agent {agent_id!r} needs {cost} credits for {votes} votes "
+                    f"(already reserved {old_reserved}, needs {net_reservation} more) "
+                    f"but only has {available} available"
+                )
+
+        # Release old reservation if replacing a bid
+        if old_reserved > 0:
+            self._ledger.get_budget(agent_id).release_reserved(old_reserved)
+
+        # Reserve the new amount
+        self._ledger.get_budget(agent_id).reserve(cost)
+        self._reserved_amounts[agent_id] = cost
+
+        # Create new bid
         bid = Bid(
             agent_id=agent_id,
             resource_type=self._resource_type,
             backend_id=self._backend_id,
             votes=votes,
         )
-        self._bids.append(bid)
-        logger.info(
-            "Bid placed: auction=%s agent=%s votes=%d cost=%d",
-            self._auction_id,
-            agent_id,
-            votes,
-            cost,
-        )
+
+        # Replace existing bid or append new one
+        if existing_bid_idx is not None:
+            self._bids[existing_bid_idx] = bid
+            logger.info(
+                "Bid replaced: auction=%s agent=%s votes=%d cost=%d (old_reserved=%d)",
+                self._auction_id,
+                agent_id,
+                votes,
+                cost,
+                old_reserved,
+            )
+        else:
+            self._bids.append(bid)
+            logger.info(
+                "Bid placed: auction=%s agent=%s votes=%d cost=%d",
+                self._auction_id,
+                agent_id,
+                votes,
+                cost,
+            )
+
         return bid
 
     def settle(self) -> AuctionResult:
@@ -504,8 +625,9 @@ class VickreyQuadraticAuction:
         - **Winner**: agent with the highest vote count.
         - **Payment**: ``second_highest_votes²`` credits (0 if ≤ 1 bidder).
 
-        Credits are deducted from the winner's ledger balance.  The auction
-        is marked settled and no further bids can be placed.
+        Credits are deducted from the winner's reserved balance and all
+        reservations are released.  The auction is marked settled and no
+        further bids can be placed.
 
         Returns:
             :class:`AuctionResult` describing the outcome.
@@ -537,10 +659,27 @@ class VickreyQuadraticAuction:
         second_votes = sorted_bids[1].votes if len(sorted_bids) > 1 else 0
         payment = second_votes * second_votes
 
-        # Deduct credits (capped at winner's remaining balance for robustness)
-        actual_payment = min(payment, self._ledger.balance(winner.agent_id))
+        # Deduct credits from winner's reserved balance (capped at reserved amount)
+        winner_reserved = self._reserved_amounts.get(winner.agent_id, 0)
+        actual_payment = min(payment, winner_reserved)
+
+        # Process winner's payment from reserved credits
+        winner_budget = self._ledger.get_budget(winner.agent_id)
         if actual_payment > 0:
-            self._ledger.spend(winner.agent_id, actual_payment)
+            winner_budget.spend_from_reserved(actual_payment)
+
+        # Release any remaining reserved credits from winner (if payment < reservation)
+        remaining_winner_reserved = winner_reserved - actual_payment
+        if remaining_winner_reserved > 0:
+            winner_budget.release_reserved(remaining_winner_reserved)
+
+        # Release all reserved credits from losing bidders
+        for agent_id, reserved_amount in self._reserved_amounts.items():
+            if agent_id != winner.agent_id and reserved_amount > 0:
+                self._ledger.get_budget(agent_id).release_reserved(reserved_amount)
+
+        # Clear reservation tracking
+        self._reserved_amounts.clear()
 
         logger.info(
             "Auction %s settled: winner=%s votes=%d payment=%d",

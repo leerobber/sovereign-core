@@ -170,6 +170,9 @@ async def proxy_inference(
     # Preserve original query string (minus our routing hints) on the forwarded URL
     fwd_path = f"/{path}"
 
+    # Get auction-derived routing priority from auctioneer
+    auction_priority = _auctioneer.allocation_priority()
+
     status, resp_headers, resp_body = await _router.route(
         path=fwd_path,
         method=request.method,
@@ -177,6 +180,7 @@ async def proxy_inference(
         body=body,
         model_id=model_id,
         vram_required_gib=vram_gib,
+        auction_priority=auction_priority,
     )
 
     # Strip hop-by-hop headers before returning
