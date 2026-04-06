@@ -230,10 +230,8 @@ class ProvenanceChain:
         if entry_id not in self._index:
             return []
         target_idx = next(
-            (i for i, e in enumerate(self._entries) if e.entry_id == entry_id), None
+            i for i, e in enumerate(self._entries) if e.entry_id == entry_id
         )
-        if target_idx is None:
-            return []
         return list(self._entries[: target_idx + 1])
 
     def all_entries(self) -> list[LedgerEntry]:
@@ -370,7 +368,7 @@ class TrustScorer:
         if len(latencies) < 2:
             return 1.0  # insufficient data → assume consistent
         mean = statistics.mean(latencies)
-        if mean == 0.0:
+        if mean < 1e-9:
             return 1.0
         stdev = statistics.stdev(latencies)
         cv = stdev / mean  # coefficient of variation

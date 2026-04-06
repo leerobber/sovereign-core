@@ -135,9 +135,9 @@ The score is a weighted sum of three sub-scores:
 
 | Sub-score | Weight | Description |
 |-----------|--------|-------------|
-| `success_rate` | 50 % | Fraction of operations that completed without error |
-| `integrity_rate` | 30 % | Fraction of entries with a valid `integrity_tag` |
-| `latency_consistency` | 20 % | Inverse coefficient of variation of observed latencies |
+| `success_rate` | 50% | Fraction of operations that completed without error |
+| `integrity_rate` | 30% | Fraction of entries with a valid `integrity_tag` |
+| `latency_consistency` | 20% | Inverse coefficient of variation of observed latencies |
 
 ---
 
