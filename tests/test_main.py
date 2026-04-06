@@ -21,8 +21,11 @@ def _patch_app_state(healthy_ids: list[str]):
     import gateway.main as gm
     from gateway.benchmark import ThroughputBenchmark
     from gateway.config import GatewaySettings
+    from gateway.context import SharedContextLayer
     from gateway.health import HealthMonitor
+    from gateway.mem_evolve import ABTestManager, MemEvolveEngine
     from gateway.models import ModelAssigner
+    from gateway.pattern_memory import PatternStore
     from gateway.router import GatewayRouter
 
     cfg = GatewaySettings(failure_threshold=1, recovery_threshold=1)
@@ -38,8 +41,12 @@ def _patch_app_state(healthy_ids: list[str]):
         benchmark=benchmark,
         cfg=cfg,
     )
+    context = SharedContextLayer(collection_name="test_main_context")
+    pattern_store = PatternStore()
+    mem_evolve = MemEvolveEngine(pattern_store, seed=42)
+    ab_test = ABTestManager(mem_evolve)
 
-    return monitor, benchmark, router
+    return monitor, benchmark, router, context, pattern_store, mem_evolve, ab_test
 
 
 # ---------------------------------------------------------------------------
@@ -54,10 +61,16 @@ def patched_app():
     """
     import gateway.main as gm
 
-    monitor, benchmark, router = _patch_app_state(["rtx5050", "radeon780m"])
+    monitor, benchmark, router, context, pattern_store, mem_evolve, ab_test = _patch_app_state(
+        ["rtx5050", "radeon780m"]
+    )
     gm._health_monitor = monitor
     gm._benchmark = benchmark
     gm._router = router
+    gm._context = context
+    gm._pattern_store = pattern_store
+    gm._mem_evolve = mem_evolve
+    gm._ab_test = ab_test
 
     # Swap the lifespan so TestClient doesn't recreate globals on __enter__
     original_lifespan = gm.app.router.lifespan_context
@@ -68,6 +81,7 @@ def patched_app():
 
     gm.app.router.lifespan_context = _noop_lifespan
     yield gm.app
+    pattern_store.close()
     gm.app.router.lifespan_context = original_lifespan
 
 
@@ -92,10 +106,14 @@ class TestHealthEndpoint:
         import gateway.main as gm
         from contextlib import asynccontextmanager
 
-        monitor, benchmark, router = _patch_app_state([])
+        monitor, benchmark, router, context, pattern_store, mem_evolve, ab_test = _patch_app_state([])
         gm._health_monitor = monitor
         gm._benchmark = benchmark
         gm._router = router
+        gm._context = context
+        gm._pattern_store = pattern_store
+        gm._mem_evolve = mem_evolve
+        gm._ab_test = ab_test
 
         original_lifespan = gm.app.router.lifespan_context
 
@@ -108,6 +126,7 @@ class TestHealthEndpoint:
             with TestClient(gm.app, raise_server_exceptions=False) as client:
                 data = client.get("/health").json()
         finally:
+            pattern_store.close()
             gm.app.router.lifespan_context = original_lifespan
 
         assert data["status"] == "degraded"
@@ -169,24 +188,31 @@ class TestProxyEndpoint:
     async def test_proxy_503_when_no_healthy_backends(self):
         import gateway.main as gm
 
-        monitor, benchmark, router = _patch_app_state([])
+        monitor, benchmark, router, context, pattern_store, mem_evolve, ab_test = _patch_app_state([])
         # Router session must be set so it doesn't raise RuntimeError
         router._session = MagicMock()
         gm._health_monitor = monitor
         gm._benchmark = benchmark
         gm._router = router
+        gm._context = context
+        gm._pattern_store = pattern_store
+        gm._mem_evolve = mem_evolve
+        gm._ab_test = ab_test
 
         async with AsyncClient(
             transport=ASGITransport(app=gm.app), base_url="http://test"
         ) as client:
             resp = await client.post("/v1/chat/completions", content=b"{}")
+        pattern_store.close()
         assert resp.status_code == 503
 
     @pytest.mark.asyncio
     async def test_proxy_routes_to_backend(self):
         import gateway.main as gm
 
-        monitor, benchmark, router = _patch_app_state(["rtx5050"])
+        monitor, benchmark, router, context, pattern_store, mem_evolve, ab_test = _patch_app_state(
+            ["rtx5050"]
+        )
         router._session = MagicMock()
 
         mock_resp = AsyncMock()
@@ -200,6 +226,10 @@ class TestProxyEndpoint:
         gm._health_monitor = monitor
         gm._benchmark = benchmark
         gm._router = router
+        gm._context = context
+        gm._pattern_store = pattern_store
+        gm._mem_evolve = mem_evolve
+        gm._ab_test = ab_test
 
         async with AsyncClient(
             transport=ASGITransport(app=gm.app), base_url="http://test"
@@ -209,4 +239,95 @@ class TestProxyEndpoint:
                 content=b"{}",
                 params={"model_id": "deepseek-v3"},
             )
+        pattern_store.close()
         assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# /memory/* endpoints
+# ---------------------------------------------------------------------------
+class TestMemoryEndpoints:
+    def test_store_pattern_returns_201(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            resp = client.post(
+                "/memory/patterns",
+                params={
+                    "model_id": "deepseek-v3",
+                    "backend_id": "rtx5050",
+                    "pattern_type": "latency",
+                    "context": '{"tokens": 128}',
+                    "recommendation": '{"action": "prefer_rtx"}',
+                },
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["model_id"] == "deepseek-v3"
+        assert data["pattern_type"] == "latency"
+
+    def test_lookup_patterns_returns_ranked_results(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            create = client.post(
+                "/memory/patterns",
+                params={
+                    "model_id": "deepseek-v3",
+                    "backend_id": "rtx5050",
+                    "pattern_type": "latency",
+                },
+            )
+            pattern_id = create.json()["pattern_id"]
+            client.post(
+                "/memory/outcome",
+                params={"pattern_id": pattern_id, "success": True},
+            )
+            resp = client.get(
+                "/memory/patterns",
+                params={
+                    "model_id": "deepseek-v3",
+                    "strategy": "evolved",
+                },
+            )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["strategy"] == "evolved"
+        assert data["count"] >= 1
+
+    def test_record_outcome_unknown_pattern_404(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            resp = client.post(
+                "/memory/outcome",
+                params={"pattern_id": "missing", "success": True},
+            )
+        assert resp.status_code == 404
+
+    def test_memory_stats_returns_totals(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            client.post(
+                "/memory/patterns",
+                params={
+                    "model_id": "deepseek-v3",
+                    "backend_id": "rtx5050",
+                    "pattern_type": "latency",
+                },
+            )
+            resp = client.get("/memory/stats")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "total_patterns" in data
+        assert "overall_hit_rate" in data
+
+    def test_memory_evolve_status_returns_both_strategies(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            resp = client.get("/memory/evolve/status")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "static" in data
+        assert "evolved" in data
+
+    def test_memory_ab_assign_and_report(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            assign = client.post("/memory/ab-test/assign", params={"request_id": "req-1"})
+            report = client.get("/memory/ab-test")
+        assert assign.status_code == 200
+        assert assign.json()["variant"] in {"static", "evolved"}
+        assert report.status_code == 200
+        assert "winner" in report.json()

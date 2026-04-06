@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import datetime
+
 import pytest
+from pydantic import ValidationError
 
 from gateway.ledger import (
     IntegrityVerifier,
@@ -65,7 +68,7 @@ class TestLedgerEntry:
 
     def test_frozen_model_rejects_mutation(self) -> None:
         entry = self._make_entry()
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             entry.operation = "changed"  # type: ignore[misc]
 
     def test_optional_fields_default_to_none_or_empty(self) -> None:
@@ -80,6 +83,27 @@ class TestLedgerEntry:
         entry = self._make_entry(metadata={"tokens": 42, "source": "test"})
         assert entry.metadata["tokens"] == 42
         assert entry.metadata["source"] == "test"
+
+    def test_canonical_bytes_with_non_json_serializable_metadata(self) -> None:
+        """datetime values in metadata must not raise TypeError (Bug 1)."""
+        entry = self._make_entry(
+            metadata={"ts": datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)}
+        )
+        # canonical_bytes() uses model_dump(mode="json") which coerces datetime → str
+        result = entry.canonical_bytes()
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+    def test_canonical_bytes_metadata_is_deterministic_with_datetime(self) -> None:
+        """Same datetime metadata must produce the same canonical bytes."""
+        dt = datetime.datetime(2024, 6, 15, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        e1 = self._make_entry(metadata={"created": dt})
+        e2 = self._make_entry(
+            entry_id=e1.entry_id,
+            timestamp=e1.timestamp,
+            metadata={"created": dt},
+        )
+        assert e1.canonical_bytes() == e2.canonical_bytes()
 
 
 # ---------------------------------------------------------------------------
@@ -190,6 +214,12 @@ class TestIntegrityVerifier:
         tampered = e2.model_copy(update={"operation": "tampered"})
         assert not verifier.verify_chain([e1, tampered, e3])
 
+    def test_verify_chain_root_with_non_none_parent_id_fails(self) -> None:
+        """Root entry (position 0) with parent_id set must fail chain verification (Bug 3)."""
+        verifier = self._make_verifier()
+        e1 = verifier.sign(self._make_entry(parent_id="some-external-id"))
+        assert not verifier.verify_chain([e1])
+
 
 # ---------------------------------------------------------------------------
 # ProvenanceChain tests
@@ -290,6 +320,25 @@ class TestProvenanceChain:
         copy.clear()
         assert len(chain) == 1  # original chain unaffected
 
+    def test_append_root_with_non_none_parent_id_raises(self) -> None:
+        """First entry with a non-None parent_id must be rejected (Bug 3)."""
+        chain = ProvenanceChain()
+        e = self._make_entry(parent_id="external-parent")
+        with pytest.raises(ValueError, match="Root entry must have parent_id=None"):
+            chain.append(e)
+
+    def test_trace_uses_position_index(self) -> None:
+        """trace() must return correct slice regardless of chain length (O(1) fix)."""
+        chain = ProvenanceChain()
+        entries = []
+        prev_id = None
+        for i in range(5):
+            e = self._make_entry(parent_id=prev_id) if i > 0 else self._make_entry()
+            chain.append(e)
+            entries.append(e)
+            prev_id = e.entry_id
+        assert chain.trace(entries[2].entry_id) == entries[:3]
+
 
 # ---------------------------------------------------------------------------
 # TrustScorer tests
@@ -387,6 +436,29 @@ class TestTrustScorer:
         scorer.record("b1", success=True, latency_s=0.1, entry=unsigned)
         # Without a verifier integrity_rate = 1.0 → does not penalise score
         assert scorer.score("b1") > 0.8
+
+    def test_record_rejects_nan_latency(self) -> None:
+        """NaN latency_s must raise ValueError (Copilot fix)."""
+        scorer = self._make_scorer()
+        with pytest.raises(ValueError, match="latency_s"):
+            scorer.record("b1", success=True, latency_s=float("nan"))
+
+    def test_record_rejects_inf_latency(self) -> None:
+        """Infinite latency_s must raise ValueError (Copilot fix)."""
+        scorer = self._make_scorer()
+        with pytest.raises(ValueError, match="latency_s"):
+            scorer.record("b1", success=True, latency_s=float("inf"))
+
+    def test_record_rejects_negative_latency(self) -> None:
+        """Negative latency_s must raise ValueError (Copilot fix)."""
+        scorer = self._make_scorer()
+        with pytest.raises(ValueError, match="latency_s"):
+            scorer.record("b1", success=True, latency_s=-0.1)
+
+    def test_record_accepts_zero_latency(self) -> None:
+        """Zero is a valid latency_s (boundary value)."""
+        scorer = self._make_scorer()
+        scorer.record("b1", success=True, latency_s=0.0)  # must not raise
 
 
 # ---------------------------------------------------------------------------
@@ -507,3 +579,31 @@ class TestSemanticLedger:
         ledger = self._make_ledger()
         entry = ledger.record(operation="op", backend_id="rtx5050", session_id="new")
         assert entry.parent_id is None
+
+    def test_mutating_provenance_entry_does_not_break_verify_session(self) -> None:
+        """Mutating a returned provenance entry's metadata must not corrupt the ledger (Bug 2)."""
+        ledger = self._make_ledger()
+        ledger.record(operation="op", backend_id="rtx5050", session_id="s1")
+        entries = ledger.provenance("s1")
+        # Mutate the returned deep-copy's metadata dict
+        entries[0].metadata["injected"] = "tampered"  # type: ignore[index]
+        # The stored chain must be unaffected
+        assert ledger.verify_session("s1")
+
+    def test_mutating_audit_log_entry_does_not_corrupt_ledger(self) -> None:
+        """Mutating a returned audit_log entry must not affect internal state (Bug 2)."""
+        ledger = self._make_ledger()
+        ledger.record(operation="op", backend_id="rtx5050", session_id="s1")
+        log = ledger.audit_log()
+        log[0].metadata["injected"] = "tampered"  # type: ignore[index]
+        assert ledger.verify_session("s1")
+
+    def test_audit_log_bounded_by_max_size(self) -> None:
+        """Audit log must not grow beyond the configured maximum entries."""
+        max_size = 5
+        ledger = SemanticLedger(self._SECRET, _max_audit_log=max_size)
+        for i in range(max_size + 3):
+            ledger.record(
+                operation=f"op{i}", backend_id="rtx5050", session_id=f"s{i}"
+            )
+        assert len(ledger.audit_log()) == max_size
