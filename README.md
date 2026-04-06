@@ -12,6 +12,21 @@ Central hub for Sovereign Core — autonomous AI agent platform architecture, sy
 
 A latency-aware, capability-aware HTTP gateway that orchestrates the tri-GPU inference mesh.
 
+## ContentAIOS Kernel (KAN-87)
+
+Master kernel and sensory interface for autonomous content coordination.
+
+- Priority-scheduled event loop with structured `KernelEvent` payloads.
+- Sensory ingestion adapters: `PushSensoryInput` (webhooks/SDK pushes), `WebhookPushBridge`
+  for HTTP payloads, `PollingSensoryInput` (custom async pollers), and `HttpPollingSensoryInput`
+  for HTTP/JSON feeds.
+- Lightweight pub/sub bus for inter-subsystem communication.
+- Bounded audit log for ingestion, dispatch, and handler outcomes with pluggable sinks (JSONL +
+  metrics).
+- Subsystem-specific timeouts and retries on message bus deliveries.
+
+See `docs/KAN-87-contentaios.md` for the architecture and usage example.
+
 ### Architecture
 
 | Device | Endpoint | Role |

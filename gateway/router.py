@@ -178,6 +178,7 @@ class GatewayRouter:
             model_id: Optional model identifier.
             vram_required_gib: Minimum VRAM requirement.
             auction_priority: Optional backend_id -> agent_id mapping from auctions.
+                Backends present in this map are ranked first.
 
         Returns:
             List of backends ordered by priority (auction winners first), then
@@ -213,7 +214,7 @@ class GatewayRouter:
         backends: list[BackendConfig],
         auction_priority: Optional[dict[str, str]] = None,
     ) -> list[BackendConfig]:
-        """Sort backends by auction priority, then EMA latency (ascending) preserving tier order.
+        """Sort backends by auction priority, then EMA latency preserving tier order.
 
         Args:
             backends: List of backends to sort.
@@ -225,12 +226,12 @@ class GatewayRouter:
         """
         # Group by device weight so high-capability tiers are still preferred
         # but within a tier we pick the faster backend.
-        # If auction_priority is provided, backends in that map get priority=0, others get 1
+        # Auction-priority backends sort first (0) before non-priority ones (1).
         def sort_key(b: BackendConfig) -> tuple[int, float, float]:
-            has_auction_priority = 0 if (auction_priority and b.id in auction_priority) else 1
+            priority_rank = 0 if (auction_priority and b.id in auction_priority) else 1
             capability_tier = round(b.weight * -1, 0)
             latency = self._latency.get(b.id)
-            return (has_auction_priority, capability_tier, latency)
+            return (priority_rank, capability_tier, latency)
 
         return sorted(backends, key=sort_key)
 

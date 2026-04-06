@@ -170,7 +170,8 @@ async def proxy_inference(
     # Preserve original query string (minus our routing hints) on the forwarded URL
     fwd_path = f"/{path}"
 
-    # Get auction-derived routing priority from auctioneer
+    # Obtain auction-derived routing priority so settled auctions influence
+    # which backend is selected for this request.
     auction_priority = _auctioneer.allocation_priority()
 
     status, resp_headers, resp_body = await _router.route(

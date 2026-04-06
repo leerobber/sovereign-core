@@ -46,6 +46,7 @@ consults to honour allocation priority.
 
 from __future__ import annotations
 
+import itertools
 import logging
 import math
 import time
@@ -703,13 +704,11 @@ class VickreyQuadraticAuction:
 # High-level auctioneer (state container used by FastAPI)
 # ---------------------------------------------------------------------------
 
-_AUCTION_COUNTER: int = 0
+_auction_counter = itertools.count(1)
 
 
 def _next_auction_id() -> str:
-    global _AUCTION_COUNTER
-    _AUCTION_COUNTER += 1
-    return f"auction-{_AUCTION_COUNTER:06d}"
+    return f"auction-{next(_auction_counter):06d}"
 
 
 class Auctioneer:
