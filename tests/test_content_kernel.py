@@ -80,7 +80,7 @@ async def test_audit_log_records_ingest_and_handling():
     assert "task_complete" in actions
 
 
-`@pytest.mark.asyncio`
+@pytest.mark.asyncio
 async def test_polling_sensory_input_feeds_kernel():
     emitted: list[int] = []
     done = asyncio.Event()

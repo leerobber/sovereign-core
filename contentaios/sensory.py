@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import Awaitable, Callable, Iterable, Optional
 
@@ -102,22 +103,27 @@ class PollingSensoryInput(SensoryInput):
     async def stop(self) -> None:
         self._running = False
         if self._runner:
-            await self._runner
+            self._runner.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._runner
             self._runner = None
 
     async def wait_idle(self) -> None:
         await asyncio.sleep(0)
 
     async def _run(self) -> None:
-        while self._running:
-            event = await self._fetcher()
-            if event is not None and self._emit is not None:
-                if isinstance(event, (list, tuple)):
-                    for item in event:
-                        await self._emit(item)
-                else:
-                    await self._emit(event)
-            await asyncio.sleep(self._interval_s)
+        try:
+            while self._running:
+                event = await self._fetcher()
+                if event is not None and self._emit is not None:
+                    if isinstance(event, (list, tuple)):
+                        for item in event:
+                            await self._emit(item)
+                    else:
+                        await self._emit(event)
+                await asyncio.sleep(self._interval_s)
+        except asyncio.CancelledError:
+            pass
 
 
 class HttpPollingSensoryInput(SensoryInput):
@@ -151,7 +157,9 @@ class HttpPollingSensoryInput(SensoryInput):
     async def stop(self) -> None:
         self._running = False
         if self._runner:
-            await self._runner
+            self._runner.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._runner
             self._runner = None
         if self._owns_session and self._session is not None:
             await self._session.close()
@@ -159,17 +167,20 @@ class HttpPollingSensoryInput(SensoryInput):
 
     async def _run(self) -> None:
         assert self._session is not None
-        while self._running:
-            try:
-                async with self._session.get(self._url) as resp:
-                    data = await resp.json()
-                    events = self._decode(data)
-                    if self._emit is not None:
-                        for event in events:
-                            await self._emit(event)
-            except Exception as exc:
-                logger.warning("HTTP polling failed for %s: %s", self._url, exc)
-            await asyncio.sleep(self._interval_s)
+        try:
+            while self._running:
+                try:
+                    async with self._session.get(self._url) as resp:
+                        data = await resp.json()
+                        events = self._decode(data)
+                        if self._emit is not None:
+                            for event in events:
+                                await self._emit(event)
+                except Exception as exc:
+                    logger.warning("HTTP polling failed for %s: %s", self._url, exc)
+                await asyncio.sleep(self._interval_s)
+        except asyncio.CancelledError:
+            pass
 
     def _decode(self, data) -> list[KernelEvent]:
         items = data if isinstance(data, list) else [data]

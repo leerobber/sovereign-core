@@ -238,8 +238,7 @@ class ContentKernel:
         self._running = True
         self._scheduler_task = asyncio.create_task(self._scheduler())
         for sensor in self._sensory_inputs:
-            task = asyncio.create_task(sensor.start(self.ingest_event))
-            self._sensor_tasks.append(task)
+            await sensor.start(self.ingest_event)
             self._audit.record(
                 actor="kernel", action="sensor_started", detail={"sensor": sensor.name}
             )
@@ -247,24 +246,27 @@ class ContentKernel:
     async def stop(self) -> None:
         if not self._running:
             return
-        self._running = False
+
+        # First stop all sensors
         for sensor in self._sensory_inputs:
             await sensor.stop()
             self._audit.record(
                 actor="kernel", action="sensor_stopped", detail={"sensor": sensor.name}
             )
 
-        for task in self._sensor_tasks:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
-        self._sensor_tasks.clear()
+        # Drain the queue to process all pending events
+        await self.join()
+
+        # Now stop the scheduler and clear running state
+        self._running = False
 
         if self._scheduler_task:
             self._scheduler_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._scheduler_task
         self._scheduler_task = None
+
+        self._sensor_tasks.clear()
 
     async def ingest_event(self, event: KernelEvent) -> None:
         """Push a sensory event into the kernel for scheduling."""
@@ -291,6 +293,11 @@ class ContentKernel:
         await self._queue.join()
 
     async def _dispatch_event(self, event: KernelEvent) -> None:
+        self._audit.record(
+            actor="kernel",
+            action="dispatch",
+            detail={"type": event.type, "trace_id": event.trace_id},
+        )
         await self._bus.publish(event)
 
     async def _enqueue(self, fn: ScheduledFn, *, priority: Priority) -> None:
