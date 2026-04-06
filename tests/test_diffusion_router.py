@@ -452,7 +452,7 @@ def diffusion_app():
     original_lifespan = gm.app.router.lifespan_context
 
     @asynccontextmanager
-    async def _noop(app):  # type: ignore[override]
+    async def _noop(_app):  # type: ignore[override]
         yield
 
     gm.app.router.lifespan_context = _noop

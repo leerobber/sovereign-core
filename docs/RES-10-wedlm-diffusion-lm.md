@@ -58,11 +58,11 @@ the RTX 5050-class GPU (192 GB/s bandwidth, 10 TFLOPS FP16):
 
 | Sequence length N | AR latency | Diffusion latency (T=10) | Speedup |
 |---|---|---|---|
-| 10 | ~1.0 ms | ~10.4 ms | 0.1× (AR wins) |
-| 64 | ~5.2 ms | ~10.4 ms | 0.5× (AR wins) |
-| 128 | ~10.4 ms | ~13.4 ms | 0.8× (AR wins) |
-| 256 | ~20.8 ms | ~26.7 ms | 0.8× (AR wins) |
-| 512 | ~41.7 ms | ~53.3 ms | 0.8× |
+| 10 | ~10.4 ms | ~10.4 ms | 1.0× (break-even) |
+| 64 | ~66.7 ms | ~10.4 ms | 6.4× (diffusion wins) |
+| 128 | ~133.3 ms | ~12.8 ms | 10.4× (diffusion wins) |
+| 256 | ~266.7 ms | ~25.6 ms | 10.4× (diffusion wins) |
+| 512 | ~533.3 ms | ~51.2 ms | 10.4× (diffusion wins) |
 
 > **Note:** The crossover point shifts to favour diffusion for longer sequences
 > once the batch compute dominates weight loading.  The speedup is most pronounced
