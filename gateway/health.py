@@ -6,7 +6,7 @@ import asyncio
 import logging
 import time
 from enum import Enum
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -70,7 +70,7 @@ class BackendState:
             )
             self.status = BackendStatus.UNHEALTHY
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.config.id,
             "label": self.config.label,
@@ -124,7 +124,7 @@ class HealthMonitor:
         state = self._states.get(backend_id)
         return state is not None and state.status == BackendStatus.HEALTHY
 
-    def status_report(self) -> list[dict]:
+    def status_report(self) -> list[dict[str, Any]]:
         return [s.to_dict() for s in self._states.values()]
 
     # ------------------------------------------------------------------
