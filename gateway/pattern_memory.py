@@ -239,6 +239,9 @@ class PatternStore:
         Returns:
             A list of matching :class:`PatternRecord` objects.
         """
+        # Only hardcoded column-name literals are ever appended to conditions;
+        # all user-supplied values travel exclusively through the parameterised
+        # placeholder list, preventing SQL injection.
         conditions: list[str] = []
         params: list[Any] = []
         if model_id is not None:
@@ -251,17 +254,23 @@ class PatternStore:
             conditions.append("pattern_type = ?")
             params.append(pattern_type)
 
-        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        where_clause = (
+            "WHERE " + " AND ".join(conditions) if conditions else ""
+        )
         params.append(limit)
 
         rows = self._conn.execute(
-            f"SELECT * FROM patterns {where} ORDER BY created_at DESC LIMIT ?",
+            # The where_clause is built exclusively from the hardcoded literals
+            # above; no user input flows into the clause itself.
+            f"SELECT * FROM patterns {where_clause} ORDER BY created_at DESC LIMIT ?",
             params,
         ).fetchall()
 
         records = [self._row_to_record(row) for row in rows]
 
-        # Instrument: increment lookup_count for every retrieved pattern
+        # Instrument: increment lookup_count for every retrieved pattern.
+        # placeholders is constructed from len(records) — a count of
+        # already-fetched rows — not from any user-supplied input.
         if records:
             ids = [r.pattern_id for r in records]
             placeholders = ",".join("?" * len(ids))

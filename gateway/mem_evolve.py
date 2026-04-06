@@ -37,6 +37,24 @@ from gateway.pattern_memory import PatternRecord, PatternStore
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Evolution algorithm constants
+# ---------------------------------------------------------------------------
+
+#: Number of equal-width buckets used for deterministic A/B assignment.
+_AB_TEST_BUCKETS: int = 1000
+
+#: Base multiplier applied before dimension-specific boost adjustment.
+_BOOST_BASE: float = 1.0
+
+#: Scaling factor that controls how strongly frequency/recency signals
+#: shift the corresponding weight dimensions each evolution step.
+_BOOST_FACTOR: float = 0.1
+
+#: Per-generation amplification applied to the success_rate weight dimension
+#: (primary learning signal for meta-evolution).
+_SUCCESS_RATE_BOOST: float = 1.05
+
 
 # ---------------------------------------------------------------------------
 # Retrieval weight model
@@ -443,7 +461,9 @@ class MemEvolveEngine:
         avg_lookup_hi = sum(p.lookup_count for p in high_success) / len(high_success)
         avg_lookup_all = sum(p.lookup_count for p in patterns) / len(patterns)
         # Boost frequency weight when high-success patterns are queried more often
-        freq_boost = 1.0 + 0.1 * (avg_lookup_hi / max(1.0, avg_lookup_all) - 1.0)
+        freq_boost = _BOOST_BASE + _BOOST_FACTOR * (
+            avg_lookup_hi / max(1.0, avg_lookup_all) - 1.0
+        )
 
         # --- Recency signal ---
         now = time.time()
@@ -451,12 +471,12 @@ class MemEvolveEngine:
         avg_age_all = sum(now - p.created_at for p in patterns) / len(patterns)
         # Boost recency weight when high-success patterns are newer
         safe_age_all = max(1.0, avg_age_all)
-        recency_boost = 1.0 + 0.1 * max(0.0, 1.0 - avg_age_hi / safe_age_all)
+        recency_boost = _BOOST_BASE + _BOOST_FACTOR * max(0.0, 1.0 - avg_age_hi / safe_age_all)
 
         # --- Success-rate signal ---
         # Always slightly amplify the success_rate dimension — it is the primary
         # learning signal for meta-evolution.
-        sr_boost = 1.05
+        sr_boost = _SUCCESS_RATE_BOOST
 
         cur = self._evolved.weights
         raw = RetrievalWeights(
@@ -529,8 +549,12 @@ class ABTestManager:
         """
         if request_id in self._assignments:
             return self._assignments[request_id]
-        bucket = abs(hash(request_id)) % 1000
-        variant = "evolved" if bucket < int(self._evolved_fraction * 1000) else "static"
+        bucket = abs(hash(request_id)) % _AB_TEST_BUCKETS
+        variant = (
+            "evolved"
+            if bucket < int(self._evolved_fraction * _AB_TEST_BUCKETS)
+            else "static"
+        )
         self._assignments[request_id] = variant
         return variant
 
