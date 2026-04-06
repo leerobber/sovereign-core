@@ -54,10 +54,14 @@ logger = logging.getLogger(__name__)
 _health_monitor: HealthMonitor
 _benchmark: ThroughputBenchmark
 _router: GatewayRouter
+<<<<<<< HEAD
 _pattern_store: PatternStore
 _mem_evolve: MemEvolveEngine
 _ab_test: ABTestManager
 _context: SharedContextLayer
+=======
+
+>>>>>>> f1b93ea (feat: Implement KAIROS nextElites Agent Economy (RES-01, RES-02, RES-11, RES-12))
 
 
 @asynccontextmanager
