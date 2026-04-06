@@ -80,9 +80,10 @@ async def test_audit_log_records_ingest_and_handling():
     assert "task_complete" in actions
 
 
-@pytest.mark.asyncio
+`@pytest.mark.asyncio`
 async def test_polling_sensory_input_feeds_kernel():
     emitted: list[int] = []
+    done = asyncio.Event()
     counter = 0
 
     async def fetcher() -> KernelEvent | None:
@@ -101,11 +102,13 @@ async def test_polling_sensory_input_feeds_kernel():
 
     async def handler(event: KernelEvent) -> None:
         emitted.append(event.payload["seq"])
+        if len(emitted) == 3:
+            done.set()
 
     kernel.register_subsystem("monitor", ["heartbeat"], handler)
 
     await kernel.start()
-    await asyncio.sleep(0.05)
+    await asyncio.wait_for(done.wait(), timeout=1)
     await kernel.join()
     await kernel.stop()
 
