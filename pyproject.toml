@@ -29,7 +29,7 @@ sovereign-gateway = "gateway.main:run"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["gateway*"]
+include = ["gateway*", "contentaios*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
