@@ -35,6 +35,7 @@ from gateway.auction import (
 )
 from gateway.benchmark import ThroughputBenchmark
 from gateway.config import BACKENDS, BACKEND_MAP, settings
+from gateway.context import AgentRole, SharedContextLayer, init_context_layer
 from gateway.health import HealthMonitor
 from gateway.models import ModelAssigner
 from gateway.router import GatewayRouter
@@ -51,11 +52,12 @@ logger = logging.getLogger(__name__)
 _health_monitor: HealthMonitor
 _benchmark: ThroughputBenchmark
 _router: GatewayRouter
+_context: SharedContextLayer
 
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
-    global _health_monitor, _benchmark, _router
+    global _health_monitor, _benchmark, _router, _context
 
     _health_monitor = HealthMonitor(cfg=settings)
     _benchmark = ThroughputBenchmark()
@@ -65,6 +67,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         benchmark=_benchmark,
         cfg=settings,
     )
+    _context = init_context_layer()
 
     await _health_monitor.start()
     await _router.start()
@@ -304,6 +307,108 @@ async def auction_metrics() -> JSONResponse:
             "utilization_by_resource": m.utilization_by_resource,
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Context endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post("/context/write", summary="Write an agent context entry")
+async def context_write(
+    role: AgentRole = Query(..., description="Cognitive role of the writing agent"),
+    backend_id: str = Query(..., description="Compute backend that produced this result"),
+    document: str = Query(..., description="Free-text conclusion or summary from the agent"),
+    trace_id: Optional[str] = Query(default=None, description="Optional request trace ID"),
+) -> JSONResponse:
+    """Persist an agent conclusion to the shared ChromaDB context layer.
+
+    Any agent (generator, verifier, safety, reasoner, planner) writes its
+    output here so that all other agents can read it on subsequent calls.
+    """
+    entry_id = _context.write(
+        role=role,
+        backend_id=backend_id,
+        document=document,
+        trace_id=trace_id,
+    )
+    return JSONResponse(
+        {
+            "entry_id": entry_id,
+            "role": role.value,
+            "backend_id": backend_id,
+            "trace_id": trace_id,
+        }
+    )
+
+
+@app.get("/context/read", summary="Read context entries")
+async def context_read(
+    role: Optional[AgentRole] = Query(default=None, description="Filter by agent role"),
+    backend_id: Optional[str] = Query(default=None, description="Filter by backend ID"),
+    trace_id: Optional[str] = Query(default=None, description="Filter by trace ID"),
+    limit: int = Query(default=20, ge=1, le=500, description="Maximum entries to return"),
+) -> JSONResponse:
+    """Read context entries with optional filtering.
+
+    Filters are applied in priority order: ``trace_id`` → ``role`` →
+    ``backend_id`` → all entries.  At most one filter is applied per call.
+    """
+    if trace_id is not None:
+        entries = _context.read_by_trace(trace_id)
+    elif role is not None:
+        entries = _context.read_by_role(role, limit=limit)
+    elif backend_id is not None:
+        entries = _context.read_by_backend(backend_id, limit=limit)
+    else:
+        entries = _context.read_all(limit=limit)
+
+    return JSONResponse(
+        {
+            "entries": [e.as_dict() for e in entries],
+            "count": len(entries),
+        }
+    )
+
+
+@app.get(
+    "/context/cross-gpu/{backend_id}",
+    summary="Cross-GPU context visibility for a backend",
+)
+async def context_cross_gpu(
+    backend_id: str,
+    limit: int = Query(default=20, ge=1, le=500, description="Maximum peer entries to return"),
+) -> JSONResponse:
+    """Return context produced by *peer* backends for cross-GPU visibility.
+
+    The Radeon 780M calls this to see what the RTX 5050 concluded, and vice
+    versa.  Entries produced by the requesting backend itself are excluded.
+    """
+    entries = _context.read_cross_gpu(backend_id, limit=limit)
+    return JSONResponse(
+        {
+            "backend_id": backend_id,
+            "peer_entries": [e.as_dict() for e in entries],
+            "count": len(entries),
+        }
+    )
+
+
+@app.get("/context/count", summary="Total context entry count")
+async def context_count() -> JSONResponse:
+    """Return the total number of entries in the shared context store."""
+    return JSONResponse({"count": _context.count()})
+
+
+@app.delete("/context/clear", summary="Clear all context entries")
+async def context_clear() -> JSONResponse:
+    """Remove all entries from the shared context store.
+
+    Use with care — this deletes all cross-agent memory accumulated since
+    the last clear or gateway restart.
+    """
+    removed = _context.clear()
+    return JSONResponse({"cleared": removed})
 
 
 # ---------------------------------------------------------------------------
