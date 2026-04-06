@@ -553,7 +553,7 @@ def kairos_client() -> Iterator[tuple[TestClient, EliteRegistry, KAIROSEvolution
     original_lifespan = gm.app.router.lifespan_context
 
     @asynccontextmanager
-    async def _noop_lifespan(_app):  # type: ignore[override]
+    async def _noop_lifespan(app):  # type: ignore[override]
         yield
 
     gm.app.router.lifespan_context = _noop_lifespan

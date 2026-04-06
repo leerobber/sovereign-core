@@ -134,6 +134,8 @@ class KAIROSEvolutionEngine:
     NEXT_ELITE_THRESHOLD: int = 10
     FITNESS_ELITE: float = 0.6
     FITNESS_NEXT_ELITE: float = 0.8
+    MIN_WEIGHT: float = 0.05
+    MAX_WEIGHT: float = 0.9
 
     def __init__(self) -> None:
         """Initialise with an empty agent archive."""
@@ -236,9 +238,9 @@ class KAIROSEvolutionEngine:
             relevance += 0.05
             recency -= 0.05
 
-        recency = max(0.05, min(0.9, recency))
-        relevance = max(0.05, min(0.9, relevance))
-        frequency = max(0.05, min(0.9, frequency))
+        recency = max(self.MIN_WEIGHT, min(self.MAX_WEIGHT, recency))
+        relevance = max(self.MIN_WEIGHT, min(self.MAX_WEIGHT, relevance))
+        frequency = max(self.MIN_WEIGHT, min(self.MAX_WEIGHT, frequency))
         # Clamping prevents degenerate weights even if prior evolutions pushed a
         # weight close to zero before this cycle's increment/decrement was applied.
 

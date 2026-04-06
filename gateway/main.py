@@ -60,8 +60,7 @@ logger = logging.getLogger(__name__)
 _health_monitor: HealthMonitor
 _benchmark: ThroughputBenchmark
 _router: GatewayRouter
-_kairos_engine: KAIROSEvolutionEngine
-_elite_registry: EliteRegistry
+
 
 
 @asynccontextmanager
