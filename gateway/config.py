@@ -98,6 +98,8 @@ class GatewaySettings(BaseSettings):
     latency_ema_alpha: float = 0.2
     # Latency penalty (seconds) applied to unhealthy / unknown backends
     unhealthy_latency_penalty: float = 9999.0
+    # SQLite path for Pattern Memory (":memory:" keeps in-memory behavior for tests)
+    pattern_memory_db_path: str = ":memory:"
 
 
 settings = GatewaySettings()

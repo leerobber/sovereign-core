@@ -351,6 +351,11 @@ class TestPatternStoreOutcomes:
         outcomes = ps.outcomes_for_pattern(rec.pattern_id)
         assert outcomes[0].context["vram"] == 8
 
+    def test_record_outcome_unknown_pattern_raises(self) -> None:
+        ps = self._store()
+        with pytest.raises(ValueError, match="Unknown pattern_id"):
+            ps.record_outcome("missing-pattern", success=True)
+
 
 # ---------------------------------------------------------------------------
 # PatternStore — statistics

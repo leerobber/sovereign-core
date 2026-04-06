@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Optional
+from typing import Any, AsyncIterator, Optional, cast
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response
@@ -74,7 +74,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     _context = init_context_layer()
 
-    _pattern_store = PatternStore()
+    _pattern_store = PatternStore(db_path=settings.pattern_memory_db_path)
     _mem_evolve = MemEvolveEngine(_pattern_store)
     _ab_test = ABTestManager(_mem_evolve)
 
@@ -427,7 +427,7 @@ async def context_clear() -> JSONResponse:
 
 
 @app.post("/memory/patterns", summary="Store an optimization pattern")
-async def memory_store_pattern(
+def memory_store_pattern(
     model_id: str = Query(..., description="Model identifier"),
     backend_id: str = Query(..., description="Backend identifier"),
     pattern_type: str = Query(..., description="Pattern category (e.g. latency, routing)"),
@@ -441,14 +441,23 @@ async def memory_store_pattern(
     rec: dict[str, Any] = {}
     if context:
         try:
-            ctx = _json.loads(context)
+            parsed_context = _json.loads(context)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=f"Invalid context JSON: {exc}") from exc
+        if not isinstance(parsed_context, dict):
+            raise HTTPException(status_code=422, detail="context must decode to a JSON object")
+        ctx = cast(dict[str, Any], parsed_context)
     if recommendation:
         try:
-            rec = _json.loads(recommendation)
+            parsed_recommendation = _json.loads(recommendation)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=f"Invalid recommendation JSON: {exc}") from exc
+        if not isinstance(parsed_recommendation, dict):
+            raise HTTPException(
+                status_code=422,
+                detail="recommendation must decode to a JSON object",
+            )
+        rec = cast(dict[str, Any], parsed_recommendation)
 
     try:
         record = PatternRecord(
@@ -466,7 +475,7 @@ async def memory_store_pattern(
 
 
 @app.get("/memory/patterns", summary="Lookup optimization patterns")
-async def memory_lookup_patterns(
+def memory_lookup_patterns(
     model_id: Optional[str] = Query(default=None, description="Filter by model"),
     backend_id: Optional[str] = Query(default=None, description="Filter by backend"),
     pattern_type: Optional[str] = Query(default=None, description="Filter by category"),
@@ -483,9 +492,12 @@ async def memory_lookup_patterns(
     query_ctx: Optional[dict[str, Any]] = None
     if context:
         try:
-            query_ctx = _json.loads(context)
+            parsed_context = _json.loads(context)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=f"Invalid context JSON: {exc}") from exc
+        if not isinstance(parsed_context, dict):
+            raise HTTPException(status_code=422, detail="context must decode to a JSON object")
+        query_ctx = cast(dict[str, Any], parsed_context)
 
     patterns = _pattern_store.lookup(
         model_id=model_id,
@@ -504,7 +516,7 @@ async def memory_lookup_patterns(
 
 
 @app.post("/memory/outcome", summary="Record a pattern lookup outcome")
-async def memory_record_outcome(
+def memory_record_outcome(
     pattern_id: str = Query(..., description="Pattern that was applied"),
     success: bool = Query(..., description="Whether the optimization succeeded"),
     latency_s: float = Query(default=0.0, ge=0.0, description="Observed latency in seconds"),
@@ -518,9 +530,12 @@ async def memory_record_outcome(
     if _pattern_store.get_pattern(pattern_id) is None:
         raise HTTPException(status_code=404, detail=f"Unknown pattern_id: {pattern_id!r}")
 
-    outcome = _pattern_store.record_outcome(
-        pattern_id, success=success, latency_s=latency_s
-    )
+    try:
+        outcome = _pattern_store.record_outcome(
+            pattern_id, success=success, latency_s=latency_s
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     variant: Optional[str] = None
     if request_id is not None:
@@ -538,13 +553,13 @@ async def memory_record_outcome(
 
 
 @app.get("/memory/stats", summary="Pattern Memory statistics")
-async def memory_stats() -> JSONResponse:
+def memory_stats() -> JSONResponse:
     """Return aggregated statistics about the Pattern Memory store."""
     return JSONResponse(_pattern_store.get_stats().to_dict())
 
 
 @app.post("/memory/evolve", summary="Run one MemEvolve meta-evolution step")
-async def memory_evolve() -> JSONResponse:
+def memory_evolve() -> JSONResponse:
     """Trigger one meta-evolution step to update retrieval weights.
 
     The engine reads outcome data accumulated since the last evolution and
@@ -555,7 +570,7 @@ async def memory_evolve() -> JSONResponse:
 
 
 @app.get("/memory/evolve/status", summary="Current MemEvolve strategy status")
-async def memory_evolve_status() -> JSONResponse:
+def memory_evolve_status() -> JSONResponse:
     """Return the current state of both retrieval strategies."""
     return JSONResponse(
         {
@@ -566,13 +581,13 @@ async def memory_evolve_status() -> JSONResponse:
 
 
 @app.get("/memory/ab-test", summary="A/B test comparison: evolved vs. static retrieval")
-async def memory_ab_test() -> JSONResponse:
+def memory_ab_test() -> JSONResponse:
     """Return comparative hit-rate statistics for evolved and static retrieval."""
     return JSONResponse(_ab_test.comparison())
 
 
 @app.post("/memory/ab-test/assign", summary="Assign a request to an A/B variant")
-async def memory_ab_assign(
+def memory_ab_assign(
     request_id: str = Query(..., description="Unique request identifier"),
 ) -> JSONResponse:
     """Return the A/B variant assigned to *request_id* (deterministic)."""

@@ -24,6 +24,7 @@ ABTestManager    — Deterministically splits requests across evolved/static
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import math
 import random
@@ -220,15 +221,15 @@ class MemEvolveEngine:
     """Meta-evolution loop that adapts retrieval weights from outcome data.
 
     Each call to :meth:`evolve` inspects the Pattern Memory for patterns with
-    accumulated outcome data and computes a new set of retrieval weights that
-    amplifies dimensions correlated with high-success patterns.
+    accumulated *new outcome rows* and computes a new set of retrieval weights
+    that amplifies dimensions correlated with high-success patterns.
 
     Args:
         store:         The :class:`~gateway.pattern_memory.PatternStore` to
                        read pattern statistics from.
         mutation_rate: Maximum uniform perturbation applied to each weight
                        dimension after each evolution step (adds diversity).
-        min_outcomes:  Minimum number of patterns with at least one lookup
+        min_outcomes:  Minimum number of patterns with newly observed outcomes
                        required before evolution proceeds.
         seed:          Optional RNG seed for reproducible mutations.
     """
@@ -261,8 +262,8 @@ class MemEvolveEngine:
             ),
         )
 
-        # Tracks which pattern_ids have already been consumed by evolution
-        self._patterns_seen: set[str] = set()
+        # Tracks the number of outcomes consumed per pattern_id
+        self._processed_outcomes: dict[str, int] = {}
 
     # ------------------------------------------------------------------
     # Public API
@@ -312,25 +313,29 @@ class MemEvolveEngine:
     def evolve(self) -> dict[str, Any]:
         """Run one meta-evolution step and return a summary dict.
 
-        Reads ``all_patterns()`` from the store, identifies patterns with new
-        outcome data (at least one lookup), and computes updated retrieval
+        Reads ``all_patterns()`` from the store, identifies patterns with newly
+        recorded outcomes since the previous generation, and computes updated retrieval
         weights that amplify dimensions correlated with high-success patterns.
 
         Returns a dict with keys:
 
         - ``generation``        — new generation number
         - ``evolved``           — ``True`` if weights changed this step
-        - ``outcomes_consumed`` — number of new patterns processed
+        - ``outcomes_consumed`` — number of newly consumed outcome rows
         - ``previous_weights``  — weight dict before evolution (if evolved)
         - ``new_weights``       — weight dict after evolution (if evolved)
         - ``fitness_score``     — current overall hit rate from the store
         - ``reason``            — explanation when ``evolved=False``
         """
         patterns = self._store.all_patterns(limit=200)
-        new_patterns = [
-            p for p in patterns
-            if p.pattern_id not in self._patterns_seen and p.lookup_count > 0
-        ]
+        consumed_outcomes = 0
+        new_patterns: list[PatternRecord] = []
+        for p in patterns:
+            current_count = len(self._store.outcomes_for_pattern(p.pattern_id))
+            previous_count = self._processed_outcomes.get(p.pattern_id, 0)
+            if current_count > previous_count:
+                consumed_outcomes += current_count - previous_count
+                new_patterns.append(p)
 
         if len(new_patterns) < self._min_outcomes:
             logger.debug(
@@ -341,7 +346,7 @@ class MemEvolveEngine:
             return {
                 "generation": self._evolved.generation,
                 "evolved": False,
-                "outcomes_consumed": len(new_patterns),
+                "outcomes_consumed": consumed_outcomes,
                 "reason": "insufficient_data",
             }
 
@@ -361,7 +366,9 @@ class MemEvolveEngine:
         )
 
         for p in new_patterns:
-            self._patterns_seen.add(p.pattern_id)
+            self._processed_outcomes[p.pattern_id] = len(
+                self._store.outcomes_for_pattern(p.pattern_id)
+            )
 
         logger.info(
             "MemEvolve: advanced to generation %d (fitness=%.3f, consumed=%d)",
@@ -373,7 +380,7 @@ class MemEvolveEngine:
         return {
             "generation": self._evolved.generation,
             "evolved": True,
-            "outcomes_consumed": len(new_patterns),
+            "outcomes_consumed": consumed_outcomes,
             "previous_weights": prev_weights.model_dump(),
             "new_weights": new_weights.model_dump(),
             "fitness_score": stats.overall_hit_rate,
@@ -549,7 +556,8 @@ class ABTestManager:
         """
         if request_id in self._assignments:
             return self._assignments[request_id]
-        bucket = abs(hash(request_id)) % _AB_TEST_BUCKETS
+        digest = hashlib.sha256(request_id.encode("utf-8")).digest()
+        bucket = int.from_bytes(digest[:8], "big") % _AB_TEST_BUCKETS
         variant = (
             "evolved"
             if bucket < int(self._evolved_fraction * _AB_TEST_BUCKETS)

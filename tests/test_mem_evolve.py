@@ -225,6 +225,7 @@ class TestMemEvolveEngine:
             rec = _record()
             ps.store(rec)
             ps.lookup()
+            ps.record_outcome(rec.pattern_id, success=True)
         result = engine.evolve()
         assert "previous_weights" in result
         assert "new_weights" in result
@@ -236,11 +237,13 @@ class TestMemEvolveEngine:
             rec = _record()
             ps.store(rec)
             ps.lookup()
+            ps.record_outcome(rec.pattern_id, success=True)
         engine.evolve()
         for _ in range(5):
             rec = _record()
             ps.store(rec)
             ps.lookup()
+            ps.record_outcome(rec.pattern_id, success=True)
         engine.evolve()
         assert engine.evolved_strategy.generation == 2
 
@@ -252,8 +255,20 @@ class TestMemEvolveEngine:
             rec = _record()
             ps.store(rec)
             ps.lookup()
+            ps.record_outcome(rec.pattern_id, success=True)
         engine.evolve()
         assert engine.static_strategy.weights.model_dump() == initial_weights
+
+    def test_evolve_ignores_lookup_without_outcomes(self) -> None:
+        ps = _store()
+        engine = _engine(ps, min_outcomes=2)
+        for _ in range(5):
+            rec = _record()
+            ps.store(rec)
+            ps.lookup()
+        result = engine.evolve()
+        assert result["evolved"] is False
+        assert result["reason"] == "insufficient_data"
 
     def test_rank_patterns_evolved_returns_list(self) -> None:
         engine = _engine(_store())
@@ -334,6 +349,11 @@ class TestABTestManager:
         ab = self._manager()
         v1 = ab.assign("req-42")
         v2 = ab.assign("req-42")
+        assert v1 == v2
+
+    def test_assign_is_stable_across_instances(self) -> None:
+        v1 = self._manager().assign("stable-id-123")
+        v2 = self._manager().assign("stable-id-123")
         assert v1 == v2
 
     def test_assign_fraction_zero_always_static(self) -> None:

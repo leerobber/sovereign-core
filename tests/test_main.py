@@ -331,3 +331,23 @@ class TestMemoryEndpoints:
         assert assign.json()["variant"] in {"static", "evolved"}
         assert report.status_code == 200
         assert "winner" in report.json()
+
+    def test_lookup_patterns_context_must_be_json_object(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            resp = client.get("/memory/patterns", params={"context": "[]"})
+        assert resp.status_code == 422
+        assert "context must decode to a JSON object" in resp.json()["detail"]
+
+    def test_store_pattern_recommendation_must_be_json_object(self, patched_app) -> None:
+        with TestClient(patched_app, raise_server_exceptions=False) as client:
+            resp = client.post(
+                "/memory/patterns",
+                params={
+                    "model_id": "deepseek-v3",
+                    "backend_id": "rtx5050",
+                    "pattern_type": "latency",
+                    "recommendation": "123",
+                },
+            )
+        assert resp.status_code == 422
+        assert "recommendation must decode to a JSON object" in resp.json()["detail"]

@@ -141,6 +141,7 @@ class PatternStore:
         self._db_path = db_path
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._conn.execute("PRAGMA foreign_keys = ON")
         self._init_schema()
         logger.info("PatternStore initialised (db_path=%r)", db_path)
 
@@ -325,6 +326,8 @@ class PatternStore:
             latency_s=latency_s,
             context=context or {},
         )
+        if self.get_pattern(pattern_id) is None:
+            raise ValueError(f"Unknown pattern_id: {pattern_id}")
         with self._conn:
             self._conn.execute(
                 """
