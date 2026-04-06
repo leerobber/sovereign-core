@@ -427,6 +427,16 @@ class VickreyQuadraticAuction:
         return self._auction_id
 
     @property
+    def resource_type(self) -> ResourceType:
+        """Resource category being auctioned."""
+        return self._resource_type
+
+    @property
+    def backend_id(self) -> str:
+        """Target compute backend for this auction."""
+        return self._backend_id
+
+    @property
     def is_settled(self) -> bool:
         """``True`` if this auction has already been settled."""
         return self._settled
@@ -683,7 +693,7 @@ class Auctioneer:
             (
                 a
                 for a in self._open.values()
-                if a._resource_type == resource_type and a._backend_id == backend_id
+                if a.resource_type == resource_type and a.backend_id == backend_id
             ),
             None,
         )
@@ -731,8 +741,8 @@ class Auctioneer:
             "open_auctions": [
                 {
                     "auction_id": a.auction_id,
-                    "resource_type": a._resource_type.value,
-                    "backend_id": a._backend_id,
+                    "resource_type": a.resource_type.value,
+                    "backend_id": a.backend_id,
                     "bid_count": len(a.bids),
                 }
                 for a in self._open.values()

@@ -372,12 +372,11 @@ class TestGiniCoefficient:
         assert gini == pytest.approx(0.0, abs=1e-9)
 
     def test_maximum_concentration_single_nonzero(self) -> None:
-        # One agent, everyone else spends 0 → Gini near 1
+        # One non-zero agent, three with zero → Gini = 0.5 for n=4
+        # sorted=[0,0,0,100], weighted=1*0+2*0+3*0+4*100=400
+        # Gini = (2*400 - 5*100) / (4*100) = (800-500)/400 = 0.75
         gini = _gini_coefficient([0, 0, 0, 100])
-        # For n=4, one element = total: Gini = 1 - 2*(100)/(4*100) = 0.5
-        # Actually: sorted [0,0,0,100], cumulative [0,0,0,100], weighted_sum=100
-        # gini = 1 - 2*100/(4*100) = 1 - 0.5 = 0.5
-        assert 0.0 < gini <= 1.0
+        assert gini == pytest.approx(0.75, abs=1e-9)
 
     def test_gini_bounded(self) -> None:
         import random
