@@ -36,6 +36,15 @@ from gateway.auction import (
 from gateway.benchmark import ThroughputBenchmark
 from gateway.config import BACKENDS, BACKEND_MAP, settings
 from gateway.health import HealthMonitor
+from gateway.kairos import (
+    AgentTier,
+    KAIROSAgent,
+    KAIROSEvolutionEngine,
+    SkillDomain,
+    EliteRegistry,
+    elite_registry as _elite_registry,
+    _kairos_engine,
+)
 from gateway.models import ModelAssigner
 from gateway.router import GatewayRouter
 
@@ -51,6 +60,8 @@ logger = logging.getLogger(__name__)
 _health_monitor: HealthMonitor
 _benchmark: ThroughputBenchmark
 _router: GatewayRouter
+_kairos_engine: KAIROSEvolutionEngine
+_elite_registry: EliteRegistry
 
 
 @asynccontextmanager
@@ -304,6 +315,80 @@ async def auction_metrics() -> JSONResponse:
             "utilization_by_resource": m.utilization_by_resource,
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# KAIROS endpoints
+# ---------------------------------------------------------------------------
+
+
+def _agent_to_dict(agent: KAIROSAgent) -> dict[str, Any]:
+    """Convert a KAIROSAgent to a JSON-serialisable dict."""
+    return {
+        "agent_id": agent.agent_id,
+        "generation": agent.generation,
+        "tier": agent.tier.value,
+        "optimizations_successful": agent.optimizations_successful,
+        "auction_wins": agent.auction_wins,
+        "auction_participations": agent.auction_participations,
+        "ancestor_id": agent.ancestor_id,
+        "skill_domains": [d.value for d in agent.skill_domains],
+        "retrieval_weights": {
+            "recency": agent.retrieval_weights.recency,
+            "relevance": agent.retrieval_weights.relevance,
+            "frequency": agent.retrieval_weights.frequency,
+        },
+        "skill_transfer_successes": agent.skill_transfer_successes,
+        "created_at": agent.created_at,
+        "last_evolved_at": agent.last_evolved_at,
+        "fitness_score": agent.fitness_score,
+        "auction_win_rate": agent.auction_win_rate,
+        "optimization_rate": agent.optimization_rate,
+    }
+
+
+@app.get("/kairos/elites", summary="List Elite and nextElite agents")
+async def kairos_list_elites() -> JSONResponse:
+    """Return all Elite and nextElite agents sorted by fitness."""
+    agents = _elite_registry.list_elites()
+    return JSONResponse({"agents": [_agent_to_dict(a) for a in agents]})
+
+
+@app.get("/kairos/agent/{agent_id}", summary="Get KAIROS agent details")
+async def kairos_get_agent(agent_id: str) -> JSONResponse:
+    """Return details of a specific KAIROS agent. 404 if not found."""
+    try:
+        agent = _elite_registry.get(agent_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return JSONResponse(_agent_to_dict(agent))
+
+
+@app.post("/kairos/evolve/{agent_id}", summary="Trigger evolution cycle")
+async def kairos_evolve(agent_id: str) -> JSONResponse:
+    """Run one evolution cycle on the specified agent. 404 if not found."""
+    try:
+        evolved = _elite_registry.promote(agent_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return JSONResponse(_agent_to_dict(evolved))
+
+
+@app.post("/kairos/reconstruct/{ancestor_id}", summary="Reconstruct agent from archive")
+async def kairos_reconstruct(ancestor_id: str) -> JSONResponse:
+    """Rebuild a new agent from an archived ancestor. 404 if ancestor not in archive."""
+    try:
+        new_agent = _kairos_engine.reconstruct_from_archive(ancestor_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    _elite_registry.register(new_agent)
+    return JSONResponse(_agent_to_dict(new_agent))
+
+
+@app.get("/kairos/metrics", summary="KAIROS population statistics")
+async def kairos_metrics() -> JSONResponse:
+    """Return population stats: total, elite_count, next_elite_count, avg_fitness."""
+    return JSONResponse(_elite_registry.metrics())
 
 
 # ---------------------------------------------------------------------------
