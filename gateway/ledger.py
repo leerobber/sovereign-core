@@ -512,7 +512,7 @@ class SemanticLedger:
             session_id,
             signed.entry_id,
         )
-        return signed
+        return signed.model_copy(deep=True)
 
     def verify_session(self, session_id: str) -> bool:
         """Verify the integrity of all entries in *session_id*'s chain.
@@ -540,12 +540,10 @@ class SemanticLedger:
         Returns deep copies of the stored entries so that external mutation
         of the returned objects cannot corrupt the ledger's internal state.
         """
-        chain = self._chains.get(session_id)
-        return (
-            [e.model_copy(deep=True) for e in chain.all_entries()]
-            if chain is not None
-            else []
-        )
+        with self._lock:
+            chain = self._chains.get(session_id)
+            entries = chain.all_entries() if chain is not None else []
+        return [e.model_copy(deep=True) for e in entries]
 
     def audit_log(self) -> list[LedgerEntry]:
         """Return an ordered copy of all entries ever recorded.
@@ -553,4 +551,6 @@ class SemanticLedger:
         Returns deep copies of the stored entries so that external mutation
         of the returned objects cannot corrupt the ledger's internal state.
         """
-        return [e.model_copy(deep=True) for e in self._audit_log]
+        with self._lock:
+            entries = list(self._audit_log)
+        return [e.model_copy(deep=True) for e in entries]
