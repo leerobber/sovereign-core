@@ -6,6 +6,7 @@ Central hub for Sovereign Core — autonomous AI agent platform architecture, sy
 
 ## Research Tracks
 
+- [RES-05: Nvidia Nemotron-3-Nano as Primary Brain Candidate](docs/RES-05-nemotron-primary-brain.md) — Nemotron-3-Nano designated as the primary brain for the agent economy; always routed to the RTX 5050 (NVIDIA GPU) regardless of its nano-model size.
 - [RES-11: Google DeepMind SIMA — Cross-Environment Skill Transfer](docs/RES-11-cross-environment-skill-transfer.md) — transferable resource rebalancing skill across VRAM, RAM, CPU, and network bottlenecks.
 
 ## Heterogeneous Compute Gateway (KAN-86)
@@ -39,7 +40,7 @@ See `docs/KAN-87-contentaios.md` for the architecture and usage example.
 ### Features
 
 - **Latency-aware routing** — Exponential Moving Average (EMA) per backend; lower-latency backends are preferred within each device-type tier.
-- **Capability-aware routing** — model size / VRAM requirements are matched to the most suitable device (large models → NVIDIA GPU → AMD GPU → CPU).
+- **Capability-aware routing** — model size / VRAM requirements are matched to the most suitable device (large models → NVIDIA GPU → AMD GPU → CPU).  The Primary Brain model (`nemotron-3-nano`) is always routed to the NVIDIA GPU first, overriding the normal nano-model CPU preference.
 - **Health check & failover** — periodic `/health` probes with configurable failure/recovery thresholds (circuit-breaker pattern).
 - **Transparent failover** — if the preferred backend is unreachable, the request is automatically retried on the next candidate.
 - **Throughput benchmarking** — per-backend request counts, avg/p50/p95/p99 latency, and requests-per-second over a rolling window.

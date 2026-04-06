@@ -11,6 +11,12 @@ VRAM requirement  →  preferred device
   2–6 GiB           AMD_GPU    (Radeon 780M, 4 GiB)
   < 2 GiB / CPU     CPU        (Ryzen 7)
   unspecified       NVIDIA_GPU → AMD_GPU → CPU (priority cascade)
+
+Primary Brain override
+──────────────────────
+``nemotron-3-nano`` is designated the Primary Brain candidate (RES-05).
+Despite its SMALL size bucket, it is always routed to ``NVIDIA_GPU`` first
+(RTX 5050) to maximise throughput and reliability for the agent economy.
 """
 
 from __future__ import annotations
@@ -43,6 +49,9 @@ _SIZE_TO_DEVICE_PREFERENCE: dict[ModelSize, list[DeviceType]] = {
     ModelSize.SMALL: [DeviceType.CPU, DeviceType.AMD_GPU, DeviceType.NVIDIA_GPU],
 }
 
+# Primary Brain: model id routed exclusively to NVIDIA_GPU regardless of size bucket
+_PRIMARY_BRAIN_MODEL = "nemotron-3-nano"
+
 # Static model registry: model_id prefix → size bucket
 _MODEL_REGISTRY: dict[str, ModelSize] = {
     # Large LLMs
@@ -53,6 +62,8 @@ _MODEL_REGISTRY: dict[str, ModelSize] = {
     "llama-7b": ModelSize.MEDIUM,
     "phi-3": ModelSize.SMALL,
     "tinyllama": ModelSize.SMALL,
+    # Primary Brain candidate (RES-05) — nano model, NVIDIA-first routing
+    "nemotron-3-nano": ModelSize.SMALL,
     # Embedding / reranking models
     "bge-large": ModelSize.MEDIUM,
     "bge-small": ModelSize.SMALL,
@@ -118,14 +129,28 @@ class ModelAssigner:
             vram_required_gib: Explicit VRAM requirement (GiB).  Non-zero
                 values override model_id-based inference.
             device_hint: If set, place backends of this device type first.
+                Applied after the Primary Brain override (see below).
 
         Returns:
             Ordered list of :class:`BackendConfig` from most to least preferred.
             Falls back through the full priority cascade so a result is always
             returned (the caller decides which backends are currently healthy).
+
+        Note:
+            Requests for the Primary Brain model (``nemotron-3-nano``) always
+            prefer ``NVIDIA_GPU`` first, overriding the normal SMALL-model CPU
+            preference.  An explicit ``device_hint`` can further adjust the
+            order on top of this override.
         """
         size = infer_model_size(model_id, vram_required_gib)
         device_preference = _SIZE_TO_DEVICE_PREFERENCE[size]
+
+        # Primary Brain override: nemotron-3-nano always runs on NVIDIA_GPU first
+        # regardless of its SMALL size bucket, to maximise performance (RES-05).
+        if model_id and model_id.lower().startswith(_PRIMARY_BRAIN_MODEL):
+            device_preference = [DeviceType.NVIDIA_GPU] + [
+                d for d in device_preference if d != DeviceType.NVIDIA_GPU
+            ]
 
         if device_hint is not None and device_hint in {d for d in DeviceType}:
             # Promote hinted device type to the front
