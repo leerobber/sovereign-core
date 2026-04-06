@@ -121,20 +121,14 @@ class GatewayRouter:
         body: Optional[bytes],
         model_id: Optional[str] = None,
         vram_required_gib: float = 0.0,
-        auction_priority: Optional[dict[str, str]] = None,
+        priority_backend_id: Optional[str] = None,
     ) -> tuple[int, dict[str, str], bytes]:
         """Forward *path* to the best available backend and return the response.
 
         Args:
-            path: Request path to forward.
-            method: HTTP method.
-            headers: Request headers to forward.
-            body: Request body bytes.
-            model_id: Optional model identifier for capability matching.
-            vram_required_gib: Minimum VRAM requirement in GiB.
-            auction_priority: Optional mapping of backend_id -> agent_id from
-                recent auction results. Backends with matching priority agents
-                are ranked higher in candidate selection.
+            priority_backend_id: If provided and the backend is among the
+                healthy candidates, it is promoted to first position so that
+                settled auction outcomes influence backend selection.
 
         Returns:
             A tuple of ``(status_code, response_headers, response_body)``.
@@ -146,7 +140,7 @@ class GatewayRouter:
         if self._session is None:
             raise RuntimeError("GatewayRouter.start() must be called before routing")
 
-        candidates = self._select_candidates(model_id, vram_required_gib, auction_priority)
+        candidates = self._select_candidates(model_id, vram_required_gib, priority_backend_id)
         if not candidates:
             logger.warning("No healthy backends available for request path=%s", path)
             return 503, {}, b'{"error": "no healthy backends available"}'
@@ -170,19 +164,14 @@ class GatewayRouter:
         self,
         model_id: Optional[str],
         vram_required_gib: float,
-        auction_priority: Optional[dict[str, str]] = None,
+        priority_backend_id: Optional[str] = None,
     ) -> list[BackendConfig]:
-        """Return healthy candidates ordered by auction priority, capability + latency.
+        """Return healthy candidates ordered by capability + latency.
 
-        Args:
-            model_id: Optional model identifier.
-            vram_required_gib: Minimum VRAM requirement.
-            auction_priority: Optional backend_id -> agent_id mapping from auctions.
-                Backends present in this map are ranked first.
-
-        Returns:
-            List of backends ordered by priority (auction winners first), then
-            capability and latency.
+        If *priority_backend_id* is provided and the backend is present in the
+        healthy candidate list, it is promoted to first position so that
+        auction settlement outcomes influence which backend receives the
+        request.
         """
         preferred = self._assigner.assign(
             model_id=model_id, vram_required_gib=vram_required_gib
@@ -204,36 +193,33 @@ class GatewayRouter:
                     "No HEALTHY backends; falling back to %d UNKNOWN backend(s)",
                     len(unknown_candidates),
                 )
-                return self._sort_by_latency(unknown_candidates, auction_priority)
+                return self._sort_by_latency(unknown_candidates)
             return []
 
-        return self._sort_by_latency(healthy_candidates, auction_priority)
+        sorted_candidates = self._sort_by_latency(healthy_candidates)
 
-    def _sort_by_latency(
-        self,
-        backends: list[BackendConfig],
-        auction_priority: Optional[dict[str, str]] = None,
-    ) -> list[BackendConfig]:
-        """Sort backends by auction priority, then EMA latency preserving tier order.
+        # Promote the auction-priority backend to the front of the list so
+        # that settled auctions determine which backend is tried first.
+        if priority_backend_id is not None:
+            priority_idx = next(
+                (i for i, b in enumerate(sorted_candidates) if b.id == priority_backend_id),
+                None,
+            )
+            if priority_idx is not None and priority_idx != 0:
+                promoted = sorted_candidates.pop(priority_idx)
+                sorted_candidates.insert(0, promoted)
+                logger.debug(
+                    "Auction priority: promoted backend %s to first position",
+                    priority_backend_id,
+                )
 
-        Args:
-            backends: List of backends to sort.
-            auction_priority: Optional backend_id -> agent_id mapping from auctions.
-                Backends in this mapping are prioritized first.
+        return sorted_candidates
 
-        Returns:
-            Sorted list with auction winners first, then by capability tier and latency.
-        """
+    def _sort_by_latency(self, backends: list[BackendConfig]) -> list[BackendConfig]:
+        """Sort backends by EMA latency (ascending) preserving relative tier order."""
         # Group by device weight so high-capability tiers are still preferred
         # but within a tier we pick the faster backend.
-        # Auction-priority backends sort first (0) before non-priority ones (1).
-        def sort_key(b: BackendConfig) -> tuple[int, float, float]:
-            priority_rank = 0 if (auction_priority and b.id in auction_priority) else 1
-            capability_tier = round(b.weight * -1, 0)
-            latency = self._latency.get(b.id)
-            return (priority_rank, capability_tier, latency)
-
-        return sorted(backends, key=sort_key)
+        return sorted(backends, key=lambda b: (round(b.weight * -1, 0), self._latency.get(b.id)))
 
     async def _try_backend(
         self,

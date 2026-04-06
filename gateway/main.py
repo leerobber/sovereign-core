@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Optional, cast
+from typing import Any, AsyncIterator, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response
@@ -35,11 +35,8 @@ from gateway.auction import (
 )
 from gateway.benchmark import ThroughputBenchmark
 from gateway.config import BACKENDS, BACKEND_MAP, settings
-from gateway.context import AgentRole, SharedContextLayer, init_context_layer
 from gateway.health import HealthMonitor
-from gateway.mem_evolve import ABTestManager, MemEvolveEngine
 from gateway.models import ModelAssigner
-from gateway.pattern_memory import PatternRecord, PatternStore
 from gateway.router import GatewayRouter
 
 logging.basicConfig(
@@ -54,19 +51,11 @@ logger = logging.getLogger(__name__)
 _health_monitor: HealthMonitor
 _benchmark: ThroughputBenchmark
 _router: GatewayRouter
-<<<<<<< HEAD
-_pattern_store: PatternStore
-_mem_evolve: MemEvolveEngine
-_ab_test: ABTestManager
-_context: SharedContextLayer
-=======
-
->>>>>>> f1b93ea (feat: Implement KAIROS nextElites Agent Economy (RES-01, RES-02, RES-11, RES-12))
 
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
-    global _health_monitor, _benchmark, _router, _pattern_store, _mem_evolve, _ab_test, _context
+    global _health_monitor, _benchmark, _router
 
     _health_monitor = HealthMonitor(cfg=settings)
     _benchmark = ThroughputBenchmark()
@@ -76,11 +65,6 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         benchmark=_benchmark,
         cfg=settings,
     )
-    _context = init_context_layer()
-
-    _pattern_store = PatternStore(db_path=settings.pattern_memory_db_path)
-    _mem_evolve = MemEvolveEngine(_pattern_store)
-    _ab_test = ABTestManager(_mem_evolve)
 
     await _health_monitor.start()
     await _router.start()
@@ -90,7 +74,6 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     await _router.stop()
     await _health_monitor.stop()
-    _pattern_store.close()
     logger.info("Gateway shut down cleanly")
 
 
@@ -187,9 +170,10 @@ async def proxy_inference(
     # Preserve original query string (minus our routing hints) on the forwarded URL
     fwd_path = f"/{path}"
 
-    # Obtain auction-derived routing priority so settled auctions influence
-    # which backend is selected for this request.
-    auction_priority = _auctioneer.allocation_priority()
+    # Derive an auction-based routing hint: prefer the backend that most recently
+    # won a settled auction so that allocation decisions influence request dispatch.
+    priority_map = _auctioneer.allocation_priority()
+    priority_backend_id: Optional[str] = next(iter(priority_map), None)
 
     status, resp_headers, resp_body = await _router.route(
         path=fwd_path,
@@ -198,7 +182,7 @@ async def proxy_inference(
         body=body,
         model_id=model_id,
         vram_required_gib=vram_gib,
-        auction_priority=auction_priority,
+        priority_backend_id=priority_backend_id,
     )
 
     # Strip hop-by-hop headers before returning
@@ -321,282 +305,6 @@ async def auction_metrics() -> JSONResponse:
             "utilization_by_resource": m.utilization_by_resource,
         }
     )
-
-
-# ---------------------------------------------------------------------------
-# Context endpoints
-# ---------------------------------------------------------------------------
-
-
-@app.post("/context/write", summary="Write an agent context entry")
-async def context_write(
-    role: AgentRole = Query(..., description="Cognitive role of the writing agent"),
-    backend_id: str = Query(..., description="Compute backend that produced this result"),
-    document: str = Query(..., description="Free-text conclusion or summary from the agent"),
-    trace_id: Optional[str] = Query(default=None, description="Optional request trace ID"),
-) -> JSONResponse:
-    """Persist an agent conclusion to the shared ChromaDB context layer.
-
-    Any agent (generator, verifier, safety, reasoner, planner) writes its
-    output here so that all other agents can read it on subsequent calls.
-    """
-    entry_id = _context.write(
-        role=role,
-        backend_id=backend_id,
-        document=document,
-        trace_id=trace_id,
-    )
-    return JSONResponse(
-        {
-            "entry_id": entry_id,
-            "role": role.value,
-            "backend_id": backend_id,
-            "trace_id": trace_id,
-        }
-    )
-
-
-@app.get("/context/read", summary="Read context entries")
-async def context_read(
-    role: Optional[AgentRole] = Query(default=None, description="Filter by agent role"),
-    backend_id: Optional[str] = Query(default=None, description="Filter by backend ID"),
-    trace_id: Optional[str] = Query(default=None, description="Filter by trace ID"),
-    limit: int = Query(default=20, ge=1, le=500, description="Maximum entries to return"),
-) -> JSONResponse:
-    """Read context entries with optional filtering.
-
-    Filters are applied in priority order: ``trace_id`` → ``role`` →
-    ``backend_id`` → all entries.  At most one filter is applied per call.
-    """
-    if trace_id is not None:
-        entries = _context.read_by_trace(trace_id)
-    elif role is not None:
-        entries = _context.read_by_role(role, limit=limit)
-    elif backend_id is not None:
-        entries = _context.read_by_backend(backend_id, limit=limit)
-    else:
-        entries = _context.read_all(limit=limit)
-
-    return JSONResponse(
-        {
-            "entries": [e.as_dict() for e in entries],
-            "count": len(entries),
-        }
-    )
-
-
-@app.get(
-    "/context/cross-gpu/{backend_id}",
-    summary="Cross-GPU context visibility for a backend",
-)
-async def context_cross_gpu(
-    backend_id: str,
-    limit: int = Query(default=20, ge=1, le=500, description="Maximum peer entries to return"),
-) -> JSONResponse:
-    """Return context produced by *peer* backends for cross-GPU visibility.
-
-    The Radeon 780M calls this to see what the RTX 5050 concluded, and vice
-    versa.  Entries produced by the requesting backend itself are excluded.
-    """
-    entries = _context.read_cross_gpu(backend_id, limit=limit)
-    return JSONResponse(
-        {
-            "backend_id": backend_id,
-            "peer_entries": [e.as_dict() for e in entries],
-            "count": len(entries),
-        }
-    )
-
-
-@app.get("/context/count", summary="Total context entry count")
-async def context_count() -> JSONResponse:
-    """Return the total number of entries in the shared context store."""
-    return JSONResponse({"count": _context.count()})
-
-
-@app.delete("/context/clear", summary="Clear all context entries")
-async def context_clear() -> JSONResponse:
-    """Remove all entries from the shared context store.
-
-    Use with care — this deletes all cross-agent memory accumulated since
-    the last clear or gateway restart.
-    """
-    removed = _context.clear()
-    return JSONResponse({"cleared": removed})
-
-
-# ---------------------------------------------------------------------------
-# Pattern Memory endpoints (RES-12 MemEvolve)
-# ---------------------------------------------------------------------------
-
-
-@app.post("/memory/patterns", summary="Store an optimization pattern")
-def memory_store_pattern(
-    model_id: str = Query(..., description="Model identifier"),
-    backend_id: str = Query(..., description="Backend identifier"),
-    pattern_type: str = Query(..., description="Pattern category (e.g. latency, routing)"),
-    context: Optional[str] = Query(default=None, description="JSON context object"),
-    recommendation: Optional[str] = Query(default=None, description="JSON recommendation object"),
-) -> JSONResponse:
-    """Persist an optimization pattern to Pattern Memory."""
-    import json as _json
-
-    ctx: dict[str, Any] = {}
-    rec: dict[str, Any] = {}
-    if context:
-        try:
-            parsed_context = _json.loads(context)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail=f"Invalid context JSON: {exc}") from exc
-        if not isinstance(parsed_context, dict):
-            raise HTTPException(status_code=422, detail="context must decode to a JSON object")
-        ctx = cast(dict[str, Any], parsed_context)
-    if recommendation:
-        try:
-            parsed_recommendation = _json.loads(recommendation)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail=f"Invalid recommendation JSON: {exc}") from exc
-        if not isinstance(parsed_recommendation, dict):
-            raise HTTPException(
-                status_code=422,
-                detail="recommendation must decode to a JSON object",
-            )
-        rec = cast(dict[str, Any], parsed_recommendation)
-
-    try:
-        record = PatternRecord(
-            model_id=model_id,
-            backend_id=backend_id,
-            pattern_type=pattern_type,
-            context=ctx,
-            recommendation=rec,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-
-    stored = _pattern_store.store(record)
-    return JSONResponse(stored.to_dict(), status_code=201)
-
-
-@app.get("/memory/patterns", summary="Lookup optimization patterns")
-def memory_lookup_patterns(
-    model_id: Optional[str] = Query(default=None, description="Filter by model"),
-    backend_id: Optional[str] = Query(default=None, description="Filter by backend"),
-    pattern_type: Optional[str] = Query(default=None, description="Filter by category"),
-    limit: int = Query(default=10, ge=1, le=100, description="Max results"),
-    strategy: str = Query(default="evolved", description="Retrieval strategy: evolved or static"),
-    context: Optional[str] = Query(default=None, description="JSON query context for context-match scoring"),
-) -> JSONResponse:
-    """Retrieve and rank optimization patterns using evolved or static retrieval."""
-    import json as _json
-
-    if strategy not in ("evolved", "static"):
-        raise HTTPException(status_code=422, detail="strategy must be 'evolved' or 'static'")
-
-    query_ctx: Optional[dict[str, Any]] = None
-    if context:
-        try:
-            parsed_context = _json.loads(context)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail=f"Invalid context JSON: {exc}") from exc
-        if not isinstance(parsed_context, dict):
-            raise HTTPException(status_code=422, detail="context must decode to a JSON object")
-        query_ctx = cast(dict[str, Any], parsed_context)
-
-    patterns = _pattern_store.lookup(
-        model_id=model_id,
-        backend_id=backend_id,
-        pattern_type=pattern_type,
-        limit=limit,
-    )
-    ranked = _mem_evolve.rank_patterns(patterns, strategy=strategy, query_context=query_ctx)
-    return JSONResponse(
-        {
-            "strategy": strategy,
-            "count": len(ranked),
-            "patterns": [p.to_dict() for p in ranked],
-        }
-    )
-
-
-@app.post("/memory/outcome", summary="Record a pattern lookup outcome")
-def memory_record_outcome(
-    pattern_id: str = Query(..., description="Pattern that was applied"),
-    success: bool = Query(..., description="Whether the optimization succeeded"),
-    latency_s: float = Query(default=0.0, ge=0.0, description="Observed latency in seconds"),
-    request_id: Optional[str] = Query(default=None, description="A/B test request ID"),
-) -> JSONResponse:
-    """Record the success or failure of an applied optimization pattern.
-
-    If a *request_id* is provided the result is also forwarded to the A/B test
-    manager so evolved vs. static hit rates are tracked.
-    """
-    if _pattern_store.get_pattern(pattern_id) is None:
-        raise HTTPException(status_code=404, detail=f"Unknown pattern_id: {pattern_id!r}")
-
-    try:
-        outcome = _pattern_store.record_outcome(
-            pattern_id, success=success, latency_s=latency_s
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
-    variant: Optional[str] = None
-    if request_id is not None:
-        variant = _ab_test.record_result(request_id, success=success)
-
-    return JSONResponse(
-        {
-            "outcome_id": outcome.outcome_id,
-            "pattern_id": outcome.pattern_id,
-            "success": outcome.success,
-            "latency_s": outcome.latency_s,
-            "ab_variant": variant,
-        }
-    )
-
-
-@app.get("/memory/stats", summary="Pattern Memory statistics")
-def memory_stats() -> JSONResponse:
-    """Return aggregated statistics about the Pattern Memory store."""
-    return JSONResponse(_pattern_store.get_stats().to_dict())
-
-
-@app.post("/memory/evolve", summary="Run one MemEvolve meta-evolution step")
-def memory_evolve() -> JSONResponse:
-    """Trigger one meta-evolution step to update retrieval weights.
-
-    The engine reads outcome data accumulated since the last evolution and
-    adjusts weights to amplify dimensions correlated with successful lookups.
-    """
-    result = _mem_evolve.evolve()
-    return JSONResponse(result)
-
-
-@app.get("/memory/evolve/status", summary="Current MemEvolve strategy status")
-def memory_evolve_status() -> JSONResponse:
-    """Return the current state of both retrieval strategies."""
-    return JSONResponse(
-        {
-            "static": _mem_evolve.static_strategy.to_dict(),
-            "evolved": _mem_evolve.evolved_strategy.to_dict(),
-        }
-    )
-
-
-@app.get("/memory/ab-test", summary="A/B test comparison: evolved vs. static retrieval")
-def memory_ab_test() -> JSONResponse:
-    """Return comparative hit-rate statistics for evolved and static retrieval."""
-    return JSONResponse(_ab_test.comparison())
-
-
-@app.post("/memory/ab-test/assign", summary="Assign a request to an A/B variant")
-def memory_ab_assign(
-    request_id: str = Query(..., description="Unique request identifier"),
-) -> JSONResponse:
-    """Return the A/B variant assigned to *request_id* (deterministic)."""
-    variant = _ab_test.assign(request_id)
-    return JSONResponse({"request_id": request_id, "variant": variant})
 
 
 # ---------------------------------------------------------------------------
