@@ -14,16 +14,20 @@ SemanticLedger    — Façade that wires the above together.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import hmac
 import json
 import logging
+import math
 import statistics
+import threading
 import time
 import uuid
+from collections import deque
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,14 @@ class LedgerEntry(BaseModel):
 
     model_config = {"frozen": True}
 
+    @model_validator(mode="before")
+    @classmethod
+    def _copy_metadata(cls, data: Any) -> Any:
+        """Deep-copy inbound metadata so caller-held references cannot mutate stored state."""
+        if isinstance(data, dict) and "metadata" in data and isinstance(data["metadata"], dict):
+            data = {**data, "metadata": copy.deepcopy(data["metadata"])}
+        return data
+
     @field_validator("operation")
     @classmethod
     def operation_must_be_non_empty(cls, v: str) -> str:
@@ -76,18 +88,12 @@ class LedgerEntry(BaseModel):
         """Return a stable JSON byte-string used for hashing and signing.
 
         The ``integrity_tag`` is excluded so the tag can be computed over
-        all other fields without circularity.
+        all other fields without circularity.  All values are serialised via
+        Pydantic's JSON mode so that non-JSON-primitive metadata values (e.g.
+        ``datetime``, ``UUID``) are coerced to strings rather than causing a
+        ``TypeError`` in ``json.dumps``.
         """
-        payload: dict[str, Any] = {
-            "entry_id": self.entry_id,
-            "timestamp": self.timestamp,
-            "operation": self.operation,
-            "backend_id": self.backend_id,
-            "model_id": self.model_id,
-            "parent_id": self.parent_id,
-            "content_hash": self.content_hash,
-            "metadata": self.metadata,
-        }
+        payload = self.model_dump(mode="json", exclude={"integrity_tag"})
         return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
 
     def to_dict(self) -> dict[str, Any]:
@@ -154,6 +160,13 @@ class IntegrityVerifier:
                     entry.entry_id,
                 )
                 return False
+            if i == 0 and entry.parent_id is not None:
+                logger.warning(
+                    "Chain root at position 0 has non-None parent_id=%s; "
+                    "root entries must have parent_id=None",
+                    entry.parent_id,
+                )
+                return False
             if i > 0 and entry.parent_id != entries[i - 1].entry_id:
                 logger.warning(
                     "Chain linkage broken at position %d: parent_id=%s expected %s",
@@ -196,24 +209,33 @@ class ProvenanceChain:
     def __init__(self) -> None:
         self._entries: list[LedgerEntry] = []
         self._index: dict[str, LedgerEntry] = {}
+        self._position: dict[str, int] = {}
 
     def append(self, entry: LedgerEntry) -> None:
         """Append *entry* to the chain.
 
         Raises:
             ValueError: If ``entry.entry_id`` is already in the chain, or if
-                the chain is non-empty and ``entry.parent_id`` does not match
-                the current head entry's ``entry_id``.
+                the chain is empty and ``entry.parent_id`` is not ``None``
+                (root invariant), or if the chain is non-empty and
+                ``entry.parent_id`` does not match the current head entry's
+                ``entry_id``.
         """
         if entry.entry_id in self._index:
             raise ValueError(f"Duplicate entry_id: {entry.entry_id}")
-        if self._entries:
+        if not self._entries:
+            if entry.parent_id is not None:
+                raise ValueError(
+                    f"Root entry must have parent_id=None, got {entry.parent_id!r}"
+                )
+        else:
             head_id = self._entries[-1].entry_id
             if entry.parent_id != head_id:
                 raise ValueError(
                     f"parent_id mismatch: expected {head_id!r}, "
                     f"got {entry.parent_id!r}"
                 )
+        self._position[entry.entry_id] = len(self._entries)
         self._entries.append(entry)
         self._index[entry.entry_id] = entry
         logger.debug("ProvenanceChain: appended entry %s", entry.entry_id)
@@ -227,11 +249,9 @@ class ProvenanceChain:
 
         Returns an empty list if *entry_id* is not in the chain.
         """
-        if entry_id not in self._index:
+        if entry_id not in self._position:
             return []
-        target_idx = next(
-            i for i, e in enumerate(self._entries) if e.entry_id == entry_id
-        )
+        target_idx = self._position[entry_id]
         return list(self._entries[: target_idx + 1])
 
     def all_entries(self) -> list[LedgerEntry]:
@@ -263,20 +283,28 @@ class TrustScorer:
         A backend with highly variable latency scores lower.  Clamped to
         [0, 1].
 
-    The combined score is clamped to [0.0, 1.0].
+    The combined score is clamped to [0.0, 1.0].  Returns 0.5 (neutral) for
+    backends with no recorded observations.
+
+    Latency history is kept as a rolling window of the most recent
+    ``_MAX_LATENCY_WINDOW`` samples to bound memory usage.  Integrity is
+    tracked as running counters rather than retaining entry objects.
     """
 
     _W_SUCCESS: float = 0.5
     _W_INTEGRITY: float = 0.3
     _W_CONSISTENCY: float = 0.2
+    _MAX_LATENCY_WINDOW: int = 1000
 
     def __init__(self, verifier: Optional[IntegrityVerifier] = None) -> None:
         self._verifier = verifier
         # Per-backend telemetry
         self._successes: dict[str, int] = {}
         self._failures: dict[str, int] = {}
-        self._latencies: dict[str, list[float]] = {}
-        self._entries: dict[str, list[LedgerEntry]] = {}
+        self._latencies: dict[str, deque[float]] = {}
+        # Integrity tracked as counters to avoid storing every LedgerEntry
+        self._verified_entries: dict[str, int] = {}
+        self._total_entries: dict[str, int] = {}
 
     # ------------------------------------------------------------------
     # Data ingestion
@@ -295,16 +323,32 @@ class TrustScorer:
         Args:
             backend_id: The backend that handled the operation.
             success: Whether the operation completed without error.
-            latency_s: Observed round-trip latency in seconds.
+            latency_s: Observed round-trip latency in seconds.  Must be a
+                finite, non-negative value.
             entry: Optional :class:`LedgerEntry` to track for integrity scoring.
+
+        Raises:
+            ValueError: If *latency_s* is not finite or is negative.
         """
+        if not (math.isfinite(latency_s) and latency_s >= 0):
+            raise ValueError(
+                f"latency_s must be a finite non-negative number, got {latency_s!r}"
+            )
         if success:
             self._successes[backend_id] = self._successes.get(backend_id, 0) + 1
         else:
             self._failures[backend_id] = self._failures.get(backend_id, 0) + 1
-        self._latencies.setdefault(backend_id, []).append(latency_s)
+        if backend_id not in self._latencies:
+            self._latencies[backend_id] = deque(maxlen=self._MAX_LATENCY_WINDOW)
+        self._latencies[backend_id].append(latency_s)
         if entry is not None:
-            self._entries.setdefault(backend_id, []).append(entry)
+            self._total_entries[backend_id] = (
+                self._total_entries.get(backend_id, 0) + 1
+            )
+            if self._verifier is not None and self._verifier.verify(entry):
+                self._verified_entries[backend_id] = (
+                    self._verified_entries.get(backend_id, 0) + 1
+                )
 
     # ------------------------------------------------------------------
     # Scoring
@@ -357,14 +401,13 @@ class TrustScorer:
     # ------------------------------------------------------------------
 
     def _integrity_rate(self, backend_id: str) -> float:
-        entries = self._entries.get(backend_id)
-        if not entries or self._verifier is None:
+        total = self._total_entries.get(backend_id, 0)
+        if total == 0 or self._verifier is None:
             return 1.0
-        verified = sum(1 for e in entries if self._verifier.verify(e))
-        return verified / len(entries)
+        return self._verified_entries.get(backend_id, 0) / total
 
     def _latency_consistency(self, backend_id: str) -> float:
-        latencies = self._latencies.get(backend_id, [])
+        latencies = self._latencies.get(backend_id, deque())
         if len(latencies) < 2:
             return 1.0  # insufficient data → assume consistent
         mean = statistics.mean(latencies)
@@ -393,16 +436,25 @@ class SemanticLedger:
     2. Forwarded to the :class:`TrustScorer` to update per-backend scores.
     3. Stored in an ordered audit log for later inspection.
 
+    The audit log is capped at ``_MAX_AUDIT_LOG`` entries (oldest entries are
+    evicted first) to prevent unbounded memory growth in long-running processes.
+    All mutations are protected by a :class:`threading.Lock` so that concurrent
+    callers on different threads cannot corrupt chain or scoring state.
+
     Args:
         secret: Shared secret for :class:`IntegrityVerifier`.  Required for
             signing and verification.
     """
 
-    def __init__(self, secret: str) -> None:
+    _MAX_AUDIT_LOG: int = 10_000
+
+    def __init__(self, secret: str, *, _max_audit_log: int = 0) -> None:
         self._verifier = IntegrityVerifier(secret)
         self._scorer = TrustScorer(verifier=self._verifier)
         self._chains: dict[str, ProvenanceChain] = {}
-        self._audit_log: list[LedgerEntry] = []
+        max_log = _max_audit_log if _max_audit_log > 0 else self._MAX_AUDIT_LOG
+        self._audit_log: deque[LedgerEntry] = deque(maxlen=max_log)
+        self._lock = threading.Lock()
 
     # ------------------------------------------------------------------
     # Public API
@@ -436,30 +488,31 @@ class SemanticLedger:
         Returns:
             The signed :class:`LedgerEntry` that was appended to the ledger.
         """
-        chain = self._chains.setdefault(session_id, ProvenanceChain())
-        head = chain.head()
-        entry = LedgerEntry(
-            operation=operation,
-            backend_id=backend_id,
-            model_id=model_id,
-            parent_id=head.entry_id if head is not None else None,
-            content_hash=IntegrityVerifier.content_hash(content),
-            metadata=metadata or {},
-        )
-        signed = self._verifier.sign(entry)
-        chain.append(signed)
-        self._audit_log.append(signed)
-        self._scorer.record(
-            backend_id, success=success, latency_s=latency_s, entry=signed
-        )
-        logger.info(
+        with self._lock:
+            chain = self._chains.setdefault(session_id, ProvenanceChain())
+            head = chain.head()
+            entry = LedgerEntry(
+                operation=operation,
+                backend_id=backend_id,
+                model_id=model_id,
+                parent_id=head.entry_id if head is not None else None,
+                content_hash=IntegrityVerifier.content_hash(content),
+                metadata=metadata or {},
+            )
+            signed = self._verifier.sign(entry)
+            chain.append(signed)
+            self._audit_log.append(signed)
+            self._scorer.record(
+                backend_id, success=success, latency_s=latency_s, entry=signed
+            )
+        logger.debug(
             "Ledger: recorded operation=%r backend=%s session=%s entry=%s",
             operation,
             backend_id,
             session_id,
             signed.entry_id,
         )
-        return signed
+        return signed.model_copy(deep=True)
 
     def verify_session(self, session_id: str) -> bool:
         """Verify the integrity of all entries in *session_id*'s chain.
@@ -482,10 +535,22 @@ class SemanticLedger:
         return self._scorer.report()
 
     def provenance(self, session_id: str) -> list[LedgerEntry]:
-        """Return the full provenance chain for *session_id*."""
-        chain = self._chains.get(session_id)
-        return chain.all_entries() if chain is not None else []
+        """Return the full provenance chain for *session_id*.
+
+        Returns deep copies of the stored entries so that external mutation
+        of the returned objects cannot corrupt the ledger's internal state.
+        """
+        with self._lock:
+            chain = self._chains.get(session_id)
+            entries = chain.all_entries() if chain is not None else []
+        return [e.model_copy(deep=True) for e in entries]
 
     def audit_log(self) -> list[LedgerEntry]:
-        """Return an ordered copy of all entries ever recorded."""
-        return list(self._audit_log)
+        """Return an ordered copy of all entries ever recorded.
+
+        Returns deep copies of the stored entries so that external mutation
+        of the returned objects cannot corrupt the ledger's internal state.
+        """
+        with self._lock:
+            entries = list(self._audit_log)
+        return [e.model_copy(deep=True) for e in entries]
