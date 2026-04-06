@@ -228,3 +228,252 @@ async def test_resilient_message_bus_retries_and_timeouts():
     assert "handler_timeout" in actions
     assert "handler_failed" in actions
     assert "retry_success" in actions
+
+# ---------------------------------------------------------------------------
+# RES-07: VerificationMiddleware tests
+# ---------------------------------------------------------------------------
+
+from contentaios import DGMHSubsystem, VerificationMiddleware
+from contentaios.kernel import MessageBus
+
+
+@pytest.mark.asyncio
+async def test_verification_middleware_blocks_none_payload():
+    """Events with a None payload must be dropped and audit-logged."""
+    audit = AuditLog()
+    mw = VerificationMiddleware(audit)
+    bus = MessageBus(audit, verification=mw)
+    reached: list[bool] = []
+
+    async def handler(event: KernelEvent) -> None:
+        reached.append(True)
+
+    bus.subscribe("test.event", "tester", handler)
+    event = KernelEvent(source="test", type="test.event", payload=None)
+    await bus.publish(event)
+
+    assert reached == [], "Handler must not be called when payload is None"
+    actions = [r.action for r in audit.tail()]
+    assert "verification_failed" in actions
+
+
+@pytest.mark.asyncio
+async def test_verification_middleware_blocks_non_dict_payload():
+    """Events with a non-dict payload must be dropped and audit-logged."""
+    audit = AuditLog()
+    mw = VerificationMiddleware(audit)
+    bus = MessageBus(audit, verification=mw)
+    reached: list[bool] = []
+
+    async def handler(event: KernelEvent) -> None:
+        reached.append(True)
+
+    bus.subscribe("test.event", "tester", handler)
+    event = KernelEvent(source="test", type="test.event", payload="bad-string")
+    await bus.publish(event)
+
+    assert reached == [], "Handler must not be called when payload is not a dict"
+    actions = [r.action for r in audit.tail()]
+    assert "verification_failed" in actions
+
+
+@pytest.mark.asyncio
+async def test_verification_middleware_allows_valid_dict_payload():
+    """Events with a valid dict payload must reach the handler."""
+    audit = AuditLog()
+    mw = VerificationMiddleware(audit)
+    bus = MessageBus(audit, verification=mw)
+    received: list[dict] = []
+
+    async def handler(event: KernelEvent) -> None:
+        received.append(event.payload)
+
+    bus.subscribe("test.event", "tester", handler)
+    event = KernelEvent(source="test", type="test.event", payload={"key": "value"})
+    await bus.publish(event)
+
+    assert received == [{"key": "value"}]
+    actions = [r.action for r in audit.tail()]
+    assert "verification_passed" in actions
+    assert "verification_failed" not in actions
+
+
+@pytest.mark.asyncio
+async def test_verification_middleware_audit_records_detail():
+    """verification_failed record must include trace_id and type fields."""
+    audit = AuditLog()
+    mw = VerificationMiddleware(audit)
+    bus = MessageBus(audit, verification=mw)
+    bus.subscribe("check", "sub", lambda e: None)  # type: ignore[arg-type]
+    event = KernelEvent(source="src", type="check", payload=None)
+    await bus.publish(event)
+
+    failed = [r for r in audit.tail() if r.action == "verification_failed"]
+    assert failed, "Expected at least one verification_failed record"
+    detail = failed[0].detail
+    assert detail["type"] == "check"
+    assert "trace_id" in detail
+
+
+@pytest.mark.asyncio
+async def test_kernel_with_verification_middleware_integration():
+    """ContentKernel with VerificationMiddleware drops bad events end-to-end."""
+    audit = AuditLog()
+    mw = VerificationMiddleware(audit)
+    sensor = PushSensoryInput("test-sensor")
+    kernel = ContentKernel([sensor], audit_log=audit, verification=mw)
+    reached: list[bool] = []
+
+    async def handler(event: KernelEvent) -> None:
+        reached.append(True)
+
+    kernel.register_subsystem("tester", ["probe"], handler)
+    await kernel.start()
+    # Manually ingest an event with a None payload (bypassing PushSensoryInput
+    # which always supplies a payload).
+    bad_event = KernelEvent(source="external", type="probe", payload=None)
+    await kernel.ingest_event(bad_event)
+    await kernel.join()
+    await kernel.stop()
+
+    assert reached == []
+    actions = [r.action for r in audit.tail()]
+    assert "verification_failed" in actions
+
+
+# ---------------------------------------------------------------------------
+# RES-02: DGMHSubsystem tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_dgmh_subscribes_to_kernel_meta_topics():
+    """DGMHSubsystem.attach() must register on the kernel bus."""
+    audit = AuditLog()
+    sensor = PushSensoryInput("s")
+    kernel = ContentKernel([sensor], audit_log=audit)
+    dgm = DGMHSubsystem(kernel, audit, emit_every=100)
+    dgm.attach()
+
+    # Subscriptions are audited with action "subscribe"
+    sub_records = [r for r in audit.tail() if r.action == "subscribe"]
+    topics = [r.detail["topic"] for r in sub_records]
+    assert "kernel.task_complete" in topics
+    assert "kernel.task_failed" in topics
+
+
+@pytest.mark.asyncio
+async def test_dgmh_mutates_policy_on_success():
+    """Policy success_weight increases when a task_complete signal is received."""
+    audit = AuditLog()
+    sensor = PushSensoryInput("s")
+    kernel = ContentKernel([sensor], audit_log=audit)
+    dgm = DGMHSubsystem(kernel, audit, emit_every=100)
+    dgm.attach()
+
+    initial_weight = dgm.policy["success_weight"]
+
+    await kernel.start()
+    # A valid dict payload event will complete successfully and trigger DGM-H.
+    await sensor.push(type="any.topic", payload={"x": 1})
+    await kernel.join()
+    await kernel.stop()
+
+    assert dgm.policy["success_weight"] > initial_weight
+    si_actions = [r for r in audit.tail() if r.action == "self_improvement"]
+    assert si_actions, "self_improvement must be audited"
+
+
+@pytest.mark.asyncio
+async def test_dgmh_mutates_policy_on_failure():
+    """Policy failure_weight increases when a task_failed signal is received."""
+    audit = AuditLog()
+    kernel = ContentKernel(audit_log=audit)
+    dgm = DGMHSubsystem(kernel, audit, emit_every=100)
+    dgm.attach()
+
+    initial_weight = dgm.policy["failure_weight"]
+
+    # Directly publish a kernel.task_failed event to the bus (simulating a
+    # task that raised an exception in the scheduler).
+    from contentaios.kernel import MessageBus as _MB  # noqa: PLC0415
+
+    event = KernelEvent(
+        source="kernel",
+        type="kernel.task_failed",
+        payload={"error": "boom", "priority": 1},
+    )
+    # Access the bus via the kernel's private attr for the test.
+    await kernel._bus.publish(event)  # type: ignore[attr-defined]
+
+    assert dgm.policy["failure_weight"] > initial_weight
+    si_actions = [r for r in audit.tail() if r.action == "self_improvement"]
+    assert si_actions
+
+
+@pytest.mark.asyncio
+async def test_dgmh_emits_optimization_at_threshold():
+    """DGM-H emits kernel.optimize into the kernel every emit_every signals."""
+    audit = AuditLog()
+    sensor = PushSensoryInput("s")
+    kernel = ContentKernel([sensor], audit_log=audit)
+    dgm = DGMHSubsystem(kernel, audit, emit_every=2)
+    dgm.attach()
+
+    optimized: list[dict] = []
+
+    async def capture(event: KernelEvent) -> None:
+        optimized.append(event.payload)
+
+    kernel.register_subsystem("watcher", ["kernel.optimize"], capture)
+
+    await kernel.start()
+    # Push 2 events — after 2 task_complete signals DGM-H should emit optimize.
+    await sensor.push(type="noop", payload={"i": 0})
+    await sensor.push(type="noop", payload={"i": 1})
+    await kernel.join()
+    await kernel.stop()
+
+    assert optimized, "DGM-H must have emitted at least one kernel.optimize event"
+    assert "policy" in optimized[0]
+    assert "signal_count" in optimized[0]
+
+
+@pytest.mark.asyncio
+async def test_dgmh_signal_count_increments():
+    """signal_count must track the total number of success+failure signals."""
+    audit = AuditLog()
+    sensor = PushSensoryInput("s")
+    kernel = ContentKernel([sensor], audit_log=audit)
+    dgm = DGMHSubsystem(kernel, audit, emit_every=100)
+    dgm.attach()
+
+    await kernel.start()
+    for i in range(3):
+        await sensor.push(type="t", payload={"i": i})
+    await kernel.join()
+    await kernel.stop()
+
+    # Each dispatched event produces 1 task_complete signal.
+    assert dgm.signal_count >= 3
+
+
+@pytest.mark.asyncio
+async def test_kernel_emits_meta_events_to_bus():
+    """The kernel scheduler must publish kernel.task_complete after each task."""
+    audit = AuditLog()
+    sensor = PushSensoryInput("s")
+    kernel = ContentKernel([sensor], audit_log=audit)
+    meta_events: list[str] = []
+
+    async def capture(event: KernelEvent) -> None:
+        meta_events.append(event.type)
+
+    kernel.register_subsystem("observer", ["kernel.task_complete"], capture)
+
+    await kernel.start()
+    await sensor.push(type="ping", payload={"x": 1})
+    await kernel.join()
+    await kernel.stop()
+
+    assert "kernel.task_complete" in meta_events
