@@ -8,14 +8,18 @@ messaging for downstream content systems.
 - **Sensory inputs** — Pluggable inputs push or poll external sources into the kernel as
   structured `KernelEvent` objects. Provided adapters:
   - `PushSensoryInput`: queue-backed, accepts external pushes (webhooks, SDK calls).
+  - `WebhookPushBridge`: maps HTTP webhook payloads into push events.
   - `PollingSensoryInput`: periodic fetcher hook for pulling external signals.
+  - `HttpPollingSensoryInput`: HTTP/JSON poller that converts responses into events.
 - **Kernel event loop** — A priority queue drives scheduling. High-priority sensory events and
   subsystem tasks are executed first; FIFO ordering within the same priority preserves
   determinism.
 - **Message bus** — Lightweight pub/sub inside the kernel. Subsystems register interest in
-  topics (event types) and receive events dispatched by the scheduler.
+  topics (event types) and receive events dispatched by the scheduler. Subscriptions can declare
+  per-subsystem timeouts and retry counts with backoff.
 - **Audit log** — Bounded, in-memory log (`AuditLog`) capturing ingestion, dispatch, handler
-  success/failure, and task lifecycle. Tail retrieval supports observability and testing.
+  success/failure, and task lifecycle. Pluggable sinks support JSONL persistence (`FileAuditSink`)
+  and metrics counters (`MetricsAuditSink`).
 
 ## Operational Flow
 
@@ -30,9 +34,16 @@ messaging for downstream content systems.
 
 ```python
 import asyncio
-from contentaios import ContentKernel, PushSensoryInput, Priority
+from contentaios import (
+    ContentKernel,
+    HttpPollingSensoryInput,
+    Priority,
+    PushSensoryInput,
+    WebhookPushBridge,
+)
 
 sensor = PushSensoryInput("webhooks")
+bridge = WebhookPushBridge(sensor)
 kernel = ContentKernel([sensor])
 
 async def summarizer(event):
@@ -43,7 +54,8 @@ kernel.register_subsystem("summarizer", ["text.ingest"], summarizer)
 
 async def main():
     await kernel.start()
-    await sensor.push(type="text.ingest", payload={"text": "hello world"})
+    # webhook data entering via bridge
+    await bridge.handle_payload({"type": "text.ingest", "payload": {"text": "hello world"}})
     await kernel.join()   # wait until everything scheduled is processed
     await kernel.stop()
 

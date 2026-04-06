@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import logging
+import os
 from collections import defaultdict, deque
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import partial
-from typing import Awaitable, Callable, Iterable, Optional
+from pathlib import Path
+from typing import Awaitable, Callable, Iterable, Optional, Protocol
 
 from contentaios.types import AuditRecord, KernelEvent, Priority
 
@@ -16,11 +20,45 @@ EventHandler = Callable[[KernelEvent], Awaitable[None]]
 ScheduledFn = Callable[[], Awaitable[None]]
 
 
-class AuditLog:
-    """In-memory audit log with bounded retention."""
+class AuditSink(Protocol):
+    """Sink interface for streaming audit records to persistence or metrics."""
 
-    def __init__(self, max_entries: int = 500) -> None:
+    def handle(self, record: AuditRecord) -> None:  # pragma: no cover - interface
+        ...
+
+
+class FileAuditSink:
+    """JSONL file sink for audit records."""
+
+    def __init__(self, path: str | os.PathLike[str]) -> None:
+        self._path = Path(path)
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+
+    def handle(self, record: AuditRecord) -> None:
+        with self._path.open("a", encoding="utf-8") as fp:
+            fp.write(json.dumps(record.as_dict()) + "\n")
+
+
+class MetricsAuditSink:
+    """Simple counter-based metrics sink for audit actions."""
+
+    def __init__(self) -> None:
+        self._counts: dict[str, int] = defaultdict(int)
+
+    def handle(self, record: AuditRecord) -> None:
+        key = f"{record.actor}.{record.action}"
+        self._counts[key] += 1
+
+    def snapshot(self) -> dict[str, int]:
+        return dict(self._counts)
+
+
+class AuditLog:
+    """In-memory audit log with bounded retention and sink fan-out."""
+
+    def __init__(self, max_entries: int = 500, sinks: Optional[list[AuditSink]] = None) -> None:
         self._entries: deque[AuditRecord] = deque(maxlen=max_entries)
+        self._sinks: list[AuditSink] = list(sinks or [])
 
     def record(self, actor: str, action: str, detail: dict) -> None:
         self._entries.append(
@@ -31,20 +69,59 @@ class AuditLog:
                 detail=dict(detail),
             )
         )
+        for sink in self._sinks:
+            sink.handle(self._entries[-1])
 
     def tail(self, count: int = 50) -> list[AuditRecord]:
         return list(self._entries)[-count:]
+
+    def add_sink(self, sink: AuditSink) -> None:
+        self._sinks.append(sink)
+
+    def flush_to_file(self, path: str | os.PathLike[str]) -> None:
+        """Persist current buffer to JSONL file."""
+        file_sink = FileAuditSink(path)
+        for entry in self._entries:
+            file_sink.handle(entry)
+
+
+@dataclass(slots=True)
+class Subscription:
+    topic: str
+    subsystem: str
+    handler: EventHandler
+    timeout_s: Optional[float] = None
+    max_retries: int = 0
+    retry_backoff_s: float = 0.1
 
 
 class MessageBus:
     """Lightweight inter-subsystem publish/subscribe bus."""
 
     def __init__(self, audit_log: AuditLog) -> None:
-        self._subscribers: dict[str, list[tuple[str, EventHandler]]] = defaultdict(list)
+        self._subscribers: dict[str, list[Subscription]] = defaultdict(list)
         self._audit = audit_log
 
-    def subscribe(self, topic: str, subsystem: str, handler: EventHandler) -> None:
-        self._subscribers[topic].append((subsystem, handler))
+    def subscribe(
+        self,
+        topic: str,
+        subsystem: str,
+        handler: EventHandler,
+        *,
+        timeout_s: Optional[float] = None,
+        max_retries: int = 0,
+        retry_backoff_s: float = 0.1,
+    ) -> None:
+        self._subscribers[topic].append(
+            Subscription(
+                topic=topic,
+                subsystem=subsystem,
+                handler=handler,
+                timeout_s=timeout_s,
+                max_retries=max_retries,
+                retry_backoff_s=retry_backoff_s,
+            )
+        )
         self._audit.record(
             actor="kernel",
             action="subscribe",
@@ -61,25 +138,50 @@ class MessageBus:
             )
             return
 
-        async def _deliver(subsystem: str, handler: EventHandler) -> None:
-            await handler(event)
+        async def _deliver(sub: Subscription) -> None:
+            attempts = sub.max_retries + 1
+            for attempt in range(1, attempts + 1):
+                try:
+                    coro = sub.handler(event)
+                    if sub.timeout_s is not None:
+                        await asyncio.wait_for(coro, timeout=sub.timeout_s)
+                    else:
+                        await coro
+                    self._audit.record(
+                        actor=sub.subsystem,
+                        action="handled",
+                        detail={"type": event.type, "trace_id": event.trace_id, "attempt": attempt},
+                    )
+                    if attempt > 1:
+                        self._audit.record(
+                            actor="kernel",
+                            action="retry_success",
+                            detail={"subsystem": sub.subsystem, "trace_id": event.trace_id},
+                        )
+                    return
+                except asyncio.TimeoutError:
+                    self._audit.record(
+                        actor=sub.subsystem,
+                        action="handler_timeout",
+                        detail={"type": event.type, "trace_id": event.trace_id, "attempt": attempt},
+                    )
+                except Exception as exc:
+                    self._audit.record(
+                        actor=sub.subsystem,
+                        action="handler_failed",
+                        detail={"error": str(exc), "trace_id": event.trace_id, "attempt": attempt},
+                    )
+
+                if attempt < attempts:
+                    await asyncio.sleep(sub.retry_backoff_s * attempt)
+            # Exhausted attempts
             self._audit.record(
-                actor=subsystem,
-                action="handled",
-                detail={"type": event.type, "trace_id": event.trace_id},
+                actor="kernel",
+                action="handler_exhausted",
+                detail={"subsystem": sub.subsystem, "trace_id": event.trace_id},
             )
 
-        results = await asyncio.gather(
-            *(_deliver(subsystem, handler) for subsystem, handler in targets),
-            return_exceptions=True,
-        )
-        for (subsystem, _), result in zip(targets, results):
-            if isinstance(result, Exception):
-                self._audit.record(
-                    actor=subsystem,
-                    action="handler_failed",
-                    detail={"error": str(result), "trace_id": event.trace_id},
-                )
+        await asyncio.gather(*(_deliver(sub) for sub in targets))
 
 
 class ContentKernel:
@@ -105,9 +207,25 @@ class ContentKernel:
     def audit_log(self) -> AuditLog:
         return self._audit
 
-    def register_subsystem(self, name: str, topics: Iterable[str], handler: EventHandler) -> None:
+    def register_subsystem(
+        self,
+        name: str,
+        topics: Iterable[str],
+        handler: EventHandler,
+        *,
+        timeout_s: Optional[float] = None,
+        max_retries: int = 0,
+        retry_backoff_s: float = 0.1,
+    ) -> None:
         for topic in topics:
-            self._bus.subscribe(topic, subsystem=name, handler=handler)
+            self._bus.subscribe(
+                topic,
+                subsystem=name,
+                handler=handler,
+                timeout_s=timeout_s,
+                max_retries=max_retries,
+                retry_backoff_s=retry_backoff_s,
+            )
         self._audit.record(
             actor="kernel",
             action="register_subsystem",

@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import IntEnum
-from typing import Any
+from typing import Any, Dict
 
 
 class Priority(IntEnum):
@@ -35,3 +35,11 @@ class AuditRecord:
     actor: str
     action: str
     detail: dict[str, Any]
+
+    def as_dict(self) -> Dict[str, Any]:
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "actor": self.actor,
+            "action": self.action,
+            "detail": self.detail,
+        }
