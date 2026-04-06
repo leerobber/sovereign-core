@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
-from typing import Awaitable, Callable, Iterable, Optional, Protocol
+from typing import Any, Awaitable, Callable, Iterable, Optional, Protocol
 
 from contentaios.types import AuditRecord, KernelEvent, Priority
 
@@ -18,6 +18,60 @@ logger = logging.getLogger(__name__)
 
 EventHandler = Callable[[KernelEvent], Awaitable[None]]
 ScheduledFn = Callable[[], Awaitable[None]]
+
+
+class VerificationMiddleware:
+    """Intercepts KernelEvent messages on the bus and validates their payloads.
+
+    Events with a ``None`` payload or a non-dict payload are rejected: a
+    ``verification_failed`` entry is written to the :class:`AuditLog` and the
+    event is dropped before any handler is invoked.  Valid events are recorded
+    as ``verification_passed``.
+    """
+
+    def __init__(self, audit_log: AuditLog) -> None:
+        self._audit = audit_log
+
+    def verify(self, event: KernelEvent) -> bool:
+        """Return ``True`` if the event passes verification, ``False`` otherwise."""
+        if event.payload is None:
+            self._audit.record(
+                actor="verification",
+                action="verification_failed",
+                detail={
+                    "reason": "null_payload",
+                    "trace_id": event.trace_id,
+                    "type": event.type,
+                },
+            )
+            logger.warning(
+                "Verification failed for event %s (%s): null payload",
+                event.trace_id,
+                event.type,
+            )
+            return False
+        if not isinstance(event.payload, dict):
+            self._audit.record(
+                actor="verification",
+                action="verification_failed",
+                detail={
+                    "reason": "non_dict_payload",
+                    "trace_id": event.trace_id,
+                    "type": event.type,
+                },
+            )
+            logger.warning(
+                "Verification failed for event %s (%s): non-dict payload",
+                event.trace_id,
+                event.type,
+            )
+            return False
+        self._audit.record(
+            actor="verification",
+            action="verification_passed",
+            detail={"trace_id": event.trace_id, "type": event.type},
+        )
+        return True
 
 
 class AuditSink(Protocol):
@@ -98,9 +152,14 @@ class Subscription:
 class MessageBus:
     """Lightweight inter-subsystem publish/subscribe bus."""
 
-    def __init__(self, audit_log: AuditLog) -> None:
+    def __init__(
+        self,
+        audit_log: AuditLog,
+        verification: Optional[VerificationMiddleware] = None,
+    ) -> None:
         self._subscribers: dict[str, list[Subscription]] = defaultdict(list)
         self._audit = audit_log
+        self._verification = verification
 
     def subscribe(
         self,
@@ -129,6 +188,9 @@ class MessageBus:
         )
 
     async def publish(self, event: KernelEvent) -> None:
+        if self._verification is not None and not self._verification.verify(event):
+            return  # dropped — verification_failed already audited
+
         targets = list(self._subscribers.get(event.type, []))
         if not targets:
             self._audit.record(
@@ -191,9 +253,10 @@ class ContentKernel:
         self,
         sensory_inputs: Optional[Iterable["SensoryInput"]] = None,
         audit_log: Optional[AuditLog] = None,
+        verification: Optional[VerificationMiddleware] = None,
     ) -> None:
         self._audit = audit_log or AuditLog()
-        self._bus = MessageBus(self._audit)
+        self._bus = MessageBus(self._audit, verification=verification)
         self._queue: asyncio.PriorityQueue[
             tuple[int, int, ScheduledFn]
         ] = asyncio.PriorityQueue()
@@ -302,14 +365,19 @@ class ContentKernel:
     async def _scheduler(self) -> None:
         while self._running:
             priority, _, fn = await self._queue.get()
+            prio_name = Priority(priority).name.lower()
+            meta_topic = "kernel.task_complete"
+            meta_payload: dict[str, Any] = {"priority": prio_name}
             try:
                 await fn()
                 self._audit.record(
                     actor="kernel",
                     action="task_complete",
-                    detail={"priority": Priority(priority).name.lower()},
+                    detail={"priority": prio_name},
                 )
             except Exception as exc:  # pragma: no cover - defensive logging
+                meta_topic = "kernel.task_failed"
+                meta_payload = {"error": str(exc), "priority": priority}
                 logger.exception("Kernel task failed: %s", exc)
                 self._audit.record(
                     actor="kernel",
@@ -318,6 +386,18 @@ class ContentKernel:
                 )
             finally:
                 self._queue.task_done()
+
+            # Publish meta-event so subsystems (e.g. DGM-H) can observe outcomes.
+            # Wrapped in suppress so meta-handler errors never crash the scheduler.
+            with contextlib.suppress(Exception):
+                await self._bus.publish(
+                    KernelEvent(
+                        source="kernel",
+                        type=meta_topic,
+                        payload=meta_payload,
+                        priority=Priority.LOW,
+                    )
+                )
 
 
 # Late import to avoid circular dependency for type checking
