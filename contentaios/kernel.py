@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import json
 import logging
-import os
 from collections import defaultdict, deque
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import partial
-from pathlib import Path
-from typing import Any, Awaitable, Callable, Iterable, Optional, Protocol
+from typing import Awaitable, Callable, Iterable, Optional
 
 from contentaios.types import AuditRecord, KernelEvent, Priority
 
@@ -20,101 +16,30 @@ EventHandler = Callable[[KernelEvent], Awaitable[None]]
 ScheduledFn = Callable[[], Awaitable[None]]
 
 
-class VerificationMiddleware:
-    """Intercepts KernelEvent messages on the bus and validates their payloads.
-
-    Events with a ``None`` payload or a non-dict payload are rejected: a
-    ``verification_failed`` entry is written to the :class:`AuditLog` and the
-    event is dropped before any handler is invoked.  Valid events are recorded
-    as ``verification_passed``.
-    """
-
-    def __init__(self, audit_log: AuditLog) -> None:
-        self._audit = audit_log
-
-    def verify(self, event: KernelEvent) -> bool:
-        """Return ``True`` if the event passes verification, ``False`` otherwise."""
-        if event.payload is None:
-            self._audit.record(
-                actor="verification",
-                action="verification_failed",
-                detail={
-                    "reason": "null_payload",
-                    "trace_id": event.trace_id,
-                    "type": event.type,
-                },
-            )
-            logger.warning(
-                "Verification failed for event %s (%s): null payload",
-                event.trace_id,
-                event.type,
-            )
-            return False
-        if not isinstance(event.payload, dict):
-            self._audit.record(
-                actor="verification",
-                action="verification_failed",
-                detail={
-                    "reason": "non_dict_payload",
-                    "trace_id": event.trace_id,
-                    "type": event.type,
-                },
-            )
-            logger.warning(
-                "Verification failed for event %s (%s): non-dict payload",
-                event.trace_id,
-                event.type,
-            )
-            return False
-        self._audit.record(
-            actor="verification",
-            action="verification_passed",
-            detail={"trace_id": event.trace_id, "type": event.type},
-        )
-        return True
-
-
-class AuditSink(Protocol):
-    """Sink interface for streaming audit records to persistence or metrics."""
-
-    def handle(self, record: AuditRecord) -> None:  # pragma: no cover - interface
-        ...
-
-
-class FileAuditSink:
-    """JSONL file sink for audit records."""
-
-    def __init__(self, path: str | os.PathLike[str]) -> None:
-        self._path = Path(path)
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-
-    def handle(self, record: AuditRecord) -> None:
-        with self._path.open("a", encoding="utf-8") as fp:
-            fp.write(json.dumps(record.as_dict()) + "\n")
-
-
-class MetricsAuditSink:
-    """Simple counter-based metrics sink for audit actions."""
-
-    def __init__(self) -> None:
-        self._counts: dict[str, int] = defaultdict(int)
-
-    def handle(self, record: AuditRecord) -> None:
-        key = f"{record.actor}.{record.action}"
-        self._counts[key] += 1
-
-    def snapshot(self) -> dict[str, int]:
-        return dict(self._counts)
-
-
 class AuditLog:
-    """In-memory audit log with bounded retention and sink fan-out."""
+    """In-memory audit log with bounded retention."""
 
-    def __init__(self, max_entries: int = 500, sinks: Optional[list[AuditSink]] = None) -> None:
+    def __init__(self, max_entries: int = 500) -> None:
+        """
+        Initialize the audit log with a bounded in-memory store of audit records.
+        
+        Parameters:
+            max_entries (int): Maximum number of audit records to retain in memory; when the capacity is exceeded, the oldest records are discarded.
+        """
         self._entries: deque[AuditRecord] = deque(maxlen=max_entries)
-        self._sinks: list[AuditSink] = list(sinks or [])
 
     def record(self, actor: str, action: str, detail: dict) -> None:
+        """
+        Record an audit entry in the in-memory audit log.
+        
+        Parameters:
+            actor (str): Identifier of the actor responsible for the action.
+            action (str): Short name of the action performed.
+            detail (dict): Additional metadata for the entry; a shallow copy of this dict is stored.
+        
+        Notes:
+            The stored record is timestamped with the current UTC time.
+        """
         self._entries.append(
             AuditRecord(
                 timestamp=datetime.now(tz=timezone.utc),
@@ -123,64 +48,46 @@ class AuditLog:
                 detail=dict(detail),
             )
         )
-        for sink in self._sinks:
-            sink.handle(self._entries[-1])
 
     def tail(self, count: int = 50) -> list[AuditRecord]:
+        """
+        Return the most recent audit records up to the specified count.
+        
+        Parameters:
+            count (int): Maximum number of recent records to return.
+        
+        Returns:
+            list[AuditRecord]: A list of up to `count` most recent audit records in chronological order (oldest to newest within the returned slice).
+        """
         return list(self._entries)[-count:]
-
-    def add_sink(self, sink: AuditSink) -> None:
-        self._sinks.append(sink)
-
-    def flush_to_file(self, path: str | os.PathLike[str]) -> None:
-        """Persist current buffer to JSONL file."""
-        file_sink = FileAuditSink(path)
-        for entry in self._entries:
-            file_sink.handle(entry)
-
-
-@dataclass(slots=True)
-class Subscription:
-    topic: str
-    subsystem: str
-    handler: EventHandler
-    timeout_s: Optional[float] = None
-    max_retries: int = 0
-    retry_backoff_s: float = 0.1
 
 
 class MessageBus:
     """Lightweight inter-subsystem publish/subscribe bus."""
 
-    def __init__(
-        self,
-        audit_log: AuditLog,
-        verification: Optional[VerificationMiddleware] = None,
-    ) -> None:
-        self._subscribers: dict[str, list[Subscription]] = defaultdict(list)
+    def __init__(self, audit_log: AuditLog) -> None:
+        """
+        Create a MessageBus that routes events to subscribed handlers and records audit entries.
+        
+        Parameters:
+            audit_log (AuditLog): AuditLog instance used to record subscription, publish, delivery, and handler-failure events.
+        """
+        self._subscribers: dict[str, list[tuple[str, EventHandler]]] = defaultdict(list)
         self._audit = audit_log
-        self._verification = verification
 
-    def subscribe(
-        self,
-        topic: str,
-        subsystem: str,
-        handler: EventHandler,
-        *,
-        timeout_s: Optional[float] = None,
-        max_retries: int = 0,
-        retry_backoff_s: float = 0.1,
-    ) -> None:
-        self._subscribers[topic].append(
-            Subscription(
-                topic=topic,
-                subsystem=subsystem,
-                handler=handler,
-                timeout_s=timeout_s,
-                max_retries=max_retries,
-                retry_backoff_s=retry_backoff_s,
-            )
-        )
+    def subscribe(self, topic: str, subsystem: str, handler: EventHandler) -> None:
+        """
+        Register a handler to receive events published to the given topic.
+        
+        Parameters:
+        	topic (str): The topic name to subscribe to.
+        	subsystem (str): Logical name of the subscribing subsystem; recorded as the actor in audit.
+        	handler (EventHandler): Async callable that will be invoked with the published event.
+        
+        Notes:
+        	An audit record with actor "kernel" and action "subscribe" is created containing the topic and subsystem.
+        """
+        self._subscribers[topic].append((subsystem, handler))
         self._audit.record(
             actor="kernel",
             action="subscribe",
@@ -188,9 +95,14 @@ class MessageBus:
         )
 
     async def publish(self, event: KernelEvent) -> None:
-        if self._verification is not None and not self._verification.verify(event):
-            return  # dropped — verification_failed already audited
-
+        """
+        Publish a KernelEvent to all subscribers of its topic and record audit entries for delivery outcomes.
+        
+        Publishes the given event to every handler subscribed to event.type. If no subscribers exist, records an audit entry with action "no_subscriber". For each successful delivery records an audit entry with action "handled" (actor set to the subsystem); if a handler raises an exception records an audit entry with action "handler_failed" including the error string and the event's trace_id.
+        
+        Parameters:
+            event (KernelEvent): The event to publish; its `type` determines recipient subscriptions and its `trace_id` is included in audit records.
+        """
         targets = list(self._subscribers.get(event.type, []))
         if not targets:
             self._audit.record(
@@ -200,50 +112,32 @@ class MessageBus:
             )
             return
 
-        async def _deliver(sub: Subscription) -> None:
-            attempts = sub.max_retries + 1
-            for attempt in range(1, attempts + 1):
-                try:
-                    coro = sub.handler(event)
-                    if sub.timeout_s is not None:
-                        await asyncio.wait_for(coro, timeout=sub.timeout_s)
-                    else:
-                        await coro
-                    self._audit.record(
-                        actor=sub.subsystem,
-                        action="handled",
-                        detail={"type": event.type, "trace_id": event.trace_id, "attempt": attempt},
-                    )
-                    if attempt > 1:
-                        self._audit.record(
-                            actor="kernel",
-                            action="retry_success",
-                            detail={"subsystem": sub.subsystem, "trace_id": event.trace_id},
-                        )
-                    return
-                except asyncio.TimeoutError:
-                    self._audit.record(
-                        actor=sub.subsystem,
-                        action="handler_timeout",
-                        detail={"type": event.type, "trace_id": event.trace_id, "attempt": attempt},
-                    )
-                except Exception as exc:
-                    self._audit.record(
-                        actor=sub.subsystem,
-                        action="handler_failed",
-                        detail={"error": str(exc), "trace_id": event.trace_id, "attempt": attempt},
-                    )
-
-                if attempt < attempts:
-                    await asyncio.sleep(sub.retry_backoff_s * attempt)
-            # Exhausted attempts
+        async def _deliver(subsystem: str, handler: EventHandler) -> None:
+            """
+            Deliver the enclosing `event` to a subsystem handler and record an audit entry indicating it was handled.
+            
+            Parameters:
+                subsystem (str): Name of the subsystem invoked as the actor in the audit record.
+                handler (EventHandler): Async callable that will be awaited with the current `event`.
+            """
+            await handler(event)
             self._audit.record(
-                actor="kernel",
-                action="handler_exhausted",
-                detail={"subsystem": sub.subsystem, "trace_id": event.trace_id},
+                actor=subsystem,
+                action="handled",
+                detail={"type": event.type, "trace_id": event.trace_id},
             )
 
-        await asyncio.gather(*(_deliver(sub) for sub in targets))
+        results = await asyncio.gather(
+            *(_deliver(subsystem, handler) for subsystem, handler in targets),
+            return_exceptions=True,
+        )
+        for (subsystem, _), result in zip(targets, results):
+            if isinstance(result, Exception):
+                self._audit.record(
+                    actor=subsystem,
+                    action="handler_failed",
+                    detail={"error": str(result), "trace_id": event.trace_id},
+                )
 
 
 class ContentKernel:
@@ -253,10 +147,16 @@ class ContentKernel:
         self,
         sensory_inputs: Optional[Iterable["SensoryInput"]] = None,
         audit_log: Optional[AuditLog] = None,
-        verification: Optional[VerificationMiddleware] = None,
     ) -> None:
+        """
+        Initialize the ContentKernel, setting up its audit log, message bus, priority queue, and sensor/task state.
+        
+        Parameters:
+            sensory_inputs (Optional[Iterable[HazardousInput]]): Optional iterable of SensoryInput instances to be managed by the kernel. The iterable is copied into an internal list.
+            audit_log (Optional[AuditLog]): Optional AuditLog to record kernel and subsystem events; a new AuditLog is created if not provided.
+        """
         self._audit = audit_log or AuditLog()
-        self._bus = MessageBus(self._audit, verification=verification)
+        self._bus = MessageBus(self._audit)
         self._queue: asyncio.PriorityQueue[
             tuple[int, int, ScheduledFn]
         ] = asyncio.PriorityQueue()
@@ -268,27 +168,25 @@ class ContentKernel:
 
     @property
     def audit_log(self) -> AuditLog:
+        """
+        Access the kernel's audit log.
+        
+        Returns:
+            The AuditLog instance used by this kernel.
+        """
         return self._audit
 
-    def register_subsystem(
-        self,
-        name: str,
-        topics: Iterable[str],
-        handler: EventHandler,
-        *,
-        timeout_s: Optional[float] = None,
-        max_retries: int = 0,
-        retry_backoff_s: float = 0.1,
-    ) -> None:
+    def register_subsystem(self, name: str, topics: Iterable[str], handler: EventHandler) -> None:
+        """
+        Register a subsystem by subscribing its handler to each listed topic and recording the registration in the audit log.
+        
+        Parameters:
+            name (str): Subsystem identifier used as the subscriber name in the message bus and as the audit actor.
+            topics (Iterable[str]): Iterable of topic names to subscribe the handler to; the topics are saved in the audit record as a list.
+            handler (EventHandler): Async callable that will be invoked for events published to the subscribed topics.
+        """
         for topic in topics:
-            self._bus.subscribe(
-                topic,
-                subsystem=name,
-                handler=handler,
-                timeout_s=timeout_s,
-                max_retries=max_retries,
-                retry_backoff_s=retry_backoff_s,
-            )
+            self._bus.subscribe(topic, subsystem=name, handler=handler)
         self._audit.record(
             actor="kernel",
             action="register_subsystem",
@@ -296,6 +194,11 @@ class ContentKernel:
         )
 
     async def start(self) -> None:
+        """
+        Start the kernel by launching its scheduler and all configured sensory input tasks.
+        
+        If the kernel is already running, this is a no-op. On start, a background scheduler task is created, each sensory input is started (their start call is scheduled as a task), and an audit record is written for each sensor indicating it was started.
+        """
         if self._running:
             return
         self._running = True
@@ -308,17 +211,20 @@ class ContentKernel:
             )
 
     async def stop(self) -> None:
+        """
+        Stop the kernel and shut down its sensor and scheduler tasks.
+        
+        If the kernel is not running this method returns immediately. Otherwise it sets the running flag to False, stops each configured sensory input (awaiting each sensor's stop method) and records an audit entry for each stopped sensor. It then cancels any outstanding sensor tasks and awaits their completion (suppressing asyncio.CancelledError), clears the internal sensor task list, cancels the scheduler task if present and awaits it (suppressing asyncio.CancelledError), and sets the scheduler task reference to None.
+        """
         if not self._running:
             return
+        self._running = False
         for sensor in self._sensory_inputs:
             await sensor.stop()
             self._audit.record(
                 actor="kernel", action="sensor_stopped", detail={"sensor": sensor.name}
             )
 
-        await self.join()
-
-        self._running = False
         for task in self._sensor_tasks:
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -332,7 +238,14 @@ class ContentKernel:
         self._scheduler_task = None
 
     async def ingest_event(self, event: KernelEvent) -> None:
-        """Push a sensory event into the kernel for scheduling."""
+        """
+        Ingests a KernelEvent into the kernel and schedules its dispatch.
+        
+        Records an audit entry with the event's source, type, and trace_id, then enqueues the event's dispatch using the event's priority.
+        
+        Parameters:
+            event (KernelEvent): The event produced by a sensory input or the kernel to be scheduled for delivery to subscribers.
+        """
         self._audit.record(
             actor=event.source,
             action="ingest",
@@ -341,7 +254,14 @@ class ContentKernel:
         await self._enqueue(partial(self._dispatch_event, event), priority=event.priority)
 
     async def emit(self, topic: str, payload, *, priority: Priority = Priority.NORMAL) -> None:
-        """Publish an inter-subsystem message into the scheduler."""
+        """
+        Emit a kernel-originated event into the kernel's ingestion and scheduling pipeline.
+        
+        Parameters:
+        	topic (str): Topic/type of the event to publish.
+        	payload: Arbitrary payload carried with the event.
+        	priority (Priority): Scheduling priority that determines ordering in the kernel's queue; higher priority values are processed before lower ones.
+        """
         event = KernelEvent(source="kernel", type=topic, payload=payload, priority=priority)
         await self.ingest_event(event)
 
@@ -356,28 +276,41 @@ class ContentKernel:
         await self._queue.join()
 
     async def _dispatch_event(self, event: KernelEvent) -> None:
+        """
+        Dispatches a KernelEvent to the message bus for delivery to subscribed handlers.
+        
+        Parameters:
+            event (KernelEvent): The kernel event to publish to subscribers.
+        """
         await self._bus.publish(event)
 
     async def _enqueue(self, fn: ScheduledFn, *, priority: Priority) -> None:
+        """
+        Enqueue a scheduled coroutine callable for later execution at the specified priority.
+        
+        Parameters:
+        	fn (ScheduledFn): A zero-argument coroutine function to be executed by the scheduler.
+        	priority (Priority): Priority level that determines ordering in the queue; items with the same priority are ordered by insertion time.
+        """
         self._sequence += 1
         await self._queue.put((int(priority), self._sequence, fn))
 
     async def _scheduler(self) -> None:
+        """
+        Consume and execute scheduled coroutine tasks from the kernel's priority queue until the kernel is stopped.
+        
+        For each dequeued task, awaits the scheduled coroutine and on success records an audit entry with action `task_complete` including the task priority name. If the task raises an exception, records an audit entry with action `task_failed` including the error string and priority. Always marks the queue item as done.
+        """
         while self._running:
             priority, _, fn = await self._queue.get()
-            prio_name = Priority(priority).name.lower()
-            meta_topic = "kernel.task_complete"
-            meta_payload: dict[str, Any] = {"priority": prio_name}
             try:
                 await fn()
                 self._audit.record(
                     actor="kernel",
                     action="task_complete",
-                    detail={"priority": prio_name},
+                    detail={"priority": Priority(priority).name.lower()},
                 )
             except Exception as exc:  # pragma: no cover - defensive logging
-                meta_topic = "kernel.task_failed"
-                meta_payload = {"error": str(exc), "priority": priority}
                 logger.exception("Kernel task failed: %s", exc)
                 self._audit.record(
                     actor="kernel",
@@ -386,18 +319,6 @@ class ContentKernel:
                 )
             finally:
                 self._queue.task_done()
-
-            # Publish meta-event so subsystems (e.g. DGM-H) can observe outcomes.
-            # Wrapped in suppress so meta-handler errors never crash the scheduler.
-            with contextlib.suppress(Exception):
-                await self._bus.publish(
-                    KernelEvent(
-                        source="kernel",
-                        type=meta_topic,
-                        payload=meta_payload,
-                        priority=Priority.LOW,
-                    )
-                )
 
 
 # Late import to avoid circular dependency for type checking
