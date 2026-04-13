@@ -1,0 +1,60 @@
+name: CodeQL SARIF CLI Export v3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  codeql-python-cli:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL CLI
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-and-quality
+
+      - name: Locate CodeQL binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          CODEQL_BIN=$(find /opt/hostedtoolcache/CodeQL -type f -path '*/codeql/codeql' | head -n 1)
+          if [ -z "$CODEQL_BIN" ]; then
+            echo "Could not locate CodeQL binary under /opt/hostedtoolcache/CodeQL" >&2
+            exit 1
+          fi
+          echo "Using CodeQL binary: $CODEQL_BIN"
+          echo "CODEQL_BIN=$CODEQL_BIN" >> "$GITHUB_ENV"
+          echo "$(dirname "$CODEQL_BIN")" >> "$GITHUB_PATH"
+          mkdir -p sarif-results
+
+      - name: Verify CodeQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$CODEQL_BIN" version
+
+      - name: Create database
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf codeql-db
+          "$CODEQL_BIN" database create codeql-db --language=python --source-root .
+
+      - name: Analyze to SARIF
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$CODEQL_BIN" database analyze codeql-db codeql/python-queries:codeql-suites/python-security-and-quality.qls --format=sarifv2.1.0 --output=sarif-results/codeql-results.sarif
+
+      - name: Upload SARIF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif-results
+          path: sarif-results
