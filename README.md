@@ -1,97 +1,236 @@
-# sovereign-core
+# Sovereign Core
 
-Central hub for Sovereign Core — autonomous AI agent platform architecture, system-level epics, and cross-subsystem coordination.
+> Autonomous AI agent platform — heterogeneous compute gateway, self-evolving KAIROS agent economy, and Aegis-Vault semantic ledger.
+
+[![CI](https://github.com/leerobber/sovereign-core/actions/workflows/ci.yml/badge.svg)](https://github.com/leerobber/sovereign-core/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg)](https://fastapi.tiangolo.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+---
+
+## Architecture
+
+```
+                        ┌─────────────────────────────────────────┐
+                        │         Sovereign Core Gateway           │
+                        │              localhost:8000              │
+                        │                                          │
+    ┌──────────┐        │  ┌──────────┐  ┌──────────┐  ┌───────┐ │
+    │  Honcho  │───────▶│  │  Router  │  │  KAIROS  │  │Auction│ │
+    │(React UI)│        │  │(EMA lat.)│  │(SAGE loop│  │(VQ)   │ │
+    └──────────┘        │  └────┬─────┘  └──────────┘  └───────┘ │
+                        │       │                                  │
+    ┌──────────┐        │  ┌────▼──────────────────────────────┐  │
+    │contentai │───────▶│  │   Backend Mesh (Latency-Aware)    │  │
+    │   -pro   │        │  ├───────────┬───────────┬───────────┤  │
+    └──────────┘        │  │ RTX 5050  │Radeon 780M│ Ryzen 7   │  │
+                        │  │:8001 GPU  │:8002 GPU  │:8003 CPU  │  │
+    ┌──────────┐        │  │ 8GB VRAM  │ 4GB VRAM  │ Fallback  │  │
+    │  Termux  │───────▶│  └───────────┴───────────┴───────────┘  │
+    │Assistant │        │                                          │
+    └──────────┘        │  ┌──────────┐  ┌──────────┐  ┌───────┐ │
+                        │  │MemEvolve │  │Aegis-Vault│  │Pattern│ │
+                        │  │(RES-12)  │  │  Ledger   │  │Memory │ │
+                        └──┴──────────┴──┴──────────┴──┴───────┘─┘
+```
+
+### Components
+
+| Component | File | Description |
+|-----------|------|-------------|
+| **Gateway Router** | `gateway/router.py` | Latency-EMA + capability-aware backend selection |
+| **Health Monitor** | `gateway/health.py` | Async health probes with circuit-breaker |
+| **KAIROS** | `gateway/kairos.py` | nextElites agent economy — self-evolving ARSO cycles |
+| **SAGE Loop** | `hyperagents/sage_generate_loop.py` | 4-agent co-evolution: Proposer→Critic→Verifier→Meta |
+| **DGM-H Archive** | `gateway/dgm_h_archive.py` | Lineage archive for ancestor reconstruction |
+| **Auction** | `gateway/auction.py` | Vickrey-Quadratic resource allocation |
+| **Ledger** | `gateway/ledger.py` | HMAC-SHA256 Aegis-Vault semantic ledger |
+| **MemEvolve** | `gateway/mem_evolve.py` | Meta-evolution of memory retrieval strategies |
+| **Self-Verification** | `gateway/self_verification.py` | DeepSeek-Coder proposal verification |
+| **ContentAIOS** | `contentaios/kernel.py` | Priority-scheduled content coordination kernel |
+| **mHC Gene** | `synthetic_architect/mhc_gene.py` | Manifold-constrained hyper-connections (NAS) |
+
+---
+
+## Quick Start
+
+### Option 1 — Docker Compose (recommended)
+
+```bash
+# Clone
+git clone https://github.com/leerobber/sovereign-core
+cd sovereign-core
+
+# Configure
+cp .env.example .env
+# Edit .env — set GATEWAY_API_KEY if desired
+
+# Start everything (gateway + 3 Ollama backends + ChromaDB + Prometheus + Grafana)
+docker compose up -d
+
+# Pull a model on the NVIDIA backend
+docker exec sovereign-nvidia ollama pull qwen2.5:14b
+docker exec sovereign-amd ollama pull deepseek-coder:6.7b
+docker exec sovereign-cpu ollama pull llama3.2:3b
+
+# Verify
+curl http://localhost:8000/health
+```
+
+### Option 2 — Local (bare metal, recommended for GPU passthrough)
+
+```bash
+# Prerequisites: Python 3.11+, Ollama running on :8001/:8002/:8003
+
+git clone https://github.com/leerobber/sovereign-core
+cd sovereign-core
+pip install -r requirements.txt
+
+# Start gateway
+python -m uvicorn gateway.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Verify
+python scripts/sovereign.py status
+```
+
+---
+
+## CLI
+
+```bash
+# System status
+python scripts/sovereign.py status
+
+# GPU backend details
+python scripts/sovereign.py backends
+
+# Run KAIROS evolution cycles
+python scripts/sovereign.py evolve --cycles 10
+
+# Tail Aegis-Vault ledger
+python scripts/sovereign.py ledger tail --n 25
+
+# Benchmark a model
+python scripts/sovereign.py bench --model qwen2.5:14b
+
+# Override gateway URL
+python scripts/sovereign.py --gateway http://192.168.1.100:8000 status
+```
+
+---
+
+## API Reference
+
+### Core
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Liveness probe — returns healthy/degraded |
+| `GET` | `/metrics` | Prometheus metrics |
+| `GET` | `/docs` | Interactive Swagger UI |
+
+### Inference
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/inference` | Route text generation across GPU mesh |
+
+```bash
+curl -X POST http://localhost:8000/inference \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen2.5:14b",
+    "prompt": "Explain KAIROS in one paragraph.",
+    "options": {"num_predict": 256, "temperature": 0.7}
+  }'
+```
+
+### KAIROS Agent Economy
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/kairos/sage` | Route task through SAGE 4-agent loop |
+| `POST` | `/kairos/evolve` | Run N ARSO evolution cycles |
+| `GET` | `/kairos/leaderboard` | Top agents by score |
+| `GET` | `/status/kairos/{agent_id}` | Agent details + lineage |
+
+### Observability
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/status/` | Full system snapshot |
+| `GET` | `/status/backends` | Per-backend health + latency |
+| `GET` | `/status/stream` | SSE real-time health stream |
+| `WS` | `/ws/events` | WebSocket event bus |
+
+### Auction & Ledger
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/auction/bid` | Submit Vickrey-Quadratic bid |
+| `GET` | `/ledger/tail` | Last N Aegis-Vault entries |
+| `POST` | `/benchmark/run` | Throughput benchmark |
+
+---
+
+## WebSocket Events
+
+Connect to `ws://localhost:8000/ws/events` to receive real-time events:
+
+```js
+const ws = new WebSocket('ws://localhost:8000/ws/events');
+ws.onmessage = ({ data }) => {
+  const { type, ts, data: payload } = JSON.parse(data);
+  // type: backend.health_changed | auction.completed | kairos.cycle_complete
+  //       kairos.elite_promoted | ledger.entry_written | inference.completed
+};
+ws.send('ping');  // → { type: "pong", ts: 1234567890 }
+```
 
 ---
 
 ## Research Tracks
 
-- [RES-05: Nvidia Nemotron-3-Nano as Primary Brain Candidate](docs/RES-05-nemotron-primary-brain.md) — Nemotron-3-Nano designated as the primary brain for the agent economy; always routed to the RTX 5050 (NVIDIA GPU) regardless of its nano-model size.
-- [RES-11: Google DeepMind SIMA — Cross-Environment Skill Transfer](docs/RES-11-cross-environment-skill-transfer.md) — transferable resource rebalancing skill across VRAM, RAM, CPU, and network bottlenecks.
+| ID | Title | Status |
+|----|-------|--------|
+| RES-05 | Nemotron-3-Nano as primary brain (RTX 5050) | 🟡 In progress |
+| RES-10 | WEDLM diffusion language model | 🟡 In progress |
+| RES-11 | SIMA cross-environment skill transfer | 🟡 In progress |
+| RES-12 | MemEvolve meta-evolution of retrieval | ✅ Implemented |
 
-## Heterogeneous Compute Gateway (KAN-86)
+---
 
-A latency-aware, capability-aware HTTP gateway that orchestrates the tri-GPU inference mesh.
-
-## ContentAIOS Kernel (KAN-87)
-
-Master kernel and sensory interface for autonomous content coordination.
-
-- Priority-scheduled event loop with structured `KernelEvent` payloads.
-- Sensory ingestion adapters: `PushSensoryInput` (webhooks/SDK pushes), `WebhookPushBridge`
-  for HTTP payloads, `PollingSensoryInput` (custom async pollers), and `HttpPollingSensoryInput`
-  for HTTP/JSON feeds.
-- Lightweight pub/sub bus for inter-subsystem communication.
-- Bounded audit log for ingestion, dispatch, and handler outcomes with pluggable sinks (JSONL +
-  metrics).
-- Subsystem-specific timeouts and retries on message bus deliveries.
-
-See `docs/KAN-87-contentaios.md` for the architecture and usage example.
-
-### Architecture
-
-| Device | Endpoint | Role |
-|---|---|---|
-| RTX 5050 | `localhost:8001` | Primary GPU inference (NVIDIA, 8 GiB VRAM) |
-| Radeon 780M | `localhost:8002` | Secondary GPU inference (AMD, 4 GiB VRAM) |
-| Ryzen 7 CPU | `localhost:8003` | CPU fallback |
-| **Gateway** | **`localhost:8000`** | **Request routing & load balancing** |
-
-### Features
-
-- **Latency-aware routing** — Exponential Moving Average (EMA) per backend; lower-latency backends are preferred within each device-type tier.
-- **Capability-aware routing** — model size / VRAM requirements are matched to the most suitable device (large models → NVIDIA GPU → AMD GPU → CPU).  The Primary Brain model (`nemotron-3-nano`) is always routed to the NVIDIA GPU first, overriding the normal nano-model CPU preference.
-- **Health check & failover** — periodic `/health` probes with configurable failure/recovery thresholds (circuit-breaker pattern).
-- **Transparent failover** — if the preferred backend is unreachable, the request is automatically retried on the next candidate.
-- **Throughput benchmarking** — per-backend request counts, avg/p50/p95/p99 latency, and requests-per-second over a rolling window.
-- **VAULT-ready** — model-to-device assignment is hot-reloadable via the `ModelAssigner` API.
-
-### Endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Gateway + backend health summary |
-| `GET` | `/metrics` | EMA latency readings + benchmark snapshot |
-| `GET` | `/benchmark` | Full per-backend throughput report |
-| `POST` | `/benchmark/reset` | Clear benchmark counters |
-| `*` | `/v1/{path}` | Proxy inference request to best backend |
-
-Query parameters on `/v1/*`:
-
-- `model_id` — model identifier (e.g. `deepseek-coder-33b`, `mistral-7b`) for capability-based routing.
-- `vram_gib` — explicit minimum VRAM requirement in GiB.
-
-### Quick Start
+## Development
 
 ```bash
-pip install -r requirements.txt
-python -m gateway.main          # starts on localhost:8000
+# Install dev deps
+pip install -r requirements.txt pytest pytest-asyncio pytest-cov httpx ruff mypy
+
+# Lint
+ruff check . && ruff format --check .
+
+# Tests
+pytest tests/ --tb=short -v --cov=gateway
+
+# Type check
+mypy gateway/ --ignore-missing-imports
 ```
 
-Or via the installed script:
+---
 
-```bash
-pip install -e .
-sovereign-gateway
-```
+## Integration
 
-### Configuration
+Sovereign Core is designed to be the backbone of your entire AI stack:
 
-All settings are overridable via environment variables prefixed with `GATEWAY_`:
+- **[Honcho](https://github.com/leerobber/Honcho)** — React frontend, uses `useSovereignCore` hook + `SovereignPanel`
+- **[contentai-pro](https://github.com/leerobber/contentai-pro)** — routes inference through `llm_sovereign.py` adapter
+- **[Termux-Intelligent-Assistant](https://github.com/leerobber/Termux-Intelligent-Assistant)** — stdlib-only `sovereign_client.py`, zero deps
 
-| Variable | Default | Description |
-|---|---|---|
-| `GATEWAY_HOST` | `0.0.0.0` | Bind host |
-| `GATEWAY_PORT` | `8000` | Bind port |
-| `GATEWAY_HEALTH_CHECK_INTERVAL` | `5.0` | Seconds between health probes |
-| `GATEWAY_BACKEND_TIMEOUT` | `30.0` | Per-request forwarding timeout (s) |
-| `GATEWAY_FAILURE_THRESHOLD` | `3` | Failures before marking backend unhealthy |
-| `GATEWAY_RECOVERY_THRESHOLD` | `2` | Successes needed to restore a backend |
-| `GATEWAY_LATENCY_EMA_ALPHA` | `0.2` | EMA smoothing factor (0–1) |
+Set `SOVEREIGN_GATEWAY_URL=http://<your-machine>:8000` in each project to connect.
 
-### Running Tests
+---
 
-```bash
-pip install -r requirements.txt
-python -m pytest tests/ -v
-```
+## License
+
+MIT — see [LICENSE](LICENSE)
