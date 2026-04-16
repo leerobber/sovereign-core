@@ -1,8 +1,11 @@
 """
-gateway/status.py — Unified System Status & Observability API
+gateway/status.py — System Status Router
 
-Real-time health, metrics, and event stream for all Sovereign Core subsystems.
-Exposes /status/, /status/stream (SSE), /status/backends, /status/kairos/{id}
+Routes:
+  GET /status/           — full system snapshot (JSON)
+  GET /status/backends   — per-backend health + latency
+  GET /status/stream     — SSE real-time health stream
+  GET /status/kairos/{id} — agent detail (delegates to kairos_routes)
 """
 from __future__ import annotations
 
@@ -10,138 +13,167 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, AsyncIterator, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict
 
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/status", tags=["observability"])
+router = APIRouter(prefix="/status", tags=["status"])
+
+_START_TIME = time.time()
+_VERSION = "2.0.0"
 
 
-# ── Models ───────────────────────────────────────────────────────────────────
+@router.get("/", summary="Full system snapshot")
+async def system_status(request: Request) -> Dict[str, Any]:
+    """Return a complete system snapshot: backends, KAIROS, auction, metrics."""
+    monitor = getattr(request.app.state, "health_monitor", None)
+    benchmark = getattr(request.app.state, "benchmark", None)
 
-class SubsystemStatus(BaseModel):
-    name: str
-    healthy: bool
-    latency_ms: Optional[float] = None
-    last_seen: Optional[float] = None
-    meta: Dict[str, Any] = Field(default_factory=dict)
+    backends = []
+    if monitor:
+        from gateway.config import BACKENDS
+        for b in BACKENDS:
+            healthy = monitor.is_healthy(b.id)
+            lat = getattr(monitor, "get_latency", lambda _: None)(b.id)
+            backends.append({
+                "name": b.id,
+                "label": b.label,
+                "healthy": healthy,
+                "latency_ms": round(lat * 1000, 2) if lat else None,
+                "meta": {
+                    "url": b.url,
+                    "device_type": b.device_type.value,
+                    "vram_gib": b.vram_gib,
+                    "weight": b.weight,
+                },
+            })
 
-
-class SystemSnapshot(BaseModel):
-    timestamp: float = Field(default_factory=time.time)
-    version: str = "1.0.0"
-    uptime_s: float = 0.0
-    backends: List[SubsystemStatus] = Field(default_factory=list)
-    gateway: Dict[str, Any] = Field(default_factory=dict)
-    kairos: Dict[str, Any] = Field(default_factory=dict)
-    auction: Dict[str, Any] = Field(default_factory=dict)
-    ledger: Dict[str, Any] = Field(default_factory=dict)
-    mem_evolve: Dict[str, Any] = Field(default_factory=dict)
-
-
-_boot_time = time.time()
-
-
-def _safe(fn):
-    """Execute a status getter safely; return error dict on failure."""
+    # KAIROS summary
+    kairos_summary: Dict[str, Any] = {}
     try:
-        return fn() or {}
-    except Exception as exc:
-        return {"error": str(exc)}
-
-
-# ── Routes ────────────────────────────────────────────────────────────────────
-
-@router.get("/", response_model=SystemSnapshot, summary="Full system snapshot")
-async def get_status(request: Request):
-    """
-    Comprehensive real-time snapshot: GPU backends, KAIROS economy,
-    auction ledger, MemEvolve retrieval stats.
-    """
-    snapshot = SystemSnapshot(uptime_s=time.time() - _boot_time)
-
-    # Backend health (requires HealthMonitor on app.state)
-    try:
-        monitor = request.app.state.health_monitor
-        for b in monitor.backends:
-            snapshot.backends.append(SubsystemStatus(
-                name=b.id,
-                healthy=monitor.is_healthy(b.id),
-                latency_ms=monitor.get_latency(b.id),
-                last_seen=monitor.last_seen(b.id),
-                meta={"url": b.url, "device_type": b.device_type},
-            ))
+        from pathlib import Path
+        import os
+        agents_dir = Path(os.getenv("KAIROS_AGENTS_DIR", "data/kairos/agents"))
+        if agents_dir.exists():
+            agent_files = [p for p in agents_dir.glob("*.json") if "_archive" not in p.name]
+            kairos_summary = {
+                "agent_count": len(agent_files),
+                "elite_count": 0,
+            }
+            for p in agent_files:
+                try:
+                    import json as _j
+                    with open(p) as f:
+                        d = _j.load(f)
+                    if d.get("tier") in ("elite", "next_elite"):
+                        kairos_summary["elite_count"] += 1
+                except Exception:
+                    pass
     except Exception:
         pass
 
-    # Auction stats
+    # Auction summary
+    auction_summary: Dict[str, Any] = {}
     try:
         from gateway.auction import auctioneer
-        snapshot.auction = _safe(lambda: auctioneer.stats())
+        auction_summary = {"credit_pool": getattr(auctioneer, "_credits", "unknown")}
     except Exception:
         pass
 
-    return snapshot
+    # WS stats
+    ws_stats: Dict[str, Any] = {}
+    try:
+        from gateway.ws import event_bus
+        ws_stats = event_bus.stats
+    except Exception:
+        pass
+
+    return {
+        "version": _VERSION,
+        "timestamp": time.time(),
+        "uptime_s": round(time.time() - _START_TIME, 2),
+        "backends": backends,
+        "healthy_count": sum(1 for b in backends if b["healthy"]),
+        "total_backends": len(backends),
+        "kairos": kairos_summary,
+        "auction": auction_summary,
+        "websocket": ws_stats,
+    }
 
 
-@router.get("/stream", summary="Server-Sent Events health stream")
-async def stream_status():
+@router.get("/backends", summary="Per-backend health and latency")
+async def backend_detail(request: Request) -> Dict[str, Any]:
+    """Return detailed per-backend state including latency EMA and last error."""
+    monitor = getattr(request.app.state, "health_monitor", None)
+    if not monitor:
+        return {"error": "Health monitor not initialized"}
+
+    from gateway.config import BACKENDS
+    result = {}
+    for b in BACKENDS:
+        healthy = monitor.is_healthy(b.id)
+        state = getattr(monitor, "_states", {}).get(b.id, None)
+        result[b.id] = {
+            "label": b.label,
+            "url": b.url,
+            "device_type": b.device_type.value,
+            "vram_gib": b.vram_gib,
+            "healthy": healthy,
+            "latency_ms": None,
+            "consecutive_failures": 0,
+            "consecutive_successes": 0,
+            "last_error": None,
+            "last_checked": None,
+        }
+        if state:
+            lat = getattr(state, "last_latency_ms", None)
+            result[b.id].update({
+                "latency_ms": round(lat, 2) if lat else None,
+                "consecutive_failures": getattr(state, "consecutive_failures", 0),
+                "consecutive_successes": getattr(state, "consecutive_successes", 0),
+                "last_error": getattr(state, "last_error", None),
+                "last_checked": getattr(state, "last_checked", None),
+                "status": getattr(state, "status", {}).value
+                    if hasattr(getattr(state, "status", None), "value") else str(getattr(state, "status", "unknown")),
+            })
+
+    return result
+
+
+@router.get("/stream", summary="SSE real-time health stream")
+async def health_stream(request: Request) -> StreamingResponse:
     """
-    SSE endpoint — pushes a lightweight system snapshot every 5 seconds.
-    Connect from any frontend: new EventSource('/status/stream')
+    Server-Sent Events stream of backend health.
+    Emits a JSON snapshot every 2 seconds.
+    Connect with: curl -N http://localhost:8000/status/stream
     """
-    async def _generate() -> AsyncIterator[str]:
+    async def generator() -> AsyncGenerator[str, None]:
         while True:
+            if await request.is_disconnected():
+                break
             try:
-                from gateway.auction import auctioneer
-                data = {
-                    "ts": time.time(),
-                    "uptime_s": time.time() - _boot_time,
-                    "auction": _safe(lambda: auctioneer.stats()),
-                }
-                yield f"data: {json.dumps(data)}\n\n"
+                snapshot = await system_status(request)
+                data = json.dumps(snapshot)
+                yield f"data: {data}\n\n"
             except Exception as exc:
                 yield f"data: {json.dumps({'error': str(exc)})}\n\n"
-            await asyncio.sleep(5)
+            await asyncio.sleep(2)
 
     return StreamingResponse(
-        _generate(),
+        generator(),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 
-@router.get("/backends", summary="GPU backend health details")
-async def get_backends(request: Request):
-    """Per-backend latency EMA, health status, and request counts."""
-    try:
-        monitor = request.app.state.health_monitor
-        return {
-            b.id: {
-                "healthy": monitor.is_healthy(b.id),
-                "latency_ms": monitor.get_latency(b.id),
-                "url": b.url,
-                "device_type": b.device_type,
-            }
-            for b in monitor.backends
-        }
-    except Exception as exc:
-        return {"error": str(exc)}
-
-
-@router.get("/kairos/{agent_id}", summary="KAIROS agent lineage and metrics")
-async def get_kairos_agent(agent_id: str):
-    """
-    Full evolution history, skill domains, and ARSO cycle count
-    for a specific KAIROS elite agent.
-    """
-    try:
-        from gateway.kairos import KAIROSAgent
-        agent = KAIROSAgent.load(agent_id)
-        return agent.to_dict()
-    except Exception as exc:
-        return {"error": str(exc), "agent_id": agent_id}
+@router.get("/kairos/{agent_id}", summary="KAIROS agent detail")
+async def kairos_agent_status(agent_id: str) -> Dict[str, Any]:
+    """Proxy to kairos_routes agent detail."""
+    from gateway.kairos_routes import get_agent
+    return await get_agent(agent_id)
