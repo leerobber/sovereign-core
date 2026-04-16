@@ -1,12 +1,17 @@
 """
 gateway/ws.py — WebSocket Event Bus
 
-Real-time bidirectional events: auction updates, backend health changes,
-KAIROS evolution milestones, ledger entries.
+Real-time bidirectional event streaming for:
+  - Backend health changes
+  - Inference completions
+  - KAIROS cycle results + elite promotions
+  - Auction outcomes
+  - Ledger writes
+  - MemEvolve weight updates
 
-Usage (from anywhere in the codebase):
-    from gateway.ws import event_bus
-    await event_bus.emit("auction.completed", {"winner": agent_id, "cost": 42})
+Clients connect to ws://host:8000/ws/events
+Send "ping" → receive {"type":"pong",...}
+All other messages are broadcast events in JSON format.
 """
 from __future__ import annotations
 
@@ -14,92 +19,165 @@ import asyncio
 import json
 import logging
 import time
-from typing import Set
+from typing import Any, Dict, Optional, Set
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ws", tags=["websocket"])
+router = APIRouter(tags=["websocket"])
 
 
 # ── Event Bus ─────────────────────────────────────────────────────────────────
 
 class EventBus:
     """
-    Lightweight in-process pub/sub.
-    Producers call await emit(); all connected WebSocket clients receive it.
+    Central async pub/sub bus.
+    Any gateway component can call await event_bus.emit(type, data)
+    All connected WebSocket clients receive the event.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._clients: Set[WebSocket] = set()
-        self._queue: asyncio.Queue = asyncio.Queue(maxsize=2000)
+        self._queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
+        self._event_counts: Dict[str, int] = {}
 
-    async def connect(self, ws: WebSocket):
-        await ws.accept()
+    def add_client(self, ws: WebSocket) -> None:
         self._clients.add(ws)
-        logger.info("WS client connected — total: %d", len(self._clients))
-
-    def disconnect(self, ws: WebSocket):
-        self._clients.discard(ws)
-        logger.info("WS client disconnected — total: %d", len(self._clients))
-
-    async def emit(self, event_type: str, payload: dict):
-        """Enqueue an event to broadcast to all connected clients."""
-        envelope = {"type": event_type, "ts": time.time(), "data": payload}
+        logger.info("WS client connected. Total: %d", len(self._clients))
+        # Update prometheus gauge if available
         try:
-            self._queue.put_nowait(envelope)
+            from gateway.metrics import WS_CONNECTIONS
+            WS_CONNECTIONS.set(len(self._clients))
+        except Exception:
+            pass
+
+    def remove_client(self, ws: WebSocket) -> None:
+        self._clients.discard(ws)
+        logger.info("WS client disconnected. Total: %d", len(self._clients))
+        try:
+            from gateway.metrics import WS_CONNECTIONS
+            WS_CONNECTIONS.set(len(self._clients))
+        except Exception:
+            pass
+
+    async def emit(self, event_type: str, data: Any = None) -> None:
+        """Put an event on the broadcast queue."""
+        event = {
+            "type": event_type,
+            "ts": time.time(),
+            "data": data or {},
+        }
+        self._event_counts[event_type] = self._event_counts.get(event_type, 0) + 1
+        try:
+            self._queue.put_nowait(event)
         except asyncio.QueueFull:
-            logger.warning("EventBus queue full — dropping %s", event_type)
+            # Drop oldest event if queue is full
+            try:
+                self._queue.get_nowait()
+                self._queue.put_nowait(event)
+            except Exception:
+                pass
 
-    async def broadcast_loop(self):
-        """
-        Background task to run in the FastAPI lifespan.
-        Drains the queue and fans out to all connected WebSocket clients.
-        """
+    async def broadcast_loop(self) -> None:
+        """Background task — drains queue and broadcasts to all clients."""
+        logger.info("WebSocket broadcast loop started")
         while True:
-            envelope = await self._queue.get()
-            dead: Set[WebSocket] = set()
-            for ws in list(self._clients):
-                try:
-                    await ws.send_json(envelope)
-                except Exception:
-                    dead.add(ws)
-            for ws in dead:
-                self._clients.discard(ws)
-            self._queue.task_done()
+            try:
+                event = await self._queue.get()
+                payload = json.dumps(event)
+
+                dead: Set[WebSocket] = set()
+                for ws in list(self._clients):
+                    try:
+                        await ws.send_text(payload)
+                    except Exception:
+                        dead.add(ws)
+
+                for ws in dead:
+                    self.remove_client(ws)
+
+            except asyncio.CancelledError:
+                logger.info("Broadcast loop cancelled — shutting down")
+                break
+            except Exception as exc:
+                logger.error("Broadcast loop error: %s", exc)
+                await asyncio.sleep(0.1)
+
+    @property
+    def client_count(self) -> int:
+        return len(self._clients)
+
+    @property
+    def stats(self) -> Dict[str, Any]:
+        return {
+            "connected_clients": len(self._clients),
+            "queue_size": self._queue.qsize(),
+            "event_counts": dict(self._event_counts),
+        }
 
 
-# Module-level singleton — import and call emit() from anywhere
+# Module-level singleton — imported by main.py and all routers
 event_bus = EventBus()
 
 
-# ── WebSocket Route ────────────────────────────────────────────────────────────
+# ── WebSocket endpoint ────────────────────────────────────────────────────────
 
-@router.websocket("/events")
-async def ws_events(websocket: WebSocket):
+@router.websocket("/ws/events")
+async def ws_events(ws: WebSocket) -> None:
     """
-    WebSocket endpoint for real-time Sovereign Core events.
+    WebSocket endpoint for real-time gateway events.
 
-    Event types emitted by the platform:
-      backend.health_changed    — a GPU backend changed health state
-      auction.completed         — Vickrey-Quadratic auction round concluded
-      kairos.cycle_complete     — KAIROS ARSO evolution cycle finished
-      kairos.elite_promoted     — agent reached Elite tier
-      ledger.entry_written      — new Aegis-Vault entry
-      mem_evolve.weights_updated — MemEvolve adjusted retrieval weights
-      verifier.verdict          — self-verification pass/fail
+    Protocol:
+      Client → "ping"                        → server replies {"type":"pong"}
+      Client → "stats"                       → server replies current stats
+      Server → {"type": EVENT_TYPE, "ts": float, "data": {...}}
 
-    Client → server messages:
-      "ping"  → server responds with {"type":"pong","ts":<float>}
+    Event types:
+      backend.health_changed      — a backend flipped healthy/unhealthy
+      inference.completed         — an inference request finished
+      kairos.cycle_complete       — a KAIROS ARSO cycle finished
+      kairos.elite_promoted       — an agent promoted to Elite tier
+      auction.completed           — an auction was resolved
+      ledger.entry_written        — Aegis-Vault ledger entry written
+      mem_evolve.weights_updated  — MemEvolve updated retrieval weights
+      verifier.verdict            — self-verification result
     """
-    await event_bus.connect(websocket)
+    await ws.accept()
+    event_bus.add_client(ws)
+
+    # Send connected event
+    await ws.send_text(json.dumps({
+        "type": "connected",
+        "ts": time.time(),
+        "data": {
+            "message": "Sovereign Core event stream connected",
+            "client_count": event_bus.client_count,
+        }
+    }))
+
     try:
-        await websocket.send_json({"type": "connected", "ts": time.time(),
-                                   "message": "Sovereign Core event stream active"})
         while True:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_json({"type": "pong", "ts": time.time()})
+            try:
+                msg = await asyncio.wait_for(ws.receive_text(), timeout=30.0)
+
+                if msg.strip().lower() == "ping":
+                    await ws.send_text(json.dumps({"type": "pong", "ts": time.time()}))
+
+                elif msg.strip().lower() == "stats":
+                    await ws.send_text(json.dumps({
+                        "type": "stats",
+                        "ts": time.time(),
+                        "data": event_bus.stats,
+                    }))
+
+            except asyncio.TimeoutError:
+                # Send keepalive
+                await ws.send_text(json.dumps({"type": "keepalive", "ts": time.time()}))
+
     except WebSocketDisconnect:
-        event_bus.disconnect(websocket)
+        pass
+    except Exception as exc:
+        logger.warning("WS error: %s", exc)
+    finally:
+        event_bus.remove_client(ws)
