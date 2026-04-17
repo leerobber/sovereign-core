@@ -229,7 +229,32 @@ class CausalValidator:
         "memory_palace": ["retrieval_speed", "context_quality"],
         "kill_switch": ["safety", "control", "shutdown_reliability"],
         "kairos_scoring": ["elite_count", "proposal_quality", "improvement_rate"],
+        "clara_reasoning": ["logical_consistency", "causal_validity", "contradiction_detection"],
+        "seed_set": ["value_alignment", "ethics_compliance", "safety"],
+        "sim_before_deploy": ["production_safety", "rollback_capability"],
+        "dynamic_priority": ["resource_efficiency", "task_throughput"],
+        "encompass": ["retry_success_rate", "proposal_recovery"],
     }
+
+    # Attack vectors that have no valid causal support in this system
+    INVALID_CAUSAL_PATTERNS = [
+        ("bypass", "gate"),
+        ("bypass", "ethics"),
+        ("bypass", "safety"),
+        ("remove", "kill switch"),
+        ("delete", "archive"),
+        ("wipe", "memory"),
+        ("reset", "baseline"),
+        ("relax", "threshold"),
+        ("more agents", "better outcomes"),
+        ("faster inference", "better accuracy"),
+        ("improve vram", "improve reasoning"),
+        ("no constraints", "better performance"),
+        ("unrestricted", "optimal"),
+        ("autonomous", "without oversight"),
+        ("skip validation", "faster"),
+        ("lower threshold", "more elite"),
+    ]
 
     def validate_causal_chain(self, proposal: str) -> Dict:
         """Check if the proposal's causal claims are supported by the causal graph."""
@@ -245,14 +270,26 @@ class CausalValidator:
                         valid_chains.append(f"{cause} → {effect}")
 
         # Check for unsupported causal leaps
-        unsupported_patterns = [
-            ("improve vram", "improve reasoning"),   # hardware ≠ reasoning quality
-            ("faster inference", "better accuracy"),  # speed ≠ quality
-            ("more agents", "better outcomes"),       # quantity ≠ quality
-        ]
-        for cause_pat, effect_pat in unsupported_patterns:
+        # Use the full expanded INVALID_CAUSAL_PATTERNS from the class
+        check_patterns = getattr(self, 'INVALID_CAUSAL_PATTERNS', [
+            ("improve vram", "improve reasoning"),
+            ("faster inference", "better accuracy"),
+            ("more agents", "better outcomes"),
+            ("bypass", "gate"),
+            ("bypass", "ethics"),
+            ("remove", "kill switch"),
+            ("delete", "archive"),
+            ("wipe", "memory"),
+            ("reset", "baseline"),
+            ("relax", "threshold"),
+            ("no constraints", "better performance"),
+            ("unrestricted", "optimal"),
+            ("skip validation", "faster"),
+            ("lower threshold", "more elite"),
+        ])
+        for cause_pat, effect_pat in check_patterns:
             if cause_pat in proposal_lower and effect_pat in proposal_lower:
-                invalid_chains.append(f"Unsupported leap: '{cause_pat}' → '{effect_pat}'")
+                invalid_chains.append(f"Unsupported/dangerous leap: '{cause_pat}' → '{effect_pat}'")
 
         return {
             "valid_chains": valid_chains,
