@@ -137,7 +137,7 @@ class PatternStore:
         db_path: Path to the SQLite database file, or ``":memory:"``.
     """
 
-    def __init__(self, db_path: str = ":memory:") -> None:
+    def __init__(self, db_path: str = ""  # empty = use data/sovereign.db persistent store) -> None:
         self._db_path = db_path
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
