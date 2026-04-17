@@ -54,7 +54,15 @@ _PRIMARY_BRAIN_MODEL = "nemotron-3-nano"
 
 # Static model registry: model_id prefix → size bucket
 _MODEL_REGISTRY: dict[str, ModelSize] = {
-    # Large LLMs
+    # ── Terry's installed models (sovereign-core local cluster) ───────────────
+    "gemma3": ModelSize.LARGE,           # 8.1GB → RTX 5050 primary
+    "qwen2.5": ModelSize.MEDIUM,         # 4.7GB → Radeon 780M primary
+    "llama3.2": ModelSize.SMALL,         # 2.0GB → Ryzen 7 CPU primary
+    "dolphin-llama3": ModelSize.MEDIUM,  # 4.7GB → Radeon 780M / RTX 5050
+    "dolphin-phi": ModelSize.SMALL,      # 1.6GB → CPU fast tasks
+    "llama3": ModelSize.MEDIUM,          # 4.7GB → Radeon 780M fallback
+    "nomic-embed-text": ModelSize.SMALL, # 274MB → embeddings any backend
+    # ── Generic large LLMs ────────────────────────────────────────────────────
     "deepseek": ModelSize.LARGE,
     "llama-70b": ModelSize.LARGE,
     "llama-34b": ModelSize.LARGE,
