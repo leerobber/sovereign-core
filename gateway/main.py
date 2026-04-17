@@ -28,7 +28,8 @@ from typing import AsyncIterator
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse
+from pathlib import Path as _Path
 
 from gateway.auction import InsufficientCreditsError, ResourceType, auctioneer as _auctioneer
 from gateway.benchmark import ThroughputBenchmark
@@ -43,6 +44,8 @@ from gateway.status import router as status_router
 from gateway.v1_compat import router as v1_router
 from gateway.ws import event_bus, router as ws_router
 from gateway.db import get_db, log_event  # persistent SQLite layer
+from gateway.auth import AuthMiddleware    # API key auth + rate limiting
+from gateway.iron_dome_middleware import iron_dome_guard  # injection screening
 
 logging.basicConfig(
     level=logging.INFO,
@@ -163,7 +166,16 @@ def create_app() -> FastAPI:
 
     # ── Core endpoints ────────────────────────────────────────────────────────
 
-    @app.get("/health", tags=["core"])
+    @app.get("/dashboard", include_in_schema=False)
+async def dashboard() -> HTMLResponse:
+    """Real-time command interface — live backend health, KAIROS, latency graphs."""
+    html_path = _Path(__file__).parent / "dashboard.html"
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>Dashboard file not found</h1>", status_code=404)
+
+
+@app.get("/health", tags=["core"])
     async def health() -> dict:
         healthy = sum(1 for b in BACKENDS if _health_monitor.is_healthy(b.id))
         ACTIVE_BACKENDS.set(healthy)
