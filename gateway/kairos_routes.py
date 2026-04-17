@@ -24,6 +24,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
+try:
+    from gateway.db import get_db, log_event as _db_log_event
+    _DB_AVAILABLE = True
+except ImportError:
+    _DB_AVAILABLE = False
+    def _db_log_event(*a, **kw): pass
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -95,7 +101,14 @@ async def run_sage(req: SAGERequest, request: Request) -> SAGEResponse:
             archive_path=archive_path,
             score_threshold=req.score_threshold,
         )
-        latency_ms = (time.time() - t0) * 1000
+        latency_ms = (time.time() - t0)
+        # Persist SAGE cycle outcome to DB
+        if _DB_AVAILABLE:
+            try:
+                _db_log_event("kairos_sage_cycle", "kairos_routes",
+                              f"SAGE cycle complete — agent {agent_id}",
+                              metadata={"agent_id": agent_id, "latency_ms": round(latency_ms*1000,1)})
+            except Exception: pass * 1000
 
         best = archive.best(5)
         top_score = best[0].score if best else 0.0
