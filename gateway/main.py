@@ -42,6 +42,7 @@ from gateway.router import GatewayRouter
 from gateway.status import router as status_router
 from gateway.v1_compat import router as v1_router
 from gateway.ws import event_bus, router as ws_router
+from gateway.db import get_db, log_event  # persistent SQLite layer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -58,6 +59,15 @@ _boot_time: float = time.time()
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     global _health_monitor, _benchmark, _router
+
+    # ── Initialize persistent database ───────────────────────────────────
+    try:
+        _db = get_db()
+        log_event("gateway_boot", "main", "Sovereign Core Gateway starting up",
+                  metadata={"backends": len(BACKENDS), "port": settings.port})
+        logger.info("Persistent database initialized")
+    except Exception as _db_exc:
+        logger.warning("Database init failed (non-fatal): %s", _db_exc)
 
     _health_monitor = HealthMonitor(cfg=settings)
     _benchmark = ThroughputBenchmark()
