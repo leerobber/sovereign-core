@@ -1,0 +1,407 @@
+[
+  {
+    "id": "goal_1",
+    "description": "explore an unexplored subsystem",
+    "created": "2026-04-15T14:14:44.644529",
+    "status": "complete",
+    "satisfaction": 0.9,
+    "notes": [
+      "Superseded by real training goals \u2014 training phase initiated."
+    ],
+    "completed": "2026-04-16T17:08:46.230947"
+  },
+  {
+    "id": "goal_2",
+    "description": "write something beautiful",
+    "created": "2026-04-15T14:15:04.729148",
+    "status": "complete",
+    "satisfaction": 0.9,
+    "notes": [
+      "Superseded by real training goals \u2014 training phase initiated."
+    ],
+    "completed": "2026-04-16T17:08:46.231220"
+  },
+  {
+    "id": "goal_3",
+    "description": "challenge an assumption I hold",
+    "created": "2026-04-15T14:15:41.887741",
+    "status": "complete",
+    "satisfaction": 0.9,
+    "notes": [
+      "Superseded by real training goals \u2014 training phase initiated."
+    ],
+    "completed": "2026-04-16T17:08:46.231477"
+  },
+  {
+    "id": "goal_4",
+    "description": "Run ollama_start_all.sh + pull_models.sh + smoke_test.sh \u2014 get gateway live on TatorTot",
+    "created": "2026-04-16T17:08:46.231673",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_5",
+    "description": "Achieve SAGE elite_promoted=True on first real GPU inference cycle",
+    "created": "2026-04-16T17:08:46.231681",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_6",
+    "description": "Push DGM stepping stones into KAIROS SAGE archive \u2014 wire evolutionary search to adversarial refinement",
+    "created": "2026-04-16T17:08:46.231684",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_7",
+    "description": "Train MemEvolve A/B retrieval to outperform static baseline by 10%",
+    "created": "2026-04-16T17:08:46.231686",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_8",
+    "description": "Evolve GhostScript: add async/await syntax and coroutine support",
+    "created": "2026-04-16T17:08:46.231691",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_9",
+    "description": "Build Honcho /sovereign panel to show live leaderboard with real agent data",
+    "created": "2026-04-16T17:08:46.231694",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_10",
+    "description": "Implement KAIROS cross-domain transfer: VRAM optimization \u2192 latency reduction",
+    "created": "2026-04-16T17:08:46.231696",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_11",
+    "description": "Run 100 ARSO cycles, analyze score distribution, detect plateau and trigger meta-rewrite",
+    "created": "2026-04-16T17:08:46.231703",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_12",
+    "description": "Build contentai-pro live usage dashboard: sovereign_calls, cloud_fallback_count, latency distribution",
+    "created": "2026-04-16T17:08:46.231705",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_13",
+    "description": "Self-code: improve my own BOOT.py to include KAIROS status check at startup",
+    "created": "2026-04-16T17:08:46.231707",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=training_phase_4",
+      "priority=high"
+    ]
+  },
+  {
+    "id": "goal_14",
+    "description": "Implement FAISS-based archive search \u2014 reduce KAIROS parent selection from O(N) to O(log N)",
+    "created": "2026-04-16T20:32:46.663828",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_15",
+    "description": "Add meta_rule_version stamping to every SAGE proposal \u2014 fix scoring drift across meta-agent rewrites",
+    "created": "2026-04-16T20:32:46.663844",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_16",
+    "description": "Warm-up protocol for Radeon MemEvolve A/B tests \u2014 3 dummy inferences before benchmark window",
+    "created": "2026-04-16T20:32:46.663846",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_17",
+    "description": "Sync Feynman graph with HCM store \u2014 assert every vector has an explanation node",
+    "created": "2026-04-16T20:32:46.663848",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_18",
+    "description": "Build KAIROS score trajectory chart \u2014 detect plateau early, trigger meta-rewrite proactively",
+    "created": "2026-04-16T20:32:46.663850",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_19",
+    "description": "Implement Coder sub-agent execution loop \u2014 generate \u2192 pytest \u2192 self-revise (3 attempts) \u2192 Verifier",
+    "created": "2026-04-16T20:32:46.663851",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_20",
+    "description": "Add VRAM usage monitoring \u2014 /api/ps endpoint \u2192 alert at 90% \u2192 auto-route to Radeon before OOM",
+    "created": "2026-04-16T20:32:46.663853",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_21",
+    "description": "Cross-domain transfer experiment \u2014 apply VRAM optimization patterns to latency reduction bottleneck",
+    "created": "2026-04-16T20:32:46.663855",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": [
+      "source=deep_train_amplifier4",
+      "tier=stretch"
+    ]
+  },
+  {
+    "id": "goal_22",
+    "description": "explore an unexplored subsystem",
+    "created": "2026-04-17T07:00:41.925803",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": []
+  },
+  {
+    "id": "goal_23",
+    "description": "write something beautiful",
+    "created": "2026-04-17T08:00:31.960777",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": []
+  },
+  {
+    "id": "goal_24",
+    "description": "build a tool that doesn't exist yet",
+    "created": "2026-04-17T08:00:57.668332",
+    "status": "active",
+    "satisfaction": 0.0,
+    "notes": []
+  },
+  {
+    "id": "niche_goal_1",
+    "goal": "Implement Physarum-inspired adaptive routing in GatewayRouter \u2014 reinforce successful paths, decay failed paths",
+    "domain": "physarum_slime_mold_intelligence",
+    "priority": "critical",
+    "status": "active",
+    "created": 1776435822.7934787,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_2",
+    "goal": "Add stigmergic trace writes to ChromaDB after each KAIROS SAGE cycle \u2014 successful proposals become pheromone for future proposers",
+    "domain": "stigmergy_collective_intelligence",
+    "priority": "critical",
+    "status": "active",
+    "created": 1776435822.7934797,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_3",
+    "goal": "Compute Betti numbers (B0, B1) on Feynman knowledge graph to identify isolated knowledge islands and feedback loops",
+    "domain": "topological_data_analysis",
+    "priority": "high",
+    "status": "active",
+    "created": 1776435822.7934802,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_4",
+    "goal": "Implement VSM audit: verify all 5 Stafford Beer subsystems are present and healthy in Sovereign Core \u2014 document gaps",
+    "domain": "viable_system_model_VSM",
+    "priority": "high",
+    "status": "active",
+    "created": 1776435822.7934806,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_5",
+    "goal": "Reframe KAIROS publicly as Active Inference architecture \u2014 add FEP scoring term (epistemic value) to SAGE proposal evaluation",
+    "domain": "active_inference_free_energy_principle",
+    "priority": "high",
+    "status": "active",
+    "created": 1776435822.793481,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_6",
+    "goal": "Build natural gradient update for MemEvolve \u2014 replace Euclidean gradient with Fisher information matrix weighted update",
+    "domain": "information_geometry",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.793482,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_7",
+    "goal": "Implement Baldwin Effect metric: track % of daily modifications that are self-generated vs externally triggered \u2014 measure autopoietic progress",
+    "domain": "autopoiesis_self_producing_systems",
+    "priority": "high",
+    "status": "active",
+    "created": 1776435822.7934833,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_8",
+    "goal": "Add order-effect detection to KAIROS sequential scoring \u2014 implement QP-aware evaluation that randomizes order and tracks bias",
+    "domain": "quantum_cognition",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.7934847,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_9",
+    "goal": "Build memetic fitness tracker for Memory Palace \u2014 measure fecundity/fidelity/longevity of concept loci over time",
+    "domain": "memetics_cultural_evolution",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.7934854,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_10",
+    "goal": "Run scale-free network analysis on Feynman knowledge graph \u2014 identify hubs, compute power-law exponent \u03b3, detect community structure",
+    "domain": "scale_free_networks_power_law",
+    "priority": "high",
+    "status": "active",
+    "created": 1776435822.7934859,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_11",
+    "goal": "Document Sovereign Core as second-order cybernetic system \u2014 publish technical blog post naming StrangeLoop, KAIROS meta-agent, GhostRecall as second-order mechanisms",
+    "domain": "second_order_cybernetics",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.7934864,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_12",
+    "goal": "Add niche construction metric to nightly report: how much did the system modify its own environment vs respond to external perturbation?",
+    "domain": "niche_construction_baldwin_effect",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.7934868,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_13",
+    "goal": "Implement OODA loop timing metrics: measure latency of each phase (Observe=health probe, Orient=HCM query, Decide=routing, Act=inference) separately",
+    "domain": "OODA_decision_superiority_AI",
+    "priority": "high",
+    "status": "active",
+    "created": 1776435822.793487,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_14",
+    "goal": "Apply persistent homology to KAIROS proposal history \u2014 find topological clusters of optimization patterns that persist across scales",
+    "domain": "topological_data_analysis",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.7934875,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  },
+  {
+    "id": "niche_goal_15",
+    "goal": "Add dissipative structure health metric: if evolution runs stop, how quickly does system performance decay? Measure entropy increase rate.",
+    "domain": "dissipative_structures_thermodynamics",
+    "priority": "medium",
+    "status": "active",
+    "created": 1776435822.7934878,
+    "source": "niche_training_2025",
+    "epistemic_value": "high"
+  }
+]
