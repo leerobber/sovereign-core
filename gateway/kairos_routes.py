@@ -25,6 +25,21 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
 try:
+    from kairos.encompass_backtrack import EnCompassBacktracker, FailureReason
+    _ENCOMPASS = EnCompassBacktracker()
+    _ENCOMPASS_ACTIVE = True
+except Exception as _enc_err:
+    _ENCOMPASS_ACTIVE = False
+    import logging as _l; _l.getLogger(__name__).warning("EnCompass unavailable: %s", _enc_err)
+
+try:
+    from gateway.sage_context import sage_write_context, sage_read_prior_context
+    _CTX_ACTIVE = True
+except Exception:
+    _CTX_ACTIVE = False
+    def sage_write_context(*a, **k): return False
+    def sage_read_prior_context(*a, **k): return "" 
+try:
     from gateway.db import get_db, log_event as _db_log_event
     _DB_AVAILABLE = True
 except ImportError:
