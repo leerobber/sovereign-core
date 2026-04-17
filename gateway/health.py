@@ -167,7 +167,7 @@ class HealthMonitor:
     async def _check_one(
         self, session: aiohttp.ClientSession, state: BackendState
     ) -> None:
-        url = f"{state.config.url}/health"
+        url = f"{state.config.url}/api/tags"
         try:
             async with session.get(url) as resp:
                 if resp.status == 200:
