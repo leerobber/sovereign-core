@@ -23,6 +23,11 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
+try:
+    from gateway.iron_dome_middleware import iron_dome_guard as _iron_dome
+    _IRON_DOME_ACTIVE = True
+except ImportError:
+    _IRON_DOME_ACTIVE = False
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
