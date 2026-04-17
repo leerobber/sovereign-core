@@ -1,236 +1,190 @@
 # Sovereign Core
 
-> Autonomous AI agent platform — heterogeneous compute gateway, self-evolving KAIROS agent economy, and Aegis-Vault semantic ledger.
+> *One person. One machine. A system that evolves itself every night.*
 
 [![CI](https://github.com/leerobber/sovereign-core/actions/workflows/ci.yml/badge.svg)](https://github.com/leerobber/sovereign-core/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg)](https://fastapi.tiangolo.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![KAIROS](https://img.shields.io/badge/KAIROS-evolving_nightly-7c3aed?style=flat-square)](https://github.com/leerobber/sovereign-core)
+[![Local GPU](https://img.shields.io/badge/RTX_5050_+_Radeon_780M-local_cluster-76b900?style=flat-square)](https://github.com/leerobber/sovereign-core)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
+
+---
+
+## What This Is
+
+Sovereign Core is the central hub of a **fully local, self-improving AI platform** — built by one self-taught developer on a home GPU cluster, with zero cloud dependency.
+
+It routes AI inference across a heterogeneous compute cluster (RTX 5050 + Radeon 780M + Ryzen 7 CPU), runs a nightly self-improvement loop that evolves its own architecture, and coordinates a multi-agent system across 5 interconnected repositories.
+
+**This is not a demo. This is not a prototype. This runs nightly on real hardware.**
 
 ---
 
 ## Architecture
 
 ```
-                        ┌─────────────────────────────────────────┐
-                        │         Sovereign Core Gateway           │
-                        │              localhost:8000              │
-                        │                                          │
-    ┌──────────┐        │  ┌──────────┐  ┌──────────┐  ┌───────┐ │
-    │  Honcho  │───────▶│  │  Router  │  │  KAIROS  │  │Auction│ │
-    │(React UI)│        │  │(EMA lat.)│  │(SAGE loop│  │(VQ)   │ │
-    └──────────┘        │  └────┬─────┘  └──────────┘  └───────┘ │
-                        │       │                                  │
-    ┌──────────┐        │  ┌────▼──────────────────────────────┐  │
-    │contentai │───────▶│  │   Backend Mesh (Latency-Aware)    │  │
-    │   -pro   │        │  ├───────────┬───────────┬───────────┤  │
-    └──────────┘        │  │ RTX 5050  │Radeon 780M│ Ryzen 7   │  │
-                        │  │:8001 GPU  │:8002 GPU  │:8003 CPU  │  │
-    ┌──────────┐        │  │ 8GB VRAM  │ 4GB VRAM  │ Fallback  │  │
-    │  Termux  │───────▶│  └───────────┴───────────┴───────────┘  │
-    │Assistant │        │                                          │
-    └──────────┘        │  ┌──────────┐  ┌──────────┐  ┌───────┐ │
-                        │  │MemEvolve │  │Aegis-Vault│  │Pattern│ │
-                        │  │(RES-12)  │  │  Ledger   │  │Memory │ │
-                        └──┴──────────┴──┴──────────┴──┴───────┘─┘
+┌─────────────────────────────────────────────────────────────┐
+│              SOVEREIGN CORE GATEWAY  :8000                  │
+│         Heterogeneous Compute Router (FastAPI)              │
+├─────────────────┬───────────────────┬───────────────────────┤
+│   RTX 5050      │   Radeon 780M     │     Ryzen 7 CPU       │
+│   8GB VRAM      │   4GB VRAM        │     System RAM        │
+│   Qwen2.5       │   DeepSeek-Coder  │     Llama/Mistral     │
+│   :8001         │   :8002           │     :8003             │
+│   Primary       │   Verifier        │     Fallback          │
+└─────────────────┴───────────────────┴───────────────────────┘
 ```
 
-### Components
-
-| Component | File | Description |
-|-----------|------|-------------|
-| **Gateway Router** | `gateway/router.py` | Latency-EMA + capability-aware backend selection |
-| **Health Monitor** | `gateway/health.py` | Async health probes with circuit-breaker |
-| **KAIROS** | `gateway/kairos.py` | nextElites agent economy — self-evolving ARSO cycles |
-| **SAGE Loop** | `hyperagents/sage_generate_loop.py` | 4-agent co-evolution: Proposer→Critic→Verifier→Meta |
-| **DGM-H Archive** | `gateway/dgm_h_archive.py` | Lineage archive for ancestor reconstruction |
-| **Auction** | `gateway/auction.py` | Vickrey-Quadratic resource allocation |
-| **Ledger** | `gateway/ledger.py` | HMAC-SHA256 Aegis-Vault semantic ledger |
-| **MemEvolve** | `gateway/mem_evolve.py` | Meta-evolution of memory retrieval strategies |
-| **Self-Verification** | `gateway/self_verification.py` | DeepSeek-Coder proposal verification |
-| **ContentAIOS** | `contentaios/kernel.py` | Priority-scheduled content coordination kernel |
-| **mHC Gene** | `synthetic_architect/mhc_gene.py` | Manifold-constrained hyper-connections (NAS) |
+**Routing logic:** RTX 5050 first → Radeon 780M if unavailable → Ryzen CPU as last resort. The system never cold-fails. Failover is silent and automatic.
 
 ---
 
-## Quick Start
+## KAIROS — The Self-Improvement Engine
 
-### Option 1 — Docker Compose (recommended)
+**KAIROS** = Knowledge-Augmented Iterative Recursive Optimization System
+
+Every night at 3:00 AM, KAIROS runs 10 live ARSO cycles on real GPU hardware:
+
+```
+Proposer ──► generates improvement proposals (Qwen2.5 / RTX 5050)
+    │
+Critic ───► reviews each proposal: APPROVE / REJECT / REVISE
+    │
+Verifier ─► validates logic and correctness (DeepSeek-Coder / Radeon)
+    │
+Meta-Agent ► every 3 cycles, rewrites the rules the others operate under
+    │
+Archive ──► stepping stones stored. score ≥ 0.85 → Elite status
+```
+
+**The compounding effect:** The Meta-Agent improves *how improvement happens* — not just what gets improved. Each generation learns faster than the last.
+
+- 10 cycles/night × 365 nights = **3,650+ live improvement cycles per year**
+- Every stepping stone builds on the last
+- Plateau detection triggers automatic rule rewrite
+
+---
+
+## The SAGE Loop (4-Agent Co-Evolution)
+
+| Agent | Role | Hardware |
+|-------|------|----------|
+| **Proposer** | Generates improvement proposals | RTX 5050 / Qwen2.5 |
+| **Critic** | Reviews and scores each proposal | Separate model (anti-capture) |
+| **Verifier** | Validates logic and correctness | Radeon 780M / DeepSeek-Coder |
+| **Meta-Agent** | Rewrites the operating rules every 3 cycles | RTX 5050 |
+
+> **Critic Capture prevention:** The Proposer and Critic are always separate models on separate hardware. A system that reviews its own work will always approve it.
+
+---
+
+## Connected Repositories
+
+Sovereign Core is the hub. These are the nodes:
+
+| Repo | Role | Connection |
+|------|------|-----------|
+| [DGM](https://github.com/leerobber/DGM) | Darwin Gödel Machine — self-improving coding agent | Stepping stones feed KAIROS archive |
+| [HyperAgents](https://github.com/leerobber/HyperAgents) | Self-referential agent swarm | Routes inference through gateway |
+| [Honcho](https://github.com/leerobber/Honcho) | Mission control dashboard | WebSocket live connection to gateway |
+| [contentai-pro](https://github.com/leerobber/contentai-pro) | Multi-agent content engine | Priority-0 sovereign provider |
+| [Termux-Intelligent-Assistant](https://github.com/leerobber/Termux-Intelligent-Assistant) | Android mobile agent | Connects via WiFi, works offline |
+
+---
+
+## Quickstart
 
 ```bash
-# Clone
-git clone https://github.com/leerobber/sovereign-core
-cd sovereign-core
+# 1. Start AI model servers on each GPU
+bash scripts/ollama_start_all.sh
 
-# Configure
+# 2. Pull the inference models
+bash scripts/pull_models.sh
+
+# 3. Start the gateway router
+bash scripts/start_gateway.sh
+
+# 4. Verify all endpoints healthy
+bash scripts/smoke_test.sh
+```
+
+**Endpoints:**
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| Gateway | 8000 | Main router — all inference requests |
+| RTX 5050 | 8001 | Primary inference (Qwen2.5) |
+| Radeon 780M | 8002 | Verifier inference (DeepSeek-Coder) |
+| Ryzen CPU | 8003 | Fallback inference (Llama/Mistral) |
+| WebSocket | 8000/ws | Real-time event bus for Honcho |
+
+---
+
+## OpenAI Compatibility
+
+The gateway exposes a `/v1/chat/completions` endpoint fully compatible with the OpenAI API spec. Any tool built for ChatGPT works with sovereign-core out of the box — no modification needed.
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="sovereign"  # any string — local auth
+)
+
+response = client.chat.completions.create(
+    model="qwen2.5",
+    messages=[{"role": "user", "content": "What ran in KAIROS last night?"}]
+)
+```
+
+---
+
+## Environment
+
+```bash
 cp .env.example .env
-# Edit .env — set GATEWAY_API_KEY if desired
-
-# Start everything (gateway + 3 Ollama backends + ChromaDB + Prometheus + Grafana)
-docker compose up -d
-
-# Pull a model on the NVIDIA backend
-docker exec sovereign-nvidia ollama pull qwen2.5:14b
-docker exec sovereign-amd ollama pull deepseek-coder:6.7b
-docker exec sovereign-cpu ollama pull llama3.2:3b
-
-# Verify
-curl http://localhost:8000/health
 ```
 
-### Option 2 — Local (bare metal, recommended for GPU passthrough)
-
-```bash
-# Prerequisites: Python 3.11+, Ollama running on :8001/:8002/:8003
-
-git clone https://github.com/leerobber/sovereign-core
-cd sovereign-core
-pip install -r requirements.txt
-
-# Start gateway
-python -m uvicorn gateway.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Verify
-python scripts/sovereign.py status
+```env
+SOVEREIGN_GATEWAY_URL=http://localhost:8000
+RTX_ENDPOINT=http://localhost:8001
+RADEON_ENDPOINT=http://localhost:8002
+CPU_ENDPOINT=http://localhost:8003
+KAIROS_CYCLES=10
+KAIROS_ELITE_THRESHOLD=0.85
+KAIROS_ARCHIVE_THRESHOLD=0.70
 ```
 
 ---
 
-## CLI
+## Philosophy
 
-```bash
-# System status
-python scripts/sovereign.py status
+Most AI infrastructure depends on cloud APIs, rate limits, and someone else's servers. 
 
-# GPU backend details
-python scripts/sovereign.py backends
+This doesn't.
 
-# Run KAIROS evolution cycles
-python scripts/sovereign.py evolve --cycles 10
+> *"Sovereign infrastructure means the compute is yours, the data is yours, the evolution is yours. No API keys. No monthly bills. No terms of service that change without warning."*
 
-# Tail Aegis-Vault ledger
-python scripts/sovereign.py ledger tail --n 25
+Built on two ideas:
+- **Darwin** — keep the good solutions, build on them, improve generation by generation
+- **Gödel** — a system powerful enough can reason about itself and rewrite itself to be better
 
-# Benchmark a model
-python scripts/sovereign.py bench --model qwen2.5:14b
-
-# Override gateway URL
-python scripts/sovereign.py --gateway http://192.168.1.100:8000 status
-```
+The goal isn't the smartest system today. It's the one that gets smarter fastest over time.
 
 ---
 
-## API Reference
+## Built By
 
-### Core
+**Terry Lee** — Douglasville, GA  
+Self-taught systems architect. Fabrication worker by day. AI infrastructure builder by night.  
+No institution. No team. Just architecture.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Liveness probe — returns healthy/degraded |
-| `GET` | `/metrics` | Prometheus metrics |
-| `GET` | `/docs` | Interactive Swagger UI |
-
-### Inference
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/inference` | Route text generation across GPU mesh |
-
-```bash
-curl -X POST http://localhost:8000/inference \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "qwen2.5:14b",
-    "prompt": "Explain KAIROS in one paragraph.",
-    "options": {"num_predict": 256, "temperature": 0.7}
-  }'
-```
-
-### KAIROS Agent Economy
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/kairos/sage` | Route task through SAGE 4-agent loop |
-| `POST` | `/kairos/evolve` | Run N ARSO evolution cycles |
-| `GET` | `/kairos/leaderboard` | Top agents by score |
-| `GET` | `/status/kairos/{agent_id}` | Agent details + lineage |
-
-### Observability
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/status/` | Full system snapshot |
-| `GET` | `/status/backends` | Per-backend health + latency |
-| `GET` | `/status/stream` | SSE real-time health stream |
-| `WS` | `/ws/events` | WebSocket event bus |
-
-### Auction & Ledger
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/auction/bid` | Submit Vickrey-Quadratic bid |
-| `GET` | `/ledger/tail` | Last N Aegis-Vault entries |
-| `POST` | `/benchmark/run` | Throughput benchmark |
+*Self-taught. Self-funded. Self-improving — just like the systems I build.*
 
 ---
 
-## WebSocket Events
+<div align="center">
 
-Connect to `ws://localhost:8000/ws/events` to receive real-time events:
+**[Profile](https://github.com/leerobber)** · **[DGM](https://github.com/leerobber/DGM)** · **[HyperAgents](https://github.com/leerobber/HyperAgents)** · **[Honcho](https://github.com/leerobber/Honcho)** · **[contentai-pro](https://github.com/leerobber/contentai-pro)**
 
-```js
-const ws = new WebSocket('ws://localhost:8000/ws/events');
-ws.onmessage = ({ data }) => {
-  const { type, ts, data: payload } = JSON.parse(data);
-  // type: backend.health_changed | auction.completed | kairos.cycle_complete
-  //       kairos.elite_promoted | ledger.entry_written | inference.completed
-};
-ws.send('ping');  // → { type: "pong", ts: 1234567890 }
-```
-
----
-
-## Research Tracks
-
-| ID | Title | Status |
-|----|-------|--------|
-| RES-05 | Nemotron-3-Nano as primary brain (RTX 5050) | 🟡 In progress |
-| RES-10 | WEDLM diffusion language model | 🟡 In progress |
-| RES-11 | SIMA cross-environment skill transfer | 🟡 In progress |
-| RES-12 | MemEvolve meta-evolution of retrieval | ✅ Implemented |
-
----
-
-## Development
-
-```bash
-# Install dev deps
-pip install -r requirements.txt pytest pytest-asyncio pytest-cov httpx ruff mypy
-
-# Lint
-ruff check . && ruff format --check .
-
-# Tests
-pytest tests/ --tb=short -v --cov=gateway
-
-# Type check
-mypy gateway/ --ignore-missing-imports
-```
-
----
-
-## Integration
-
-Sovereign Core is designed to be the backbone of your entire AI stack:
-
-- **[Honcho](https://github.com/leerobber/Honcho)** — React frontend, uses `useSovereignCore` hook + `SovereignPanel`
-- **[contentai-pro](https://github.com/leerobber/contentai-pro)** — routes inference through `llm_sovereign.py` adapter
-- **[Termux-Intelligent-Assistant](https://github.com/leerobber/Termux-Intelligent-Assistant)** — stdlib-only `sovereign_client.py`, zero deps
-
-Set `SOVEREIGN_GATEWAY_URL=http://<your-machine>:8000` in each project to connect.
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE)
+</div>
