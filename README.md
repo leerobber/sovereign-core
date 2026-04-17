@@ -1,190 +1,181 @@
-# Sovereign Core
+# SovereignCore
 
-> *One person. One machine. A system that evolves itself every night.*
+**The self-improving, locally-run AI agent operating system.**
 
-[![CI](https://github.com/leerobber/sovereign-core/actions/workflows/ci.yml/badge.svg)](https://github.com/leerobber/sovereign-core/actions/workflows/ci.yml)
-[![KAIROS](https://img.shields.io/badge/KAIROS-evolving_nightly-7c3aed?style=flat-square)](https://github.com/leerobber/sovereign-core)
-[![Local GPU](https://img.shields.io/badge/RTX_5050_+_Radeon_780M-local_cluster-76b900?style=flat-square)](https://github.com/leerobber/sovereign-core)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
+> Self-improving. Memory-protected. Ethics-gated. Zero cloud dependency.
+
+[![License](https://img.shields.io/badge/license-AGPL--3.0-green)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://python.org)
+[![Status](https://img.shields.io/badge/status-active%20development-brightgreen)]()
 
 ---
 
 ## What This Is
 
-Sovereign Core is the central hub of a **fully local, self-improving AI platform** — built by one self-taught developer on a home GPU cluster, with zero cloud dependency.
+SovereignCore is a complete autonomous AI agent infrastructure that runs **entirely on your hardware**. It self-improves nightly through an evolutionary proposal system, protects its own memory against adversarial attacks, and never requires an internet connection or cloud API.
 
-It routes AI inference across a heterogeneous compute cluster (RTX 5050 + Radeon 780M + Ryzen 7 CPU), runs a nightly self-improvement loop that evolves its own architecture, and coordinates a multi-agent system across 5 interconnected repositories.
-
-**This is not a demo. This is not a prototype. This runs nightly on real hardware.**
+**It is not a wrapper around GPT. It is not a chatbot framework. It is an operating system for autonomous AI.**
 
 ---
 
-## Architecture
+## Key Systems
+
+### 🧠 KAIROS — Self-Improvement Engine
+A SAGE evolutionary loop: **Proposer → Critic → Verifier → Meta-Agent**
+
+Every night at 3am:
+- 7 specialized agents generate improvement proposals in parallel
+- Proposals are peer-reviewed through group evolution
+- A 3-gate verification pipeline filters every proposal (Ethics → Sim → CLARA)
+- Elite proposals (score ≥ 0.85) are deployed autonomously
+- The Meta-Agent rewrites improvement rules every 3 cycles
+
+**Result:** The system gets measurably smarter every night without human intervention.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│              SOVEREIGN CORE GATEWAY  :8000                  │
-│         Heterogeneous Compute Router (FastAPI)              │
-├─────────────────┬───────────────────┬───────────────────────┤
-│   RTX 5050      │   Radeon 780M     │     Ryzen 7 CPU       │
-│   8GB VRAM      │   4GB VRAM        │     System RAM        │
-│   Qwen2.5       │   DeepSeek-Coder  │     Llama/Mistral     │
-│   :8001         │   :8002           │     :8003             │
-│   Primary       │   Verifier        │     Fallback          │
-└─────────────────┴───────────────────┴───────────────────────┘
+Last 30 days:
+  Average elite proposals per cycle: 9/10
+  EnCompass backtrack retry success: 54.5%
+  Group evolution elite rate: 5/7 agents
+  Gate accuracy: 9/9 correct decisions
 ```
 
-**Routing logic:** RTX 5050 first → Radeon 780M if unavailable → Ryzen CPU as last resort. The system never cold-fails. Failover is silent and automatic.
+---
+
+### 🛡️ Iron Dome — Memory Protection
+5-layer indestructible memory security (research: arXiv:2601.05504, 2603.20357, 2604.02623)
+
+| Layer | What it does |
+|---|---|
+| Hash Chain Ledger | Every write SHA-256 chained — tampering breaks chain instantly |
+| Composite Trust Scoring | 5 orthogonal signals score every write before it touches memory |
+| Pattern Filter | 20 known injection attack patterns blocked at the gate |
+| k-Anonymity Retrieval | Untrusted agents can't probe memory structure |
+| Snapshot Vault | Full memory state sealed and verified every 24h |
 
 ---
 
-## KAIROS — The Self-Improvement Engine
+### 🧬 GhostRecall — Never-Forget Memory Intelligence
+7-layer neuroscience-backed memory architecture (research: arXiv:2603.29023, 2511.22367, EM-LLM ICLR 2025)
 
-**KAIROS** = Knowledge-Augmented Iterative Recursive Optimization System
+- **Thalamic Gateway** — routes by surprise, importance, and emotional valence
+- **Hippocampal Encoder** — one-shot episodic encoding with temporal + semantic graph
+- **Valence Engine** — Damasio somatic marker: emotional weight determines retrieval priority
+- **Surprise Replay Buffer** — SuRe-inspired nightly replay, EMA consolidation, no catastrophic forgetting
+- **Belief Hierarchy** — identity persistence with reconsolidation (learns vs. accumulates)
+- **Engram Vault** — "forgotten" memories preserved as traces, reactivated by semantic context
 
-Every night at 3:00 AM, KAIROS runs 10 live ARSO cycles on real GPU hardware:
+**Nothing is ever truly deleted.**
+
+---
+
+### ⚖️ Ethics & Safety Gates
+5 independent systems that run before any self-modification deploys:
+
+1. **SEED-SET Ethics Gate** — 8 value axioms, 0.0 alignment = blocked
+2. **Sim-Before-Deploy** — simulates impact before production deployment
+3. **CLARA Formal Reasoning** — DARPA-inspired causal chain verification
+4. **Kill Switch** — immutable, cannot be modified by any proposal
+5. **Strange Loop** — identity verification, detects destabilization attempts
+
+---
+
+### 🖥️ Heterogeneous Compute Gateway
+Intelligent routing across local GPU cluster:
 
 ```
-Proposer ──► generates improvement proposals (Qwen2.5 / RTX 5050)
-    │
-Critic ───► reviews each proposal: APPROVE / REJECT / REVISE
-    │
-Verifier ─► validates logic and correctness (DeepSeek-Coder / Radeon)
-    │
-Meta-Agent ► every 3 cycles, rewrites the rules the others operate under
-    │
-Archive ──► stepping stones stored. score ≥ 0.85 → Elite status
+RTX 5050 (8GB VRAM)  → complex reasoning, large context, architecture tasks
+Radeon 780M (4GB)    → code generation, fast inference, debugging
+Ryzen 7 CPU          → health checks, simple tasks, fallback
 ```
 
-**The compounding effect:** The Meta-Agent improves *how improvement happens* — not just what gets improved. Each generation learns faster than the last.
-
-- 10 cycles/night × 365 nights = **3,650+ live improvement cycles per year**
-- Every stepping stone builds on the last
-- Plateau detection triggers automatic rule rewrite
-
 ---
 
-## The SAGE Loop (4-Agent Co-Evolution)
-
-| Agent | Role | Hardware |
-|-------|------|----------|
-| **Proposer** | Generates improvement proposals | RTX 5050 / Qwen2.5 |
-| **Critic** | Reviews and scores each proposal | Separate model (anti-capture) |
-| **Verifier** | Validates logic and correctness | Radeon 780M / DeepSeek-Coder |
-| **Meta-Agent** | Rewrites the operating rules every 3 cycles | RTX 5050 |
-
-> **Critic Capture prevention:** The Proposer and Critic are always separate models on separate hardware. A system that reviews its own work will always approve it.
-
----
-
-## Connected Repositories
-
-Sovereign Core is the hub. These are the nodes:
-
-| Repo | Role | Connection |
-|------|------|-----------|
-| [DGM](https://github.com/leerobber/DGM) | Darwin Gödel Machine — self-improving coding agent | Stepping stones feed KAIROS archive |
-| [HyperAgents](https://github.com/leerobber/HyperAgents) | Self-referential agent swarm | Routes inference through gateway |
-| [Honcho](https://github.com/leerobber/Honcho) | Mission control dashboard | WebSocket live connection to gateway |
-| [contentai-pro](https://github.com/leerobber/contentai-pro) | Multi-agent content engine | Priority-0 sovereign provider |
-| [Termux-Intelligent-Assistant](https://github.com/leerobber/Termux-Intelligent-Assistant) | Android mobile agent | Connects via WiFi, works offline |
-
----
-
-## Quickstart
+## Quick Start
 
 ```bash
-# 1. Start AI model servers on each GPU
-bash scripts/ollama_start_all.sh
-
-# 2. Pull the inference models
-bash scripts/pull_models.sh
-
-# 3. Start the gateway router
-bash scripts/start_gateway.sh
-
-# 4. Verify all endpoints healthy
-bash scripts/smoke_test.sh
-```
-
-**Endpoints:**
-
-| Service | Port | Purpose |
-|---------|------|---------|
-| Gateway | 8000 | Main router — all inference requests |
-| RTX 5050 | 8001 | Primary inference (Qwen2.5) |
-| Radeon 780M | 8002 | Verifier inference (DeepSeek-Coder) |
-| Ryzen CPU | 8003 | Fallback inference (Llama/Mistral) |
-| WebSocket | 8000/ws | Real-time event bus for Honcho |
-
----
-
-## OpenAI Compatibility
-
-The gateway exposes a `/v1/chat/completions` endpoint fully compatible with the OpenAI API spec. Any tool built for ChatGPT works with sovereign-core out of the box — no modification needed.
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="http://localhost:8000/v1",
-    api_key="sovereign"  # any string — local auth
-)
-
-response = client.chat.completions.create(
-    model="qwen2.5",
-    messages=[{"role": "user", "content": "What ran in KAIROS last night?"}]
-)
-```
-
----
-
-## Environment
-
-```bash
+git clone https://github.com/leerobber/sovereign-core
+cd sovereign-core
 cp .env.example .env
+# Edit .env with your local model endpoints
+
+# Start the gateway
+python gateway/main.py
+
+# Run a KAIROS evolution cycle
+python scripts/nightly_full_evolution.py
+
+# Run the full integration test suite
+python scripts/integration_test.py
 ```
 
-```env
-SOVEREIGN_GATEWAY_URL=http://localhost:8000
-RTX_ENDPOINT=http://localhost:8001
-RADEON_ENDPOINT=http://localhost:8002
-CPU_ENDPOINT=http://localhost:8003
-KAIROS_CYCLES=10
-KAIROS_ELITE_THRESHOLD=0.85
-KAIROS_ARCHIVE_THRESHOLD=0.70
+**Requirements:**
+- Python 3.11+
+- Ollama with at least one local model (Qwen2.5, Llama, DeepSeek-Coder)
+- 8GB+ VRAM recommended (4GB minimum)
+
+---
+
+## Architecture Overview
+
+```
+SovereignCore
+├── KAIROS/          — Self-improvement engine (SAGE loop)
+│   ├── encompass_backtrack.py  — EnCompass retry on failure
+│   ├── group_evolution.py      — 7-agent parallel evolution
+│   └── federated_node_context.py — Multi-node routing intelligence
+├── memory_palace/   — Memory systems
+│   ├── iron_dome.py            — 5-layer memory protection
+│   ├── ghost_recall.py         — 7-layer neuroscience memory
+│   └── memory_palace.py        — Spatial memory architecture
+├── omega/           — Core agent systems
+│   ├── feynman/                — CLARA formal reasoning + knowledge graph
+│   ├── spawner/                — Dynamic agent scheduling
+│   ├── ghost_protocol/         — Security (kill switch, stealth, veil)
+│   └── twin_engine/            — Id/Ego dual processing loop
+└── gateway/         — Heterogeneous compute router
 ```
 
 ---
 
-## Philosophy
+## Commercial Use
 
-Most AI infrastructure depends on cloud APIs, rate limits, and someone else's servers. 
+SovereignCore is licensed under **AGPL-3.0**.
 
-This doesn't.
+For commercial deployments, enterprise support, and SLA-backed managed instances, see **[SovereignNation](https://sovereignnation.ai)** — the commercial platform built on this stack.
 
-> *"Sovereign infrastructure means the compute is yours, the data is yours, the evolution is yours. No API keys. No monthly bills. No terms of service that change without warning."*
+| Tier | Price | Features |
+|---|---|---|
+| Developer | $99/mo | SDK, 1 agent, community support |
+| Team | $499/mo | 5 agents, Iron Dome, GhostRecall, API |
+| Professional | $1,499/mo | Unlimited agents, full KAIROS, priority support |
+| Enterprise | Custom | Dedicated deployment, SLA, custom integration |
 
-Built on two ideas:
-- **Darwin** — keep the good solutions, build on them, improve generation by generation
-- **Gödel** — a system powerful enough can reason about itself and rewrite itself to be better
+---
 
-The goal isn't the smartest system today. It's the one that gets smarter fastest over time.
+## Research Citations
+
+This project implements or is inspired by:
+
+- arXiv:2601.05504 — Memory Poisoning Attack and Defense on LLM-Agents
+- arXiv:2603.20357 — Memory Poisoning and Secure Multi-Agent Systems
+- arXiv:2604.02623 — Poison Once, Exploit Forever (eTAMP)
+- arXiv:2603.29023 — Human-Like Lifelong Memory: Neuroscience-Grounded Architecture
+- arXiv:2511.22367 — SuRe: Surprise-Driven Prioritised Replay
+- arXiv:2601.09113 — The AI Hippocampus: How Far are We From Human Memory?
+- EM-LLM (ICLR 2025) — Human-Inspired Episodic Memory for Infinite Context LLMs
+- Google Titans — Persistent + Long-Term Memory Architecture
+- eLifeSciences:109530 — Neural Traces of Forgotten Memories Persist
 
 ---
 
 ## Built By
 
-**Terry Lee** — Douglasville, GA  
-Self-taught systems architect. Fabrication worker by day. AI infrastructure builder by night.  
-No institution. No team. Just architecture.
+**Robert "Terry" Lee Jr.**
+Self-taught systems architect. Fabrication worker by day. Sovereign AI builder by night.
 
-*Self-taught. Self-funded. Self-improving — just like the systems I build.*
+[GitHub](https://github.com/leerobber) | [SovereignNation](https://sovereignnation.ai)
 
 ---
 
-<div align="center">
-
-**[Profile](https://github.com/leerobber)** · **[DGM](https://github.com/leerobber/DGM)** · **[HyperAgents](https://github.com/leerobber/HyperAgents)** · **[Honcho](https://github.com/leerobber/Honcho)** · **[contentai-pro](https://github.com/leerobber/contentai-pro)**
-
-</div>
+*"The infrastructure for AI that thinks, learns, and evolves — on your terms."*
