@@ -87,6 +87,13 @@ async def chat_completions(req: OAIChatRequest, request: Request) -> OAIChatResp
     request_id = f"chatcmpl-{uuid.uuid4().hex[:12]}"
     t0 = time.time()
 
+    # ── Iron Dome screening ──────────────────────────────────────────────
+    if _IRON_DOME_ACTIVE:
+        full_prompt = " ".join(m.content for m in req.messages)
+        _allowed, _reason = _iron_dome.screen(full_prompt, req.model, "v1_compat")
+        if not _allowed:
+            raise HTTPException(status_code=400, detail=_reason)
+
     # Get router from app state
     try:
         gateway_router = request.app.state.router
