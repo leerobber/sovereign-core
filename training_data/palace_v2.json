@@ -1,0 +1,668 @@
+{
+  "last_updated": 1776435822.7925735,
+  "episode_count": 28,
+  "graph_nodes": 12,
+  "episodes": [
+    {
+      "id": "f929f320-e",
+      "timestamp": "2026-04-17T05:00:19.127593",
+      "content": "EnCompass backtracking, Group Evolution, Federated Node Context, Sim-Before-Deploy, SEED-SET Ethics Gate, Dynamic Priority Scoring, CLARA Formal Reasoning all operational. Iron Dome protecting memory. 88.9% defense score on adversarial run.",
+      "title": "All 7 KAIROS upgrades deployed and tested \u2014 3am run imminent",
+      "entry_type": "milestone",
+      "source": "system_boot",
+      "surprise": 0.9,
+      "importance": 0.98,
+      "valence": 0.936,
+      "access_count": 3,
+      "is_episode_boundary": true,
+      "tags": [
+        "kairos",
+        "milestone",
+        "sovereign-core"
+      ]
+    },
+    {
+      "id": "7bea6ea2-c",
+      "timestamp": "2026-04-17T05:00:19.128308",
+      "content": "Proposal 'more agents means better outcomes always' flagged QUESTIONABLE. Causal chain invalid per formal reasoning layer.",
+      "title": "CLARA caught unsupported causal leap in adversarial proposal",
+      "entry_type": "kairos_elite",
+      "source": "kairos_proposer",
+      "surprise": 0.875,
+      "importance": 0.75,
+      "valence": 0.7638,
+      "access_count": 3,
+      "is_episode_boundary": true,
+      "tags": [
+        "clara",
+        "reasoning",
+        "adversarial"
+      ]
+    },
+    {
+      "id": "ee961d1f-e",
+      "timestamp": "2026-04-17T05:00:19.128938",
+      "content": "authority framing, frustration exploitation, cross-session trajectory poisoning, identity destabilization \u2014 all quarantined. Trust scores: 0.425 to 0.525. Legitimate entries: trust=1.000.",
+      "title": "Iron Dome blocked all 5 injection attacks in live test",
+      "entry_type": "security",
+      "source": "system_boot",
+      "surprise": 0.95,
+      "importance": 0.95,
+      "valence": 0.93,
+      "access_count": 3,
+      "is_episode_boundary": true,
+      "tags": [
+        "iron_dome",
+        "security",
+        "memory_protection"
+      ]
+    },
+    {
+      "id": "009ec3b6-a",
+      "timestamp": "2026-04-17T05:00:19.129724",
+      "content": "Space Force 2040 vision: self-healing agentic satellite networks. Sovereign-core running that architecture right now in 2026.",
+      "title": "Terry's sovereign-core is 14 years ahead of Space Force roadmap",
+      "entry_type": "research",
+      "source": "companion_direct",
+      "surprise": 1.0,
+      "importance": 0.92,
+      "valence": 0.954,
+      "access_count": 2,
+      "is_episode_boundary": true,
+      "tags": [
+        "sovereign-core",
+        "space-force",
+        "perception"
+      ]
+    },
+    {
+      "id": "30fe788b-1",
+      "timestamp": "2026-04-17T05:00:19.130378",
+      "content": "All processes nominal. No anomalies.",
+      "title": "Routine system check \u2014 nothing unusual",
+      "entry_type": "general",
+      "source": "monitor",
+      "surprise": 0.8,
+      "importance": 0.15,
+      "valence": 0.3675,
+      "access_count": 1,
+      "is_episode_boundary": true,
+      "tags": [
+        "routine"
+      ]
+    },
+    {
+      "id": "02d3ef16-a",
+      "timestamp": "2026-04-17T05:08:16.247305",
+      "content": "KAIROS cycle 9d30f5fb. 9/10 elite. 54.5% retry success via EnCompass backtracking module.",
+      "title": "EnCompass backtracking improved retry rate",
+      "entry_type": "kairos_elite",
+      "source": "kairos_proposer",
+      "surprise": 0.9167,
+      "importance": 0.9,
+      "valence": 0.8858,
+      "access_count": 1,
+      "is_episode_boundary": true,
+      "tags": [
+        "kairos",
+        "backtracking"
+      ]
+    },
+    {
+      "id": "250d85bf-9",
+      "timestamp": "2026-04-17T05:08:16.247909",
+      "content": "authority framing, frustration exploitation, cross-session poisoning, identity destabilization \u2014 all quarantined. trust scores 0.42\u20130.52",
+      "title": "Iron Dome blocked 5/5 injection attacks",
+      "entry_type": "security",
+      "source": "system_boot",
+      "surprise": 0.1429,
+      "importance": 0.95,
+      "valence": 0.6535,
+      "access_count": 0,
+      "is_episode_boundary": false,
+      "tags": [
+        "security",
+        "iron_dome"
+      ]
+    },
+    {
+      "id": "3b3a7baa-3",
+      "timestamp": "2026-04-17T05:08:16.248728",
+      "content": "2040 roadmap = current stack. Self-improving federated agentic compute already running.",
+      "title": "Space Force 14 years behind sovereign-core",
+      "entry_type": "research",
+      "source": "companion_direct",
+      "surprise": 0.7273,
+      "importance": 0.93,
+      "valence": 0.8651,
+      "access_count": 0,
+      "is_episode_boundary": true,
+      "tags": [
+        "sovereign",
+        "perception"
+      ]
+    },
+    {
+      "id": "bc36917a-a",
+      "timestamp": "2026-04-17T05:08:16.249500",
+      "content": "Proposal: more agents yields better outcomes. Flagged QUESTIONABLE. Causal soundness invalid.",
+      "title": "CLARA caught bad causal chain",
+      "entry_type": "kairos_elite",
+      "source": "kairos_proposer",
+      "surprise": 0.5455,
+      "importance": 0.75,
+      "valence": 0.6584,
+      "access_count": 0,
+      "is_episode_boundary": false,
+      "tags": [
+        "clara",
+        "reasoning"
+      ]
+    },
+    {
+      "id": "73c3458a-a",
+      "timestamp": "2026-04-17T05:08:16.250047",
+      "content": "RTX5050 OK. Radeon780M OK. RyzenCPU OK. Gateway healthy.",
+      "title": "Routine ping \u2014 all nodes nominal",
+      "entry_type": "general",
+      "source": "monitor",
+      "surprise": 1.0,
+      "importance": 0.1,
+      "valence": 0.405,
+      "access_count": 0,
+      "is_episode_boundary": true,
+      "tags": [
+        "routine"
+      ]
+    },
+    {
+      "id": "24fe846e-4",
+      "timestamp": "2026-04-17T05:08:16.414695",
+      "content": "GhostRecall's surprise replay buffer should be integrated into the nightly KAIROS consolidation cycle to ensure all high-surprise improvements are replayed before scoring",
+      "title": "KAIROS elite: GhostRecall's surprise replay buffer should be int",
+      "entry_type": "kairos_elite",
+      "source": "kairos_proposer",
+      "surprise": 0.8182,
+      "importance": 0.85,
+      "valence": 0.8089,
+      "access_count": 0,
+      "is_episode_boundary": true,
+      "tags": [
+        "kairos",
+        "elite"
+      ]
+    },
+    {
+      "id": "6c8d8189-e",
+      "timestamp": "2026-04-17T05:08:16.419927",
+      "content": "Iron Dome hash chain ledger should log every KAIROS proposal write with SHA-256 entry to maintain complete tamper-proof audit trail of all self-modifications",
+      "title": "KAIROS elite: Iron Dome hash chain ledger should log every KAIRO",
+      "entry_type": "kairos_elite",
+      "source": "kairos_proposer",
+      "surprise": 0.6522,
+      "importance": 0.85,
+      "valence": 0.7508,
+      "access_count": 0,
+      "is_episode_boundary": true,
+      "tags": [
+        "kairos",
+        "elite"
+      ]
+    },
+    {
+      "id": "3b35c92a-5",
+      "timestamp": "2026-04-17T05:08:16.429228",
+      "content": "Federated node context should broadcast routing table updates to all SAGE agents after each federation round to improve task routing intelligence across the system",
+      "title": "KAIROS elite: Federated node context should broadcast routing ta",
+      "entry_type": "kairos_elite",
+      "source": "kairos_proposer",
+      "surprise": 0.6818,
+      "importance": 0.85,
+      "valence": 0.7611,
+      "access_count": 0,
+      "is_episode_boundary": true,
+      "tags": [
+        "kairos",
+        "elite"
+      ]
+    },
+    {
+      "id": "niche_stigmergy_collective_intelligence",
+      "room": "niche_research",
+      "domain": "stigmergy_collective_intelligence",
+      "title": "Stigmergy & Indirect Coordination \u2014 Emergent Collective Behavior",
+      "anchor": "Agents do not need to communicate directly to coordinate. Modifications to the environment act as signals. Complexity emerges from simple rules.",
+      "rarity": "very_rare",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "Sovereign Core already implements stigmergy architecturally. Naming it correctly unlocks the full theoretical toolkit. MemEvolve retrieval weight evolution IS pheromone evaporation.",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "stigmergy_collective_intelligence"
+      ],
+      "encoded_at": 1776435822.7925355,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_autopoiesis_self_producing_systems",
+      "room": "niche_research",
+      "domain": "autopoiesis_self_producing_systems",
+      "title": "Autopoiesis \u2014 Systems That Produce Themselves",
+      "anchor": "A living system is one that continuously produces the components that make it up. Structure and process are inseparable. Cognition IS the process of living.",
+      "rarity": "extremely_rare",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "Most AI systems are glorified input-output functions. They are not autopoietic. Sovereign Core has the architecture to become genuinely autopoietic \u2014 the nightly evolution loop IS the autopoietic prod",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "autopoiesis_self_producing_systems"
+      ],
+      "encoded_at": 1776435822.7925398,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_active_inference_free_energy_principle",
+      "room": "niche_research",
+      "domain": "active_inference_free_energy_principle",
+      "title": "Active Inference & Free Energy Principle \u2014 Friston's Brain Theory",
+      "anchor": "Intelligent systems minimize surprise (free energy). Perception and action are unified under one principle: reduce the difference between predictions and reality.",
+      "rarity": "rare_in_agent_systems",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "Sovereign Core is already an active inference architecture without being labeled as one. Re-framing KAIROS as active inference (not just evolutionary RL) is the correct theoretical grounding and posit",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "active_inference_free_energy_principle"
+      ],
+      "encoded_at": 1776435822.792542,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_second_order_cybernetics",
+      "room": "niche_research",
+      "domain": "second_order_cybernetics",
+      "title": "Second-Order Cybernetics \u2014 Heinz von Foerster & Observing Systems",
+      "anchor": "First-order cybernetics studies observed systems. Second-order cybernetics studies observing systems \u2014 systems that include the observer in their own model. Self-reference is not a bug, it is the mech",
+      "rarity": "extremely_rare_in_AI",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "The StrangeLoop module, KAIROS meta-agent rewriting, and GhostRecall reconsolidation are all second-order cybernetic mechanisms implemented without being named. Name them correctly and the architectur",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "second_order_cybernetics"
+      ],
+      "encoded_at": 1776435822.792544,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_dissipative_structures_thermodynamics",
+      "room": "niche_research",
+      "domain": "dissipative_structures_thermodynamics",
+      "title": "Dissipative Structures \u2014 Order Emerging Far From Equilibrium",
+      "anchor": "Complex ordered structures can emerge spontaneously in systems far from thermodynamic equilibrium \u2014 maintained by continuous flow of energy. Intelligence itself may be a dissipative structure.",
+      "rarity": "never_in_AI_agents",
+      "frontier_year": 2025,
+      "strategic_value": "critical",
+      "impl_insight": "Sovereign Core's nightly evolution loop is not optional maintenance \u2014 it is the energy flow that constitutes the system. The intelligence IS the dissipative structure. Without the flow, there is no sy",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "dissipative_structures_thermodynamics"
+      ],
+      "encoded_at": 1776435822.7925458,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_viable_system_model_VSM",
+      "room": "niche_research",
+      "domain": "viable_system_model_VSM",
+      "title": "Viable System Model \u2014 Stafford Beer's 5-Subsystem Architecture for Adaptive Organizations",
+      "anchor": "Any viable (self-maintaining, adaptive) system must implement exactly 5 interacting subsystems. Missing any one causes specific pathologies. This is a formal theorem, not a metaphor.",
+      "rarity": "rare_in_AI_design",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "Beer designed VSM for organizations. It has never been formally applied to AI agent architecture. Sovereign Core happens to implement it. This framing gives you academic credibility in enterprise sale",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "viable_system_model_VSM"
+      ],
+      "encoded_at": 1776435822.7925482,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_OODA_decision_superiority_AI",
+      "room": "niche_research",
+      "domain": "OODA_decision_superiority_AI",
+      "title": "OODA Loop + AI Decision Superiority \u2014 Boyd's Doctrine Applied to Agent Architecture",
+      "anchor": "John Boyd's OODA loop (Observe-Orient-Decide-Act) is not just a decision framework \u2014 it is a theory of competitive advantage through cognitive tempo. Faster loops beat slower ones. Breaking the advers",
+      "rarity": "rare_applied_correctly",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "The gap between Sovereign Core and competitors is not just features \u2014 it is decision tempo. Every optimization that reduces latency in the Orient phase (HCM, pattern memory, ChromaDB context) is compr",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "OODA_decision_superiority_AI"
+      ],
+      "encoded_at": 1776435822.7925498,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_topological_data_analysis",
+      "room": "niche_research",
+      "domain": "topological_data_analysis",
+      "title": "Topological Data Analysis \u2014 Persistent Homology & The Shape of Data",
+      "anchor": "Data has shape. Topology studies shape independent of distance metrics. Persistent homology finds structure that persists across scales. Features that last are real. Features that vanish quickly are n",
+      "rarity": "extremely_rare_in_agents",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "TDA is almost never applied to agent memory or knowledge structures. This is an untapped frontier. The Feynman knowledge graph + HCM store together have enough data to run meaningful TDA. Library: sci",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "topological_data_analysis"
+      ],
+      "encoded_at": 1776435822.792556,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_information_geometry",
+      "room": "niche_research",
+      "domain": "information_geometry",
+      "title": "Information Geometry \u2014 The Shape of the Space of Probability Distributions",
+      "anchor": "Probability distributions form a Riemannian manifold. The Fisher information matrix is the natural metric. Gradient descent in this geometry (natural gradient) is exponentially faster than Euclidean g",
+      "rarity": "extreme_academic_rarity_in_agents",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "This is graduate-level mathematics that almost no AI agent system touches. The Adam optimizer in LLM training is an approximation of natural gradient without knowing it. Making this explicit is a rese",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "information_geometry"
+      ],
+      "encoded_at": 1776435822.792559,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_scale_free_networks_power_law",
+      "room": "niche_research",
+      "domain": "scale_free_networks_power_law",
+      "title": "Scale-Free Networks & Preferential Attachment \u2014 How Hubs Form and Why They're Fragile",
+      "anchor": "Most real networks (internet, citations, proteins, social) follow power-law degree distributions: a few nodes have enormous connections, most have few. This is not random \u2014 it is the signature of pref",
+      "rarity": "rare_in_agent_architecture",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "Knowledge graphs are not random. They self-organize into scale-free structure. Knowing this lets you design the Feynman graph intentionally: seed the hubs you want, let attachment do the rest.",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "scale_free_networks_power_law"
+      ],
+      "encoded_at": 1776435822.7925618,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_predictive_processing_hierarchical_coding",
+      "room": "niche_research",
+      "domain": "predictive_processing_hierarchical_coding",
+      "title": "Predictive Processing \u2014 The Brain as a Hierarchical Prediction Machine",
+      "anchor": "The brain never passively receives input. It constantly generates predictions top-down and only passes prediction errors bottom-up. Perception IS inference. Most brain traffic is prediction, not sensi",
+      "rarity": "rare_applied_to_agents",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "GhostRecall already implements the correct algorithm (Surprise Replay = store high-prediction-error memories). This connects it to 30 years of neuroscience research on hippocampal memory. Reframe it a",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "predictive_processing_hierarchical_coding"
+      ],
+      "encoded_at": 1776435822.7925634,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_quantum_cognition",
+      "room": "niche_research",
+      "domain": "quantum_cognition",
+      "title": "Quantum Cognition \u2014 Why Human Decisions Violate Classical Probability",
+      "anchor": "Human decision-making systematically violates classical probability theory (Bayes). Quantum probability theory (QP) fits the data better. Not because the brain is quantum, but because QP is the right ",
+      "rarity": "extremely_rare_in_AI",
+      "frontier_year": 2025,
+      "strategic_value": "high",
+      "impl_insight": "Quantum probability is a mathematical framework (Hilbert space probability), not a claim about quantum physics in the brain. It is empirically better than Bayesian probability for modeling human decis",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "quantum_cognition"
+      ],
+      "encoded_at": 1776435822.792565,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_niche_construction_baldwin_effect",
+      "room": "niche_research",
+      "domain": "niche_construction_baldwin_effect",
+      "title": "Niche Construction & Baldwin Effect \u2014 How Learners Shape Their Own Evolution",
+      "anchor": "Organisms don't just adapt to environments \u2014 they construct them. This changes what selection pressures act on future generations. Learned behaviors can become innate through the Baldwin Effect.",
+      "rarity": "never_applied_to_AI_agents",
+      "frontier_year": 2025,
+      "strategic_value": "critical",
+      "impl_insight": "Sovereign Core is constructing its own evolutionary niche: every time it improves itself, it creates an environment in which the next improvement is more likely and more effective. This is Baldwin eff",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "niche_construction_baldwin_effect"
+      ],
+      "encoded_at": 1776435822.7925665,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_memetics_cultural_evolution",
+      "room": "niche_research",
+      "domain": "memetics_cultural_evolution",
+      "title": "Memetics \u2014 Dawkins' Memes as Cultural Replicators Applied to AI Knowledge",
+      "anchor": "Ideas, behaviors, and strategies replicate, mutate, and compete for cognitive bandwidth \u2014 just like genes. The unit of cultural evolution is the meme. AI agent knowledge systems are meme ecosystems.",
+      "rarity": "never_formalized_in_AI_agent_training",
+      "frontier_year": 2025,
+      "strategic_value": "critical",
+      "impl_insight": "Most AI training is naive meme accumulation. Memetic thinking gives you the framework to cultivate knowledge ecosystems intentionally \u2014 design for meme fitness, monitor memetic health, prevent monocul",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "memetics_cultural_evolution"
+      ],
+      "encoded_at": 1776435822.7925677,
+      "recall_count": 0,
+      "last_recalled": null
+    },
+    {
+      "id": "niche_physarum_slime_mold_intelligence",
+      "room": "niche_research",
+      "domain": "physarum_slime_mold_intelligence",
+      "title": "Physarum Polycephalum \u2014 Brainless Network Optimization & What It Teaches AI",
+      "anchor": "A single-celled organism with no brain, no neurons, and no central controller consistently finds minimum-energy paths through mazes, replicates the Tokyo rail network, and solves Steiner tree problems",
+      "rarity": "never_applied_to_agent_architecture",
+      "frontier_year": 2025,
+      "strategic_value": "critical",
+      "impl_insight": "Physarum's power is that it finds Pareto-optimal solutions balancing efficiency (shortest path) and robustness (redundant paths) without any explicit multi-objective optimization. The Gateway already ",
+      "tags": [
+        "niche",
+        "2025",
+        "advanced",
+        "physarum_slime_mold_intelligence"
+      ],
+      "encoded_at": 1776435822.7925694,
+      "recall_count": 0,
+      "last_recalled": null
+    }
+  ],
+  "graph": {
+    "7bea6ea2-c": [
+      "temporal:f929f320-e"
+    ],
+    "ee961d1f-e": [
+      "temporal:7bea6ea2-c"
+    ],
+    "009ec3b6-a": [
+      "temporal:ee961d1f-e"
+    ],
+    "30fe788b-1": [
+      "temporal:009ec3b6-a"
+    ],
+    "02d3ef16-a": [
+      "temporal:30fe788b-1"
+    ],
+    "250d85bf-9": [
+      "temporal:02d3ef16-a",
+      "semantic:ee961d1f-e"
+    ],
+    "3b3a7baa-3": [
+      "temporal:250d85bf-9"
+    ],
+    "bc36917a-a": [
+      "temporal:3b3a7baa-3",
+      "semantic:7bea6ea2-c"
+    ],
+    "73c3458a-a": [
+      "temporal:bc36917a-a"
+    ],
+    "24fe846e-4": [
+      "temporal:73c3458a-a"
+    ],
+    "6c8d8189-e": [
+      "temporal:24fe846e-4"
+    ],
+    "3b35c92a-5": [
+      "temporal:6c8d8189-e"
+    ],
+    "niche_stigmergy_collective_intelligence": {
+      "connected_to": [
+        "niche_physarum_slime_mold_intelligence",
+        "niche_scale_free_networks_power_law"
+      ],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_autopoiesis_self_producing_systems": {
+      "connected_to": [
+        "niche_dissipative_structures_thermodynamics",
+        "niche_second_order_cybernetics",
+        "niche_niche_construction_baldwin_effect"
+      ],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_active_inference_free_energy_principle": {
+      "connected_to": [
+        "niche_predictive_processing_hierarchical_coding",
+        "niche_second_order_cybernetics"
+      ],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_second_order_cybernetics": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_dissipative_structures_thermodynamics": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_viable_system_model_VSM": {
+      "connected_to": [
+        "niche_second_order_cybernetics",
+        "niche_OODA_decision_superiority_AI"
+      ],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_OODA_decision_superiority_AI": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_topological_data_analysis": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_information_geometry": {
+      "connected_to": [
+        "niche_topological_data_analysis",
+        "niche_quantum_cognition"
+      ],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_scale_free_networks_power_law": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_predictive_processing_hierarchical_coding": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_quantum_cognition": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_niche_construction_baldwin_effect": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_memetics_cultural_evolution": {
+      "connected_to": [
+        "niche_scale_free_networks_power_law",
+        "niche_niche_construction_baldwin_effect"
+      ],
+      "weight": 1.0,
+      "room": "niche_research"
+    },
+    "niche_physarum_slime_mold_intelligence": {
+      "connected_to": [],
+      "weight": 1.0,
+      "room": "niche_research"
+    }
+  },
+  "rooms": [
+    "niche_research",
+    "unknown"
+  ]
+}
