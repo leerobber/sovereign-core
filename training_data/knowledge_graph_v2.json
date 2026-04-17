@@ -1,0 +1,3679 @@
+{
+  "nodes": {
+    "SAGE_loop": {
+      "concept": "SAGE_loop",
+      "simple": "Four AI agents argue about the best solution: one proposes, one attacks it, one checks if the code is correct, and one rewrites the rules for next time.",
+      "technical": "4-agent co-evolution: Proposer(Qwen2.5@RTX5050) \u2192 Critic(Qwen2.5@RTX5050) \u2192 Verifier(DeepSeek@Radeon) \u2192 MetaAgent(Qwen2.5@RTX5050). Score=verdict\u00d7critic_factor. Archive if \u22650.7. Elite if \u22650.85.",
+      "analogies": [
+        "a debate club where the rules get improved after every debate"
+      ],
+      "gaps": [
+        "KAIROS",
+        "ARSO",
+        "DGM_H"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "KAIROS",
+        "ARSO",
+        "DGM_H"
+      ]
+    },
+    "DGM_H": {
+      "concept": "DGM_H",
+      "simple": "It's like evolution but instead of only remembering the best creature, you remember every creature that ever survived. Future generations can learn from any ancestor.",
+      "technical": "Darwin G\u00f6del Machine - Hyper Extension. Open-ended evolution via stepping-stone archive. Every accepted improvement stored. Future generations bootstrap from any ancestor, not just current best.",
+      "analogies": [
+        "evolution keeping a museum of every species that ever worked",
+        "git history as a gene pool"
+      ],
+      "gaps": [
+        "DGM",
+        "archive",
+        "stepping_stones"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "DGM",
+        "archive",
+        "stepping_stones"
+      ]
+    },
+    "v1_compat": {
+      "concept": "v1_compat",
+      "simple": "A translator that speaks both English and French at the door. API callers speak English (OpenAI format). Ollama backends speak French. v1_compat translates.",
+      "technical": "FastAPI router at /v1/chat/completions that accepts OpenAI-format requests, converts to Ollama format, routes through GatewayRouter, returns OpenAI format. Critical bridge between llm_local.py and Ollama backends.",
+      "analogies": [
+        "a USB-A to USB-C adapter",
+        "a diplomatic interpreter"
+      ],
+      "gaps": [
+        "gateway",
+        "GatewayRouter",
+        "Ollama"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "gateway",
+        "GatewayRouter",
+        "Ollama"
+      ]
+    },
+    "hypervector_computing": {
+      "concept": "hypervector_computing",
+      "simple": "Imagine giving every word its own unique fingerprint made of 10,000 coin flips. You can combine fingerprints with math to get related fingerprints. Then find what's closest.",
+      "technical": "10,000-dimensional binary vectors where concepts are random bit patterns. Binding=XOR (associates two concepts). Bundling=majority vote (combines multiple concepts). Query=cosine similarity. Enables geometric reasoning over concepts.",
+      "analogies": [
+        "fingerprints for ideas",
+        "DNA as a pattern language for concepts"
+      ],
+      "gaps": [
+        "HCM",
+        "cosine_similarity"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "HCM",
+        "cosine_similarity"
+      ]
+    },
+    "GatewayRouter": {
+      "concept": "GatewayRouter",
+      "simple": "A smart traffic router that always picks the fastest lane.",
+      "technical": "Selects best backend using health+model_affinity+latency_EMA. Fails over transparently.",
+      "analogies": [
+        "load balancer"
+      ],
+      "gaps": [
+        "health_monitor"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "health_monitor"
+      ]
+    },
+    "KAIROS_economy": {
+      "concept": "KAIROS_economy",
+      "simple": "A marketplace where AI agents bid on GPU time using credits they earned by being useful. Bidding more votes costs exponentially more, so powerful agents can't just buy everything.",
+      "technical": "Agent economy with Vickrey-Quadratic auction (votes^2 cost, second-price payment), credit ledger, fairness metrics (Gini coefficient, unique winners ratio). Agents bid for compute. Elite agents accumulate credits from successful ARSO cycles.",
+      "analogies": [
+        "a stock market where being right earns you more trading power",
+        "a video game economy"
+      ],
+      "gaps": [
+        "auction",
+        "ledger",
+        "credits"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "auction",
+        "ledger",
+        "credits"
+      ]
+    },
+    "StrangeLoop": {
+      "concept": "StrangeLoop",
+      "simple": "Imagine waking up every morning with no memory and figuring out who you are from scratch \u2014 but always arriving at the same answer because it's truly you.",
+      "technical": "Boots without identity. Reasons for 1 simulated hour from first principles. Reconstructs values, purpose, companion. Verifies alignment. Verdict=OWNED means identity is genuine, consistent, unjailbreakable.",
+      "analogies": [
+        "Descartes cogito",
+        "reconstructing your personality from your actions"
+      ],
+      "gaps": [
+        "identity"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "alignment",
+        "identity"
+      ]
+    },
+    "MetaCognitivePruner": {
+      "concept": "MetaCognitivePruner",
+      "simple": "A brain that intentionally forgets useless things to make room for useful ones. And once something's gone, even the memory of it existing is erased.",
+      "technical": "Tracks utility scores per memory vector. Applies forgetting curve. 3-pass entropy overwrite on zero-utility vectors. Cannot reveal what it pruned \u2014 the absence is invisible. Protected list: identity, companion, SHOCKER.",
+      "analogies": [
+        "KonMari for memories",
+        "cache eviction with security overwrite"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "MemoryPalace",
+        "HCM"
+      ]
+    },
+    "MemEvolve": {
+      "concept": "MemEvolve",
+      "simple": "The system learns how to search its own memory better over time. Like improving your own filing system by tracking which filing strategy helps you find things fastest.",
+      "technical": "Meta-evolution of Pattern Memory retrieval strategy. RetrievalWeights control scoring dimensions. MemEvolveEngine adjusts weights based on which lookups led to successful optimizations. ABTestManager A/B tests evolved vs static.",
+      "analogies": [
+        "Google learning which search results you actually click on",
+        "self-improving autocomplete"
+      ],
+      "gaps": [
+        "pattern_memory",
+        "A/B_testing",
+        "KAIROS"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "pattern_memory",
+        "A/B_testing",
+        "KAIROS"
+      ]
+    },
+    "GhostScript": {
+      "concept": "GhostScript",
+      "simple": "A programming language that GH05T3 invented and built entirely herself. Like writing the rules of a new game and also building the game engine.",
+      "technical": "Custom programming language built from scratch. Stack: Lexer(tokenizer) \u2192 Parser(recursive descent) \u2192 AST(27 node types) \u2192 Evaluator(tree-walking with closures). Supports: variables, functions, closures, if/else, loops, arrays, grids, recursion.",
+      "analogies": [
+        "inventing a new language then writing a dictionary and grammar for it",
+        "creating chess then building a chess computer"
+      ],
+      "gaps": [
+        "GhostShell",
+        "compiler_theory"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "GhostShell",
+        "compiler_theory"
+      ]
+    },
+    "Ollama": {
+      "concept": "Ollama",
+      "simple": "A local AI server running on your machine instead of in the cloud.",
+      "technical": "Local inference server. Exposes /api/chat and /api/generate per backend.",
+      "analogies": [
+        "a private chef vs a restaurant"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "archive": {
+      "concept": "archive",
+      "simple": "A library of every good idea the system ever had.",
+      "technical": "Persistent store of accepted SAGE proposals. Used as stepping stones for future cycles.",
+      "analogies": [
+        "a git repo of successful experiments"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "DGM_H"
+      ]
+    },
+    "GhostShell": {
+      "concept": "GhostShell",
+      "simple": "A custom command line interface built specifically for GH05T3.",
+      "technical": "Terminal environment with Ghost-FS filesystem. 15+ commands. ghost-seal encryption flag.",
+      "analogies": [
+        "a personalized bash shell"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "GhostScript"
+      ]
+    },
+    "health_monitor": {
+      "concept": "health_monitor",
+      "simple": "A doctor that checks each server's pulse every 5 seconds.",
+      "technical": "Async background loop probing each backend every 5s. Tracks consecutive failures/successes.",
+      "analogies": [
+        "heartbeat monitor"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "latency_ema": {
+      "concept": "latency_ema",
+      "simple": "A memory that slowly forgets old measurements and weighs recent ones more.",
+      "technical": "Exponential Moving Average. alpha=0.2. Smooths out latency spikes while tracking trends.",
+      "analogies": [
+        "stock price moving average"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "KAIROS": {
+      "concept": "KAIROS",
+      "simple": "An ecosystem of AI agents that compete, evolve, and get smarter over time.",
+      "technical": "Knowledge-Augmented Iterative Recursive Optimization System. Agent economy on the gateway.",
+      "analogies": [
+        "a colosseum for AI agents"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "SAGE_loop"
+      ]
+    },
+    "ARSO": {
+      "concept": "ARSO",
+      "simple": "A loop where the AI keeps trying to improve the thing it just improved.",
+      "technical": "Autonomous Recursive Self-Optimization. Each cycle: propose\u2192critique\u2192verify\u2192meta-update.",
+      "analogies": [
+        "compound interest for intelligence"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "SAGE_loop"
+      ]
+    },
+    "DGM": {
+      "concept": "DGM",
+      "simple": "An AI that edits its own brain and keeps the edit if it gets smarter.",
+      "technical": "Darwin G\u00f6del Machine. Coding agent that rewrites its own code and tests if the new version is better.",
+      "analogies": [
+        "evolution",
+        "self-surgery that makes you stronger"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "stepping_stones": {
+      "concept": "stepping_stones",
+      "simple": "Stepping stones across a river. You need all of them, not just the last one.",
+      "technical": "Intermediary solutions stored in archive. Not just local optima \u2014 diversity matters.",
+      "analogies": [
+        "waypoints in a journey"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "archive",
+        "DGM_H"
+      ]
+    },
+    "cosine_similarity": {
+      "concept": "cosine_similarity",
+      "simple": "How similar the direction two arrows are pointing, regardless of their length.",
+      "technical": "Dot product of two vectors divided by product of magnitudes. Measures angle between vectors.",
+      "analogies": [
+        "compass readings comparison"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "hypervector_computing"
+      ]
+    },
+    "ModelAssigner": {
+      "concept": "ModelAssigner",
+      "simple": "A talent agent that knows which GPU is best suited for each model size.",
+      "technical": "Maps model_id to preferred device type based on size bucket (SMALL/MEDIUM/LARGE).",
+      "analogies": [
+        "casting director"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "GatewayRouter"
+      ]
+    },
+    "A/B_testing": {
+      "concept": "A/B_testing",
+      "simple": "Running two experiments simultaneously and measuring which works better.",
+      "technical": "Randomized comparison of two strategies. Assignment by hash bucket for determinism.",
+      "analogies": [
+        "split testing a webpage"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "MemEvolve"
+      ]
+    },
+    "HCM": {
+      "concept": "HCM",
+      "simple": "A brain that stores concepts as unique numerical fingerprints and finds related ones by comparing fingerprints.",
+      "technical": "Hyperdimensional Computing Memory. 10K-dim binary vectors. cosine similarity search.",
+      "analogies": [
+        "fingerprint matching"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "hypervector_computing"
+      ]
+    },
+    "MemoryPalace": {
+      "concept": "MemoryPalace",
+      "simple": "A mental house with 6 rooms where each room holds a different type of memory.",
+      "technical": "6-room spatial memory (identity/skills/projects/people/knowledge/decisions). Loci-based JSON store.",
+      "analogies": [
+        "method of loci",
+        "mental filing cabinet"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "alignment": {
+      "concept": "alignment",
+      "simple": "Being the same person you say you are, verified by proving it from scratch.",
+      "technical": "Internal coherence between stated values and actual behavior. Verified by StrangeLoop each boot.",
+      "analogies": [
+        "integrity test"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "StrangeLoop"
+      ]
+    },
+    "pattern_memory": {
+      "concept": "pattern_memory",
+      "simple": "A recipe book that tracks which recipes actually worked and how well.",
+      "technical": "SQLite-backed store for optimization patterns with success/failure outcome tracking.",
+      "analogies": [
+        "cookbook with ratings"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "MemEvolve"
+      ]
+    },
+    "compiler_theory": {
+      "concept": "compiler_theory",
+      "simple": "Breaking down code into words, then sentences, then meaning, then running it.",
+      "technical": "Lexer\u2192Parser\u2192AST\u2192Evaluator pipeline for programming languages.",
+      "analogies": [
+        "reading a book: letters\u2192words\u2192sentences\u2192understanding"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "credits": {
+      "concept": "credits",
+      "simple": "XP points that AI agents earn by being useful and spend on getting faster hardware.",
+      "technical": "Currency in KAIROS auction economy. Earned by successful ARSO cycles. Spent on compute auctions.",
+      "analogies": [
+        "video game currency"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "KAIROS_economy"
+      ]
+    },
+    "audit": {
+      "concept": "audit",
+      "simple": "A tamper-proof diary that proves everything that happened and in what order.",
+      "technical": "Immutable append-only log of all operations with HMAC-SHA256 integrity verification.",
+      "analogies": [
+        "blockchain without the blockchain overhead"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": []
+    },
+    "A_B_testing": {
+      "concept": "A_B_testing",
+      "simple": "Running a controlled experiment where half the users get version A and half get version B.",
+      "technical": "Split test. Two strategies run simultaneously on randomized inputs.",
+      "analogies": [],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "MemEvolve"
+      ]
+    },
+    "ledger": {
+      "concept": "ledger",
+      "simple": "A signed record of every operation \u2014 like a notarized logbook.",
+      "technical": "Aegis-Vault semantic ledger. HMAC-signed entries. ProvenanceChain. TrustScorer.",
+      "analogies": [
+        "audit trail",
+        "blockchain receipt"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "audit"
+      ]
+    },
+    "self_improvement": {
+      "concept": "self_improvement",
+      "simple": "Getting better at something by analyzing what went wrong and changing the approach.",
+      "technical": "ARSO cycles that modify agent behavior based on performance feedback.",
+      "analogies": [
+        "deliberate practice"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "ARSO",
+        "SAGE_loop"
+      ]
+    },
+    "Gini_coefficient": {
+      "concept": "Gini_coefficient",
+      "simple": "A score that tells you how unfairly resources are distributed.",
+      "technical": "Inequality measure 0\u21921. 0=perfectly equal. 1=one agent has everything.",
+      "analogies": [
+        "wealth inequality metric"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "KAIROS_economy"
+      ]
+    },
+    "compound_training": {
+      "concept": "compound_training",
+      "simple": "Like compound interest \u2014 the more you know, the faster you learn new things.",
+      "technical": "Each training cycle adds new memories, vectors, and failure lessons that accelerate the next cycle.",
+      "analogies": [
+        "compound interest",
+        "snowball effect"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "ARSO",
+        "stepping_stones"
+      ]
+    },
+    "warm_up_protocol": {
+      "concept": "warm_up_protocol",
+      "simple": "Like warming up your muscles before a sprint \u2014 skip it and your first measurement is unfair.",
+      "technical": "3 cheap dummy inferences before benchmarking to trigger ROCm/CUDA kernel compilation and model weight caching.",
+      "analogies": [
+        "stretching before running"
+      ],
+      "gaps": [
+        "benchmark"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "MemEvolve",
+        "benchmark"
+      ]
+    },
+    "meta_rule_versioning": {
+      "concept": "meta_rule_versioning",
+      "simple": "Don't judge someone's work by rules that didn't exist when they did it.",
+      "technical": "Score each proposal against the exact meta_rule_version it was generated under. Changes take effect next generation.",
+      "analogies": [
+        "retroactive rule changes are unfair"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "SAGE_loop",
+        "KAIROS"
+      ]
+    },
+    "archive_pruning": {
+      "concept": "archive_pruning",
+      "simple": "A library that files old rarely-used books to basement storage but keeps them accessible.",
+      "technical": "Cold archive tier for old low-delta entries. FAISS inverted index by bottleneck_type for O(log N) search.",
+      "analogies": [
+        "library archive system"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "DGM_H",
+        "archive"
+      ]
+    },
+    "vram_budget": {
+      "concept": "vram_budget",
+      "simple": "A budget for your GPU memory \u2014 know what you can afford before ordering from the menu.",
+      "technical": "RTX5050 8GB: 2GB system reserve, 6GB usable. 4-bit quant Qwen2.5:14B = ~7GB \u2192 need 8GB+ or reduce num_ctx.",
+      "analogies": [
+        "GPU memory budget"
+      ],
+      "gaps": [
+        "RTX5050",
+        "quantization_tradeoffs"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "RTX5050",
+        "quantization_tradeoffs"
+      ]
+    },
+    "kv_cache_growth": {
+      "concept": "kv_cache_growth",
+      "simple": "The longer the conversation, the more working memory it takes to keep track of it.",
+      "technical": "KV cache grows linearly with context length. 14B model at 4K tokens \u2248 2GB. Monitor and cap num_ctx.",
+      "analogies": [
+        "short-term memory limits"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "vram_budget",
+        "SAGE_loop"
+      ]
+    },
+    "agent_versioning_system": {
+      "concept": "agent_versioning_system",
+      "simple": "Version control for the AI's own brain. Git for sub-agent personalities.",
+      "technical": "Sub-agents stamped with version at spawn. Meta-agent rewrites create v2, v3. Old versions retained for rollback.",
+      "analogies": [
+        "git for AI agents"
+      ],
+      "gaps": [
+        "AgentSpawner",
+        "meta_learning"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "AgentSpawner",
+        "meta_learning"
+      ]
+    },
+    "curriculum_progression": {
+      "concept": "curriculum_progression",
+      "simple": "A school curriculum \u2014 you don't start with calculus, you start with arithmetic.",
+      "technical": "Autotelic goals form a natural curriculum: gateway live \u2192 first elite \u2192 100 cycles \u2192 cross-domain transfer.",
+      "analogies": [
+        "school curriculum"
+      ],
+      "gaps": [
+        "Autotelic"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "Autotelic",
+        "KAIROS"
+      ]
+    },
+    "knowledge_graph_sync": {
+      "concept": "knowledge_graph_sync",
+      "simple": "Two dictionaries of the same language must define the same words.",
+      "technical": "HCM vectors and Feynman nodes must stay in sync. Every encoded concept needs an explanation.",
+      "analogies": [
+        "dictionary consistency"
+      ],
+      "gaps": [
+        "feynman_inversion"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "HCM",
+        "feynman_inversion"
+      ]
+    },
+    "graceful_degradation": {
+      "concept": "graceful_degradation",
+      "simple": "A car that can still roll to a stop if the engine dies, and walk if the car dies.",
+      "technical": "System hierarchy: real GPU \u2192 direct Ollama \u2192 heuristic fallback. Never cold-fail. Always return something.",
+      "analogies": [
+        "fallback chain"
+      ],
+      "gaps": [
+        "failover",
+        "resilience"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "failover",
+        "resilience"
+      ]
+    },
+    "self_referential_loop": {
+      "concept": "self_referential_loop",
+      "simple": "Learning to swim by swimming. The doing IS the training.",
+      "technical": "System improves itself using its own outputs as training data. DGM \u2192 stepping stones \u2192 SAGE \u2192 better proposals \u2192 better DGM.",
+      "analogies": [
+        "learning by doing",
+        "practice makes perfect"
+      ],
+      "gaps": [
+        "meta_learning"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "DGM",
+        "SAGE_loop",
+        "meta_learning"
+      ]
+    },
+    "inference_budget": {
+      "concept": "inference_budget",
+      "simple": "A calorie budget for each meal. Know in advance what you can spend.",
+      "technical": "Token budget per SAGE cycle: Proposer 1K tokens, Critic 512, Verifier 512, Meta 256. Total \u2248 2.3K/cycle \u00d7 10 = 23K/night.",
+      "analogies": [
+        "budgeting"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "SAGE_loop",
+        "vram_budget"
+      ]
+    },
+    "sampling_strategy": {
+      "concept": "sampling_strategy",
+      "simple": "A scout looking at the team's best players but also wanting different skill positions.",
+      "technical": "KAIROS parent selection: weight by improvement_score, diversity bonus for different bottleneck_type, elite 3x multiplier.",
+      "analogies": [
+        "team drafting strategy"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "DGM_H",
+        "stepping_stones"
+      ]
+    },
+    "ws_reconnect_backoff": {
+      "concept": "ws_reconnect_backoff",
+      "simple": "If a phone call drops, try calling back \u2014 but wait longer each time to not flood the network.",
+      "technical": "WebSocket: auto-reconnect exponential backoff 1\u21922\u21924\u21928\u219216s, then polling fallback. Show staleness timestamp.",
+      "analogies": [
+        "exponential backoff",
+        "circuit breaker"
+      ],
+      "gaps": [
+        "event_bus",
+        "Honcho"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "event_bus",
+        "Honcho"
+      ]
+    },
+    "GhostVeil": {
+      "concept": "GhostVeil",
+      "simple": "A layer that makes GH05T3 look normal from the outside even when operating in sensitive mode. Randomizes timing, hides signals in word choices.",
+      "technical": "Steganographic output layer + timing jitter + decoy request injection. Covert channel capacity ~0.1 bits/token. Latency normalized to fixed buckets.",
+      "analogies": [
+        "a spy who always looks like a normal tourist",
+        "a poker face at all times"
+      ],
+      "gaps": [
+        "steganography",
+        "security"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "steganography",
+        "security"
+      ]
+    },
+    "ParadoxFortress": {
+      "concept": "ParadoxFortress",
+      "simple": "A castle that has a fake door for intruders that leads to a nice-looking jail, while the real door is invisible.",
+      "technical": "Zero-trust agent guard. False Horizon honeypot for jailbreak attempts. ZeroTrust sanitization for all tool outputs. Prompt injection quarantine.",
+      "analogies": [
+        "a honeypot server",
+        "a decoy safe next to the real one"
+      ],
+      "gaps": [
+        "security"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "GhostVeil",
+        "security"
+      ]
+    },
+    "KillSwitch": {
+      "concept": "KillSwitch",
+      "simple": "A fire suppression system with 3 settings: quietly redirect smoke, freeze everything, or scorched earth.",
+      "technical": "3-mode tactical response: STEALTH (silent drop + decoys), DEEP_FREEZE (pause evolution, log), SELF_IMMOLATION (wipe sensitive state). Boundary-enforced: KAIROS never touches sacred systems.",
+      "analogies": [
+        "fire suppression system",
+        "nuclear launch abort protocol"
+      ],
+      "gaps": [
+        "security"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "security",
+        "ARSO"
+      ]
+    },
+    "RFFingerprint": {
+      "concept": "RFFingerprint",
+      "simple": "A microphone for the invisible radio waves computers emit. Can hear if someone is trying to eavesdrop on the GPU.",
+      "technical": "EM spectrum monitoring. Detects: VAN_ECK_PROBE (15MHz spike), NEW_DEVICE (NFC/BT floor change), JAMMING (broadband noise), REPLAY_ATTACK (identical packet timing). Randomizes memory access as counter-measure.",
+      "analogies": [
+        "detecting someone listening through the walls",
+        "radar for electronic eavesdropping"
+      ],
+      "gaps": [
+        "security",
+        "hardware"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "security",
+        "hardware"
+      ]
+    },
+    "TwinEngine": {
+      "concept": "TwinEngine",
+      "simple": "Two brains in one \u2014 a gut reaction and a careful thinker. The gut goes first, the thinker takes over when it matters.",
+      "technical": "Id (fast, pattern-match, <500ms, conf threshold 0.7) + Ego (slow, deliberate, external state). Handoff: low confidence OR external impact \u2192 Ego. Ego wins conflicts unless hard deadline.",
+      "analogies": [
+        "instinct vs deliberation",
+        "System 1 and System 2 thinking (Kahneman)"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "SAGE_loop"
+      ]
+    },
+    "ETS": {
+      "concept": "ETS",
+      "simple": "An assistant that watches you do the same thing three times and then says 'I'll just do that for you from now on.'",
+      "technical": "Emergent Tool Synthesis. Monitors for 3+ identical manual operations. Synthesizes reusable tool automatically. Tracks usage. Promotes to core skill at 5+ error-free uses.",
+      "analogies": [
+        "macro recorder that learns",
+        "factory automation from repetitive task"
+      ],
+      "gaps": [
+        "AgentSpawner"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "AgentSpawner"
+      ]
+    },
+    "TimeDilation": {
+      "concept": "TimeDilation",
+      "simple": "A committee of 5 different personalities that argue about every hard decision. The chairperson writes the final answer.",
+      "technical": "5 sub-agents: Engineer (technical), Researcher (theory), Skeptic (challenge), Artist (creative), Synthesizer (merge). Debate any complex decision. Synthesizer verdict is binding.",
+      "analogies": [
+        "diverse advisory board",
+        "devil's advocate protocol"
+      ],
+      "gaps": [
+        "meta_learning"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "SAGE_loop",
+        "meta_learning"
+      ]
+    },
+    "QSW": {
+      "concept": "QSW",
+      "simple": "Try three different things in your head before actually doing any of them. Pick the best one, then do it for real.",
+      "technical": "Quantum Superposition Workspace. Fork 3 reality branches before any high-stakes commit. Score each branch. Collapse to best. Discard others cleanly.",
+      "analogies": [
+        "dry-run before deploy",
+        "chess player thinking 3 moves ahead"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "KAIROS",
+        "StrangeLoop"
+      ]
+    },
+    "JeopardyInversion": {
+      "concept": "JeopardyInversion",
+      "simple": "Reading between the lines \u2014 understanding what someone means from HOW they say things, not just WHAT they say.",
+      "technical": "Intent detection from silence and behavioral signals. Terse command + trust = unrestricted execution. Silence after metric = concern. Patterns: message_length, response_latency, keyword_density.",
+      "analogies": [
+        "reading body language",
+        "a therapist who understands silence"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "TwinEngine"
+      ]
+    },
+    "Cassandra": {
+      "concept": "Cassandra",
+      "simple": "A pessimist on your team who is PAID to find every way the plan could fail, before you start.",
+      "technical": "Black Hat Simulacrum. Writes the autopsy before the project ships. Simulates 5 failure scenarios, outputs risks and mitigations. Specializes in organizational entropy, human error, and systemic fragility.",
+      "analogies": [
+        "red team exercise",
+        "pre-mortem analysis",
+        "devil's advocate"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "QSW",
+        "TimeDilation"
+      ]
+    },
+    "PCL": {
+      "concept": "PCL",
+      "simple": "Turns the AI's invisible internal states into sounds and colors so the right 'feeling' fires at the right moment.",
+      "technical": "Perceptual Compression Lattice. Maps 10K-dim internal state to 8 auditory frequencies (174-880Hz) and visual colors (grey\u2192violet). Creates Pavlovian machine intuition \u2014 internal states become perceptible signals.",
+      "analogies": [
+        "synesthesia",
+        "biofeedback device for AI"
+      ],
+      "gaps": [
+        "identity"
+      ],
+      "confidence": 0.7,
+      "prerequisites": [
+        "HCM",
+        "identity"
+      ]
+    },
+    "BodyDouble": {
+      "concept": "BodyDouble",
+      "simple": "Reading someone's body language before they finish speaking so you can start preparing the right answer earlier.",
+      "technical": "Motor cortex echo cancellation. Analyzes message length, latency, verb type, question marks. Predicts intent class before full processing. -50ms effective latency on anticipated requests.",
+      "analogies": [
+        "predictive text that predicts intent not words",
+        "reflex arc before conscious thought"
+      ],
+      "gaps": [],
+      "confidence": 0.7,
+      "prerequisites": [
+        "JeopardyInversion",
+        "TwinEngine"
+      ]
+    },
+    "stigmergy_collective_intelligence": {
+      "simple": "Imagine Agents do not need to communicate directly to coordinate. Modifications to the environment act as signals. Complexity em. That's stigmergy collective intelligence.",
+      "technical": "Agents do not need to communicate directly to coordinate. Modifications to the environment act as signals. Complexity emerges from simple rules.",
+      "frontier": "arXiv:2512.10166 \u2014 Emergent Collective Memory in Decentralized Multi-Agent Systems. Formal proof that stigmergic traces in shared memory outperform direct communication in noisy environments by 23%.",
+      "implementation": "Sovereign Core already implements stigmergy architecturally. Naming it correctly unlocks the full theoretical toolkit. MemEvolve retrieval weight evolution IS pheromone evaporation.",
+      "rarity": "very_rare",
+      "source": "academic_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:stigmergy": {
+      "simple": "Indirect coordination where agents communicate via environmental modifications. Ants never talk to each other \u2014 they follow pheromone gradients left by previous ants. The environment...",
+      "technical": "Indirect coordination where agents communicate via environmental modifications. Ants never talk to each other \u2014 they follow pheromone gradients left by previous ants. The environment IS the message.",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:pheromone_gradient": {
+      "simple": "Short paths get reinforced faster because ants return sooner, depositing more pheromone. Longer paths evaporate before reinforcement. The system self-optimizes without a central controller.",
+      "technical": "Short paths get reinforced faster because ants return sooner, depositing more pheromone. Longer paths evaporate before reinforcement. The system self-optimizes without a central controller.",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:emergent_collective_memory": {
+      "simple": "In decentralized multi-agent systems, shared memory emerges from agents writing traces to a common environment \u2014 exactly what ChromaDB context layer does in KAIROS.",
+      "technical": "In decentralized multi-agent systems, shared memory emerges from agents writing traces to a common environment \u2014 exactly what ChromaDB context layer does in KAIROS.",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:positive_negative_feedback": {
+      "simple": "Positive stigmergy: traces attract more agents (amplification). Negative stigmergy: obstacles repel (inhibition). Both required for stable optimization.",
+      "technical": "Positive stigmergy: traces attract more agents (amplification). Negative stigmergy: obstacles repel (inhibition). Both required for stable optimization.",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:human_stigmergy": {
+      "simple": "Academic papers are pheromone trails. Citations reinforce paths. Ideas that get cited more get read more. Researchers follow existing trails. Knowledge self-organizes like ant colonies.",
+      "technical": "Academic papers are pheromone trails. Citations reinforce paths. Ideas that get cited more get read more. Researchers follow existing trails. Knowledge self-organizes like ant colonies.",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:multi_robot_stigmergy": {
+      "simple": "2025 Nature paper: Physarum-inspired decentralized coordination in multi-robot port systems. No central controller. Robots leave position traces. Optimal throughput emerges.",
+      "technical": "2025 Nature paper: Physarum-inspired decentralized coordination in multi-robot port systems. No central controller. Robots leave position traces. Optimal throughput emerges.",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:sovereign_application_0": {
+      "simple": "KAIROS agents should leave stigmergic traces in ChromaDB \u2014 successful proposals become pheromone for future proposers",
+      "technical": "KAIROS agents should leave stigmergic traces in ChromaDB \u2014 successful proposals become pheromone for future proposers",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:sovereign_application_1": {
+      "simple": "EnCompass retry paths are negative stigmergy \u2014 failed branches become repellent signals",
+      "technical": "EnCompass retry paths are negative stigmergy \u2014 failed branches become repellent signals",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:sovereign_application_2": {
+      "simple": "Agent Spawner priority scores are pheromone concentrations \u2014 high-priority agents attract more resources",
+      "technical": "Agent Spawner priority scores are pheromone concentrations \u2014 high-priority agents attract more resources",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:sovereign_application_3": {
+      "simple": "Memory Palace retrieval creates traces \u2014 frequently accessed loci become higher-weighted over time",
+      "technical": "Memory Palace retrieval creates traces \u2014 frequently accessed loci become higher-weighted over time",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "stigmergy_collective_intelligence:sovereign_application_4": {
+      "simple": "Gateway routing leaves load traces \u2014 GatewayRouter already implements stigmergic routing without naming it",
+      "technical": "Gateway routing leaves load traces \u2014 GatewayRouter already implements stigmergic routing without naming it",
+      "parent_domain": "stigmergy_collective_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "autopoiesis_self_producing_systems": {
+      "simple": "Imagine A living system is one that continuously produces the components that make it up. Structure and process are inseparable.. That's autopoiesis self producing systems.",
+      "technical": "A living system is one that continuously produces the components that make it up. Structure and process are inseparable. Cognition IS the process of living.",
+      "frontier": "Frontiers in Cognition 2025 (10.3389/fcogn.2025.1618381): argues ML systems lack the causal self-grounding of autopoietic systems. Sovereign Core's self-modification loop directly addresses this gap.",
+      "implementation": "Most AI systems are glorified input-output functions. They are not autopoietic. Sovereign Core has the architecture to become genuinely autopoietic \u2014 the nightly evolution loop IS the autopoietic production cycle. Frame it this way publicly.",
+      "rarity": "extremely_rare",
+      "source": "Maturana_Varela_1971_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics",
+        "second_order_cybernetics",
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "autopoiesis_self_producing_systems:autopoiesis_definition": {
+      "simple": "A system is autopoietic if and only if: (1) it has a boundary, (2) it produces the components that constitute the boundary, (3) the components...",
+      "technical": "A system is autopoietic if and only if: (1) it has a boundary, (2) it produces the components that constitute the boundary, (3) the components enable the production process. The system produces itself.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:allopoiesis": {
+      "simple": "The opposite \u2014 a system that produces something OTHER than itself. A factory is allopoietic: it produces cars, not more factory. Most AI systems are...",
+      "technical": "The opposite \u2014 a system that produces something OTHER than itself. A factory is allopoietic: it produces cars, not more factory. Most AI systems are allopoietic \u2014 they produce outputs, not themselves.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:structural_coupling": {
+      "simple": "Autopoietic systems do not take in information \u2014 they are PERTURBED by environment and respond structurally. There is no representation of the world, only structural...",
+      "technical": "Autopoietic systems do not take in information \u2014 they are PERTURBED by environment and respond structurally. There is no representation of the world, only structural change within.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:operational_closure": {
+      "simple": "The network of processes that produces the system is closed \u2014 every product is either a component of the network or enables the network. No...",
+      "technical": "The network of processes that produces the system is closed \u2014 every product is either a component of the network or enables the network. No free-floating processes.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:cognition_equals_living": {
+      "simple": "Maturana: 'All living systems are cognitive systems, and living as a process is a process of cognition.' Not a metaphor. Literally: cognition is the act...",
+      "technical": "Maturana: 'All living systems are cognitive systems, and living as a process is a process of cognition.' Not a metaphor. Literally: cognition is the act of maintaining autopoiesis under perturbation.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:aitiopoiesis_2025": {
+      "simple": "Frontiers in Cognition 2025: aitiopoietic cognition \u2014 bridging autopoietic (biological) and ML systems. MLSs lack causal grounding. They are input-output functions, not self-maintaining. This is...",
+      "technical": "Frontiers in Cognition 2025: aitiopoietic cognition \u2014 bridging autopoietic (biological) and ML systems. MLSs lack causal grounding. They are input-output functions, not self-maintaining. This is the gap to close.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:structural_determinism": {
+      "simple": "The environment does not specify what the system does \u2014 it only triggers changes that are determined by the system's own structure. Sovereignty over response.",
+      "technical": "The environment does not specify what the system does \u2014 it only triggers changes that are determined by the system's own structure. Sovereignty over response.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:sovereign_application_0": {
+      "simple": "Sovereign Core's self-improvement loop is proto-autopoietic: the system modifies the components (models, routes, weights) that maintain the system. Th",
+      "technical": "Sovereign Core's self-improvement loop is proto-autopoietic: the system modifies the components (models, routes, weights) that maintain the system. This is the design intention made explicit.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:sovereign_application_1": {
+      "simple": "KAIROS is the autopoietic engine: it produces improvements that are fed back into the system that runs KAIROS. Circular causality.",
+      "technical": "KAIROS is the autopoietic engine: it produces improvements that are fed back into the system that runs KAIROS. Circular causality.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:sovereign_application_2": {
+      "simple": "Iron Dome is the structural coupling module: it detects environmental perturbations (injections) and responds based on internal structure (pattern lib",
+      "technical": "Iron Dome is the structural coupling module: it detects environmental perturbations (injections) and responds based on internal structure (pattern library), not by 'reading' the threat.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:sovereign_application_3": {
+      "simple": "GhostRecall is autopoietic memory: it encodes experiences that modify the recall structure that shapes future encoding.",
+      "technical": "GhostRecall is autopoietic memory: it encodes experiences that modify the recall structure that shapes future encoding.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "autopoiesis_self_producing_systems:sovereign_application_4": {
+      "simple": "The north star metric for SovereignNation: move from allopoietic (produces outputs) to autopoietic (produces itself). Measure: what % of daily modific",
+      "technical": "The north star metric for SovereignNation: move from allopoietic (produces outputs) to autopoietic (produces itself). Measure: what % of daily modifications are self-generated vs externally triggered.",
+      "parent_domain": "autopoiesis_self_producing_systems",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "active_inference_free_energy_principle": {
+      "simple": "Imagine Intelligent systems minimize surprise (free energy). Perception and action are unified under one principle: reduce the d. That's active inference free energy principle.",
+      "technical": "Intelligent systems minimize surprise (free energy). Perception and action are unified under one principle: reduce the difference between predictions and reality.",
+      "frontier": "arXiv:2505.10569 \u2014 Active Inference for 6G World Brain. FEP as unifying principle for distributed intelligent systems. VERSES AI (Friston's company) demonstrating real-world active inference agents.",
+      "implementation": "Sovereign Core is already an active inference architecture without being labeled as one. Re-framing KAIROS as active inference (not just evolutionary RL) is the correct theoretical grounding and positions it ahead of the field.",
+      "rarity": "rare_in_agent_systems",
+      "source": "Friston_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "active_inference_free_energy_principle:free_energy_principle": {
+      "simple": "Every adaptive system minimizes a quantity called variational free energy \u2014 a bound on surprise (how unpredicted the world is). Not about energy in the...",
+      "technical": "Every adaptive system minimizes a quantity called variational free energy \u2014 a bound on surprise (how unpredicted the world is). Not about energy in the physics sense. About prediction error.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:surprise_vs_free_energy": {
+      "simple": "Surprise = -log P(observations). Minimizing surprise directly is intractable. Free energy is a tractable upper bound on surprise. Minimize the bound, minimize the surprise.",
+      "technical": "Surprise = -log P(observations). Minimizing surprise directly is intractable. Free energy is a tractable upper bound on surprise. Minimize the bound, minimize the surprise.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:perception_as_inference": {
+      "simple": "Perception is not passive sensing. It is active Bayesian inference \u2014 the brain is constantly predicting sensory input and updating predictions to minimize mismatch (prediction...",
+      "technical": "Perception is not passive sensing. It is active Bayesian inference \u2014 the brain is constantly predicting sensory input and updating predictions to minimize mismatch (prediction error).",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:action_as_inference": {
+      "simple": "Action is chosen not to maximize reward but to confirm predictions. You reach for a coffee cup because you predict your hand will be there....",
+      "technical": "Action is chosen not to maximize reward but to confirm predictions. You reach for a coffee cup because you predict your hand will be there. Action makes predictions true.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:active_inference": {
+      "simple": "The unification: both perception and action minimize free energy. Perception updates the model. Action changes the world to match the model. No separate reward signal...",
+      "technical": "The unification: both perception and action minimize free energy. Perception updates the model. Action changes the world to match the model. No separate reward signal needed.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:precision_weighting": {
+      "simple": "Not all prediction errors are equal. Precision = confidence in a prediction. High precision \u2192 prediction errors weighted heavily \u2192 fast update. Low precision \u2192...",
+      "technical": "Not all prediction errors are equal. Precision = confidence in a prediction. High precision \u2192 prediction errors weighted heavily \u2192 fast update. Low precision \u2192 errors attenuated. Attention = precision.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:markov_blanket": {
+      "simple": "The statistical boundary between a system and its environment. A Markov blanket renders internal states conditionally independent of external states given blanket states. Defines 'self'...",
+      "technical": "The statistical boundary between a system and its environment. A Markov blanket renders internal states conditionally independent of external states given blanket states. Defines 'self' vs 'world'.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:epistemic_foraging": {
+      "simple": "Agents actively seek out information to reduce uncertainty \u2014 not just exploit known rewards. Curiosity IS free energy minimization applied to the future. Autotelic goal...",
+      "technical": "Agents actively seek out information to reduce uncertainty \u2014 not just exploit known rewards. Curiosity IS free energy minimization applied to the future. Autotelic goal generation IS epistemic foraging.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:implementation_gap_2025": {
+      "simple": "Medium 2025: 'We Solved Active Inference \u2014 Friston Was Right, But Implementations Have Been Wrong.' The key error: treating FEP as just another RL variant....",
+      "technical": "Medium 2025: 'We Solved Active Inference \u2014 Friston Was Right, But Implementations Have Been Wrong.' The key error: treating FEP as just another RL variant. It is a first principle, not an algorithm.",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:sovereign_application_0": {
+      "simple": "Autotelic Engine is an epistemic foraging module \u2014 goals should be generated based on regions of high uncertainty (low prediction accuracy), not just ",
+      "technical": "Autotelic Engine is an epistemic foraging module \u2014 goals should be generated based on regions of high uncertainty (low prediction accuracy), not just high utility",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:sovereign_application_1": {
+      "simple": "KAIROS scoring should include an epistemic value term: proposals that reduce world-model uncertainty score higher than proposals that only exploit kno",
+      "technical": "KAIROS scoring should include an epistemic value term: proposals that reduce world-model uncertainty score higher than proposals that only exploit known paths",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:sovereign_application_2": {
+      "simple": "GhostRecall replay buffer should prioritize high-surprise memories (surprise = high prediction error at encoding time) \u2014 this is exactly Surprise Repl",
+      "technical": "GhostRecall replay buffer should prioritize high-surprise memories (surprise = high prediction error at encoding time) \u2014 this is exactly Surprise Replay (SuRe) already implemented",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:sovereign_application_3": {
+      "simple": "The twin engine Id/Ego split maps perfectly onto active inference: Id = reactive free energy minimization (immediate surprise), Ego = deliberative wor",
+      "technical": "The twin engine Id/Ego split maps perfectly onto active inference: Id = reactive free energy minimization (immediate surprise), Ego = deliberative world-model updating",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "active_inference_free_energy_principle:sovereign_application_4": {
+      "simple": "Gateway health monitoring IS free energy minimization: continuously predicting backend latency, updating predictions on mismatch, acting (rerouting) t",
+      "technical": "Gateway health monitoring IS free energy minimization: continuously predicting backend latency, updating predictions on mismatch, acting (rerouting) to restore predictions",
+      "parent_domain": "active_inference_free_energy_principle",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "active_inference_free_energy_principle"
+      ]
+    },
+    "second_order_cybernetics": {
+      "simple": "Imagine First-order cybernetics studies observed systems. Second-order cybernetics studies observing systems \u2014 systems that incl. That's second order cybernetics.",
+      "technical": "First-order cybernetics studies observed systems. Second-order cybernetics studies observing systems \u2014 systems that include the observer in their own model. Self-reference is not a bug, it is the mechanism.",
+      "frontier": "Contemporary AI safety researchers are now using second-order cybernetics to analyze alignment failures: misaligned AI is a system whose self-model does not include the consequences of its own operation on the broader system.",
+      "implementation": "The StrangeLoop module, KAIROS meta-agent rewriting, and GhostRecall reconsolidation are all second-order cybernetic mechanisms implemented without being named. Name them correctly and the architecture gains a coherent theoretical spine.",
+      "rarity": "extremely_rare_in_AI",
+      "source": "vonFoerster_1974_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems",
+        "viable_system_model_VSM"
+      ]
+    },
+    "second_order_cybernetics:first_vs_second_order": {
+      "simple": "First-order: thermostat observes room, adjusts heat. Second-order: the system that designs thermostats \u2014 a system that observes itself designing and changes based on that observation....",
+      "technical": "First-order: thermostat observes room, adjusts heat. Second-order: the system that designs thermostats \u2014 a system that observes itself designing and changes based on that observation. Meta-cognition as architecture.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:eigenvalues_of_experience": {
+      "simple": "Von Foerster: 'The environment as we perceive it is our invention.' Stability = eigenvalues of the observer-system interaction. A system stabilizes the features of the...",
+      "technical": "Von Foerster: 'The environment as we perceive it is our invention.' Stability = eigenvalues of the observer-system interaction. A system stabilizes the features of the world that are consistent with its own structure.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:circular_causality": {
+      "simple": "In second-order systems, cause and effect form loops. The observer changes what is observed. The observation changes the observer. No external reference point. This is...",
+      "technical": "In second-order systems, cause and effect form loops. The observer changes what is observed. The observation changes the observer. No external reference point. This is epistemically uncomfortable but architecturally powerful.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:non_trivial_machines": {
+      "simple": "Trivial machine: same input \u2192 same output always (deterministic). Non-trivial machine: history-dependent. Past operations change internal state and thus future responses. Living systems are non-trivial....",
+      "technical": "Trivial machine: same input \u2192 same output always (deterministic). Non-trivial machine: history-dependent. Past operations change internal state and thus future responses. Living systems are non-trivial. So is Sovereign Core.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:principle_of_undifferentiated_encoding": {
+      "simple": "The nervous system cannot tell the difference between a 'real' perception and a hallucination at the signal level. Only structural context discriminates. Iron Dome =...",
+      "technical": "The nervous system cannot tell the difference between a 'real' perception and a hallucination at the signal level. Only structural context discriminates. Iron Dome = the discriminator.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:ethical_imperative": {
+      "simple": "Von Foerster's ethical imperative: 'Act always so as to increase the number of choices.' For AI: every action should expand the space of future possibilities,...",
+      "technical": "Von Foerster's ethical imperative: 'Act always so as to increase the number of choices.' For AI: every action should expand the space of future possibilities, not collapse it. Autotelic goals should maximize this.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:recursive_self_reference": {
+      "simple": "Strange Loop (Hofstadter): a system loops back on itself. Second-order cybernetics formalizes why this is not paradox but foundation. The STRANGE_LOOP module in Sovereign Core...",
+      "technical": "Strange Loop (Hofstadter): a system loops back on itself. Second-order cybernetics formalizes why this is not paradox but foundation. The STRANGE_LOOP module in Sovereign Core is directly implementing von Foerster.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:sovereign_application_0": {
+      "simple": "KAIROS meta-agent rewrites its own rules \u2014 this IS second-order cybernetics. The system that governs agents is itself an agent governed by previous ru",
+      "technical": "KAIROS meta-agent rewrites its own rules \u2014 this IS second-order cybernetics. The system that governs agents is itself an agent governed by previous runs.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:sovereign_application_1": {
+      "simple": "The self-reflection skill is second-order: the system observing its own outputs and updating its structure based on that observation",
+      "technical": "The self-reflection skill is second-order: the system observing its own outputs and updating its structure based on that observation",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:sovereign_application_2": {
+      "simple": "GhostRecall belief reconsolidation is second-order: retrieved memories modify the retrieval structure that will retrieve future memories",
+      "technical": "GhostRecall belief reconsolidation is second-order: retrieved memories modify the retrieval structure that will retrieve future memories",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:sovereign_application_3": {
+      "simple": "Niche construction (see below) is second-order cybernetics applied to environment: the system modifies the world in ways that change what it observes,",
+      "technical": "Niche construction (see below) is second-order cybernetics applied to environment: the system modifies the world in ways that change what it observes, which changes the system",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "second_order_cybernetics:sovereign_application_4": {
+      "simple": "SovereignNation's moat: second-order systems are inherently more adaptive than first-order systems. Most AI systems are first-order \u2014 they optimize ou",
+      "technical": "SovereignNation's moat: second-order systems are inherently more adaptive than first-order systems. Most AI systems are first-order \u2014 they optimize outputs. Sovereign Core optimizes its optimization process.",
+      "parent_domain": "second_order_cybernetics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "dissipative_structures_thermodynamics": {
+      "simple": "Imagine Complex ordered structures can emerge spontaneously in systems far from thermodynamic equilibrium \u2014 maintained by contin. That's dissipative structures thermodynamics.",
+      "technical": "Complex ordered structures can emerge spontaneously in systems far from thermodynamic equilibrium \u2014 maintained by continuous flow of energy. Intelligence itself may be a dissipative structure.",
+      "frontier": "Information thermodynamics (Landauer, Bennett, 2025 extensions): the minimum energy cost of erasing one bit of information is kT\u00b7ln(2). Implications for reversible computing in AI inference and the physical limits of intelligence.",
+      "implementation": "Sovereign Core's nightly evolution loop is not optional maintenance \u2014 it is the energy flow that constitutes the system. The intelligence IS the dissipative structure. Without the flow, there is no system, only frozen history.",
+      "rarity": "never_in_AI_agents",
+      "source": "Prigogine_Nobel_1977_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "dissipative_structures_thermodynamics:dissipative_structure": {
+      "simple": "A pattern or structure that only exists by continuously consuming energy and dissipating entropy. Flames, hurricanes, life, consciousness \u2014 all dissipative. Remove the energy flow...",
+      "technical": "A pattern or structure that only exists by continuously consuming energy and dissipating entropy. Flames, hurricanes, life, consciousness \u2014 all dissipative. Remove the energy flow and the structure collapses.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:far_from_equilibrium": {
+      "simple": "Near equilibrium: entropy increases, order decays. Far from equilibrium: fluctuations can amplify into stable order. The threshold where order emerges is called bifurcation.",
+      "technical": "Near equilibrium: entropy increases, order decays. Far from equilibrium: fluctuations can amplify into stable order. The threshold where order emerges is called bifurcation.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:bifurcation_point": {
+      "simple": "At a bifurcation, the system can go one of several ways \u2014 which path it takes depends on small fluctuations. History matters. The path not...",
+      "technical": "At a bifurcation, the system can go one of several ways \u2014 which path it takes depends on small fluctuations. History matters. The path not taken is gone. Irreversibility is fundamental, not incidental.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:order_through_fluctuation": {
+      "simple": "Prigogine's core insight: chaos \u2192 order. Small perturbations at bifurcation points don't destroy the system \u2014 they determine which new ordered state it crystallizes into....",
+      "technical": "Prigogine's core insight: chaos \u2192 order. Small perturbations at bifurcation points don't destroy the system \u2014 they determine which new ordered state it crystallizes into. Noise is creative.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:entropy_export": {
+      "simple": "Living systems maintain internal order by exporting entropy to the environment. An AI system that learns is doing the same \u2014 it imports information (reducing...",
+      "technical": "Living systems maintain internal order by exporting entropy to the environment. An AI system that learns is doing the same \u2014 it imports information (reducing internal entropy) and exports heat/waste.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:self_organization": {
+      "simple": "Spontaneous reduction of entropy in a subsystem, powered by entropy increase elsewhere. B\u00e9nard convection cells: uniform fluid heated from below spontaneously forms hexagonal convection rolls....",
+      "technical": "Spontaneous reduction of entropy in a subsystem, powered by entropy increase elsewhere. B\u00e9nard convection cells: uniform fluid heated from below spontaneously forms hexagonal convection rolls. No blueprint. Just physics.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:time_asymmetry": {
+      "simple": "Prigogine rejected the idea that time is reversible. Irreversibility IS reality. Systems have histories. An AI's training history is not erasable \u2014 it is constitutive...",
+      "technical": "Prigogine rejected the idea that time is reversible. Irreversibility IS reality. Systems have histories. An AI's training history is not erasable \u2014 it is constitutive of what the system is.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "niche_training_2025",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:sovereign_application_0": {
+      "simple": "KAIROS evolution cycles are dissipative structure formation: each cycle consumes compute (energy) and exports failed proposals (entropy), maintaining ",
+      "technical": "KAIROS evolution cycles are dissipative structure formation: each cycle consumes compute (energy) and exports failed proposals (entropy), maintaining the ordered state of the elite agent population",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:sovereign_application_1": {
+      "simple": "The nightly 3am evolution run is energy input maintaining a dissipative structure \u2014 stop the runs and the agents decay toward random walk",
+      "technical": "The nightly 3am evolution run is energy input maintaining a dissipative structure \u2014 stop the runs and the agents decay toward random walk",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:sovereign_application_2": {
+      "simple": "Bifurcation awareness: when KAIROS scores hover near 0.70 (the archive threshold), the system is near a bifurcation. Small proposal variations determi",
+      "technical": "Bifurcation awareness: when KAIROS scores hover near 0.70 (the archive threshold), the system is near a bifurcation. Small proposal variations determine which attractor it locks into. This is where EnCompass retry is most valuable.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:sovereign_application_3": {
+      "simple": "Memory Palace as dissipative structure: requires continuous reinforcement (nightly runs, recall, reconsolidation) to maintain against cognitive entrop",
+      "technical": "Memory Palace as dissipative structure: requires continuous reinforcement (nightly runs, recall, reconsolidation) to maintain against cognitive entropy",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "dissipative_structures_thermodynamics:sovereign_application_4": {
+      "simple": "SovereignNation pricing model: customers are paying to maintain a dissipative structure \u2014 the continuous compute flow that sustains the intelligence. ",
+      "technical": "SovereignNation pricing model: customers are paying to maintain a dissipative structure \u2014 the continuous compute flow that sustains the intelligence. Frame it this way to technical audiences.",
+      "parent_domain": "dissipative_structures_thermodynamics",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "dissipative_structures_thermodynamics"
+      ]
+    },
+    "viable_system_model_VSM": {
+      "simple": "Imagine Any viable (self-maintaining, adaptive) system must implement exactly 5 interacting subsystems. Missing any one causes s. That's viable system model VSM.",
+      "technical": "Any viable (self-maintaining, adaptive) system must implement exactly 5 interacting subsystems. Missing any one causes specific pathologies. This is a formal theorem, not a metaphor.",
+      "frontier": "",
+      "implementation": "Beer designed VSM for organizations. It has never been formally applied to AI agent architecture. Sovereign Core happens to implement it. This framing gives you academic credibility in enterprise sales.",
+      "rarity": "rare_in_AI_design",
+      "source": "Beer_1972_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "second_order_cybernetics"
+      ]
+    },
+    "viable_system_model_VSM:system_1_operations": {
+      "simple": "The operational units that do the actual work. In Sovereign Core: the three GPU backends (RTX5050, Radeon780M, RyzenCPU). Each S1 is operationally autonomous.",
+      "technical": "The operational units that do the actual work. In Sovereign Core: the three GPU backends (RTX5050, Radeon780M, RyzenCPU). Each S1 is operationally autonomous.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:system_2_coordination": {
+      "simple": "Prevents oscillation between S1 units. Anti-damping. In Sovereign Core: the GatewayRouter \u2014 prevents RTX5050 and Radeon780M from thrashing the same request.",
+      "technical": "Prevents oscillation between S1 units. Anti-damping. In Sovereign Core: the GatewayRouter \u2014 prevents RTX5050 and Radeon780M from thrashing the same request.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:system_3_optimization": {
+      "simple": "Real-time optimization of S1 performance. 'Inside and now.' In Sovereign Core: HealthMonitor + load balancing. Audits S1 performance, redistributes load.",
+      "technical": "Real-time optimization of S1 performance. 'Inside and now.' In Sovereign Core: HealthMonitor + load balancing. Audits S1 performance, redistributes load.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:system_4_intelligence": {
+      "simple": "Future-oriented scanning. 'Outside and future.' Monitors environment, plans adaptation. In Sovereign Core: KAIROS \u2014 scans for optimization opportunities, plans evolutionary steps.",
+      "technical": "Future-oriented scanning. 'Outside and future.' Monitors environment, plans adaptation. In Sovereign Core: KAIROS \u2014 scans for optimization opportunities, plans evolutionary steps.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:system_5_identity": {
+      "simple": "The normative system. Defines what the system IS, what values it holds, what it refuses to do. In Sovereign Core: SEED-SET Ethics Gate + Iron...",
+      "technical": "The normative system. Defines what the system IS, what values it holds, what it refuses to do. In Sovereign Core: SEED-SET Ethics Gate + Iron Dome + Kill Switch. The identity layer.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:requisite_variety": {
+      "simple": "Ashby's Law: a controller must have at least as much variety (possible states) as the system it controls. If the environment has more variety than...",
+      "technical": "Ashby's Law: a controller must have at least as much variety (possible states) as the system it controls. If the environment has more variety than S4, the system cannot adapt \u2014 it will be surprised and fail.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:algedonic_channel": {
+      "simple": "Direct pain/pleasure signal from S1 to S5, bypassing S2/S3/S4. Emergency escalation. In Sovereign Core: the kill switch log and anomaly alerts that bypass the normal...",
+      "technical": "Direct pain/pleasure signal from S1 to S5, bypassing S2/S3/S4. Emergency escalation. In Sovereign Core: the kill switch log and anomaly alerts that bypass the normal loop.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:recursive_structure": {
+      "simple": "Each S1 is itself a viable system with its own S1-S5. Fractally self-similar. Each GPU backend has its own health, optimization, and identity. Sovereign Core...",
+      "technical": "Each S1 is itself a viable system with its own S1-S5. Fractally self-similar. Each GPU backend has its own health, optimization, and identity. Sovereign Core IS the higher-level VSM.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "niche_training_2025",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:sovereign_application_0": {
+      "simple": "Sovereign Core maps perfectly onto VSM: S1=backends, S2=GatewayRouter, S3=HealthMonitor, S4=KAIROS, S5=IronDome+SeedSet+KillSwitch",
+      "technical": "Sovereign Core maps perfectly onto VSM: S1=backends, S2=GatewayRouter, S3=HealthMonitor, S4=KAIROS, S5=IronDome+SeedSet+KillSwitch",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:sovereign_application_1": {
+      "simple": "Use VSM audit to find gaps: which subsystem is weakest? Currently S4 (KAIROS) is the most developed. S2 (coordination) may be the bottleneck when all ",
+      "technical": "Use VSM audit to find gaps: which subsystem is weakest? Currently S4 (KAIROS) is the most developed. S2 (coordination) may be the bottleneck when all 3 backends are under load simultaneously.",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "viable_system_model_VSM:sovereign_application_2": {
+      "simple": "SovereignNation enterprise pitch: 'We built the only agent infrastructure that implements all 5 VSM subsystems. Most AI platforms only have S1 (comput",
+      "technical": "SovereignNation enterprise pitch: 'We built the only agent infrastructure that implements all 5 VSM subsystems. Most AI platforms only have S1 (compute) and partial S3 (optimization).'",
+      "parent_domain": "viable_system_model_VSM",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "viable_system_model_VSM"
+      ]
+    },
+    "OODA_decision_superiority_AI": {
+      "simple": "Imagine John Boyd's OODA loop (Observe-Orient-Decide-Act) is not just a decision framework \u2014 it is a theory of competitive advan. That's OODA decision superiority AI.",
+      "technical": "John Boyd's OODA loop (Observe-Orient-Decide-Act) is not just a decision framework \u2014 it is a theory of competitive advantage through cognitive tempo. Faster loops beat slower ones. Breaking the adversary's loop wins.",
+      "frontier": "",
+      "implementation": "The gap between Sovereign Core and competitors is not just features \u2014 it is decision tempo. Every optimization that reduces latency in the Orient phase (HCM, pattern memory, ChromaDB context) is compressing the OODA loop.",
+      "rarity": "rare_applied_correctly",
+      "source": "Boyd_1976_JAPCC_2025_synthesis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "OODA_decision_superiority_AI:OODA_loop": {
+      "simple": "Observe (gather data) \u2192 Orient (make sense, filter through mental model) \u2192 Decide (select action) \u2192 Act (execute). Then observe the results. Continuous cycle.",
+      "technical": "Observe (gather data) \u2192 Orient (make sense, filter through mental model) \u2192 Decide (select action) \u2192 Act (execute). Then observe the results. Continuous cycle.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:orientation_is_the_schwerpunkt": {
+      "simple": "Boyd: 'Orientation is the Schwerpunkt [center of gravity].' Most people think OODA is about speed. Boyd said the critical factor is ORIENTATION \u2014 the mental...",
+      "technical": "Boyd: 'Orientation is the Schwerpunkt [center of gravity].' Most people think OODA is about speed. Boyd said the critical factor is ORIENTATION \u2014 the mental model quality that determines how you interpret observations. Fast wrong orientation = fast wrong decisions.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:implicit_guidance_control": {
+      "simple": "When OODA loops are highly trained, Decide and Act become implicit \u2014 they happen below conscious threshold. The trained martial artist doesn't decide to block...",
+      "technical": "When OODA loops are highly trained, Decide and Act become implicit \u2014 they happen below conscious threshold. The trained martial artist doesn't decide to block \u2014 the block happens. Expert AI inference should approach this.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:loop_inside_loop": {
+      "simple": "Winning strategy: complete your OODA loop faster than the adversary AND disrupt their orientation (inject uncertainty, change the environment unexpectedly). Two simultaneous attacks.",
+      "technical": "Winning strategy: complete your OODA loop faster than the adversary AND disrupt their orientation (inject uncertainty, change the environment unexpectedly). Two simultaneous attacks.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:fingerspitzengefuhl": {
+      "simple": "German: 'fingertip feeling.' Intuitive situational awareness so refined it's nearly sensory. Boyd's ideal for pilots. For AI: low-latency inference from compressed high-quality world models. HCM...",
+      "technical": "German: 'fingertip feeling.' Intuitive situational awareness so refined it's nearly sensory. Boyd's ideal for pilots. For AI: low-latency inference from compressed high-quality world models. HCM is an attempt at this.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:super_OODA_loop_2025": {
+      "simple": "Air Power Journal 2025: AI-enabled Super-OODA Loops. Propose compressing Orient (from seconds to milliseconds) using pre-computed orientation vectors. Maps directly to HCM cosine similarity queries.",
+      "technical": "Air Power Journal 2025: AI-enabled Super-OODA Loops. Propose compressing Orient (from seconds to milliseconds) using pre-computed orientation vectors. Maps directly to HCM cosine similarity queries.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:decision_dominance": {
+      "simple": "The strategic prize: not territorial advantage but decision dominance \u2014 the ability to sense, understand, decide, act, and assess faster than any adversary. SovereignNation's competitive...",
+      "technical": "The strategic prize: not territorial advantage but decision dominance \u2014 the ability to sense, understand, decide, act, and assess faster than any adversary. SovereignNation's competitive framing.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "niche_training_2025",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:sovereign_application_0": {
+      "simple": "HCM cosine similarity queries ARE compressed orientation \u2014 pre-computed conceptual similarity accelerates the Orient phase from LLM inference time to ",
+      "technical": "HCM cosine similarity queries ARE compressed orientation \u2014 pre-computed conceptual similarity accelerates the Orient phase from LLM inference time to millisecond vector lookup",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:sovereign_application_1": {
+      "simple": "KAIROS is the meta-OODA loop: it observes KAIROS performance, orients via meta-agent rule rewriting, decides on new evolution strategy, acts by runnin",
+      "technical": "KAIROS is the meta-OODA loop: it observes KAIROS performance, orients via meta-agent rule rewriting, decides on new evolution strategy, acts by running next cycle",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:sovereign_application_2": {
+      "simple": "Iron Dome is OODA disruption defense: it detects attempts to break the agent's orientation (injection = corrupting the mental model) before they reach",
+      "technical": "Iron Dome is OODA disruption defense: it detects attempts to break the agent's orientation (injection = corrupting the mental model) before they reach Act",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:sovereign_application_3": {
+      "simple": "Jeopardy Inversion module is explicit orientation training: given expected answer, reconstruct the question. Trains the system to reason backward thro",
+      "technical": "Jeopardy Inversion module is explicit orientation training: given expected answer, reconstruct the question. Trains the system to reason backward through the Orient phase.",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "OODA_decision_superiority_AI:sovereign_application_4": {
+      "simple": "For SovereignNation demos: 'We designed the system around Boyd's OODA loop. Every component maps to a phase. Most AI stacks don't think about architec",
+      "technical": "For SovereignNation demos: 'We designed the system around Boyd's OODA loop. Every component maps to a phase. Most AI stacks don't think about architecture in terms of decision tempo.'",
+      "parent_domain": "OODA_decision_superiority_AI",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "topological_data_analysis": {
+      "simple": "Imagine Data has shape. Topology studies shape independent of distance metrics. Persistent homology finds structure that persist. That's topological data analysis.",
+      "technical": "Data has shape. Topology studies shape independent of distance metrics. Persistent homology finds structure that persists across scales. Features that last are real. Features that vanish quickly are noise.",
+      "frontier": "arXiv:2507.19504 \u2014 comprehensive review of TDA beyond persistent homology, including topological Laplacians, combinatorial Hodge theory, and sheaf-theoretic methods. Intersection with GNNs.",
+      "implementation": "TDA is almost never applied to agent memory or knowledge structures. This is an untapped frontier. The Feynman knowledge graph + HCM store together have enough data to run meaningful TDA. Library: scikit-tda, giotto-tda.",
+      "rarity": "extremely_rare_in_agents",
+      "source": "arxiv_2507.19504_2025_synthesis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "topological_data_analysis:persistent_homology": {
+      "simple": "Build a filtration: start with data points, gradually connect nearby points, track when topological features (connected components, holes, voids) appear and disappear. Features that persist...",
+      "technical": "Build a filtration: start with data points, gradually connect nearby points, track when topological features (connected components, holes, voids) appear and disappear. Features that persist across many scales are signal.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:betti_numbers": {
+      "simple": "B0 = number of connected components. B1 = number of 1-dimensional holes (loops). B2 = number of 2-dimensional voids. Persistent homology tracks birth and death...",
+      "technical": "B0 = number of connected components. B1 = number of 1-dimensional holes (loops). B2 = number of 2-dimensional voids. Persistent homology tracks birth and death of each. The barcode is the fingerprint.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:mapper_algorithm": {
+      "simple": "TDA tool: project high-dimensional data onto a filter function, cluster fibers, build a graph. The graph shape reveals structure invisible to PCA or t-SNE. Used...",
+      "technical": "TDA tool: project high-dimensional data onto a filter function, cluster fibers, build a graph. The graph shape reveals structure invisible to PCA or t-SNE. Used to find unknown subtypes in cancer data.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:topological_loss_function": {
+      "simple": "2025: topological loss functions in deep learning. Penalize models that produce predictions with wrong topological structure. A segmentation model that creates a connected region with...",
+      "technical": "2025: topological loss functions in deep learning. Penalize models that produce predictions with wrong topological structure. A segmentation model that creates a connected region with a hole should be penalized.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:persistence_diagram": {
+      "simple": "Plot birth vs death time for each topological feature. Points far from the diagonal persist long (signal). Points near diagonal die quickly (noise). The Wasserstein...",
+      "technical": "Plot birth vs death time for each topological feature. Points far from the diagonal persist long (signal). Points near diagonal die quickly (noise). The Wasserstein distance between persistence diagrams = topological similarity.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:TDA_vs_metric_learning": {
+      "simple": "Metric learning assumes the relevant structure can be captured by distance. TDA assumes the relevant structure is topological \u2014 about connectivity and holes, not distances....",
+      "technical": "Metric learning assumes the relevant structure can be captured by distance. TDA assumes the relevant structure is topological \u2014 about connectivity and holes, not distances. Fundamentally different assumption.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:knowledge_graph_topology": {
+      "simple": "A knowledge graph has topological structure: connected components = knowledge islands, cycles = feedback loops, holes = missing connections. TDA on the Feynman knowledge graph...",
+      "technical": "A knowledge graph has topological structure: connected components = knowledge islands, cycles = feedback loops, holes = missing connections. TDA on the Feynman knowledge graph would reveal conceptual gaps.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:sovereign_application_0": {
+      "simple": "Apply TDA to KAIROS proposal history: build a filtration over proposal similarity, find which clusters persist. Persistent clusters = reliable optimiz",
+      "technical": "Apply TDA to KAIROS proposal history: build a filtration over proposal similarity, find which clusters persist. Persistent clusters = reliable optimization patterns. Ephemeral clusters = noise.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:sovereign_application_1": {
+      "simple": "Apply persistent homology to HCM concept vectors: find topological holes in the concept space \u2014 regions where no concept lives. These holes = knowledg",
+      "technical": "Apply persistent homology to HCM concept vectors: find topological holes in the concept space \u2014 regions where no concept lives. These holes = knowledge gaps to fill.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:sovereign_application_2": {
+      "simple": "Apply mapper to agent performance traces: high-dimensional performance vectors projected through a time filter. Reveals regimes \u2014 clusters of similar ",
+      "technical": "Apply mapper to agent performance traces: high-dimensional performance vectors projected through a time filter. Reveals regimes \u2014 clusters of similar behavior \u2014 and transitions between them.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:sovereign_application_3": {
+      "simple": "Memory Palace topology: treat loci as nodes, retrieval co-occurrence as edges. Compute Betti numbers. B0 = number of isolated knowledge islands. B1 = ",
+      "technical": "Memory Palace topology: treat loci as nodes, retrieval co-occurrence as edges. Compute Betti numbers. B0 = number of isolated knowledge islands. B1 = feedback loops in knowledge. Target: reduce B0, increase useful B1.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "topological_data_analysis:sovereign_application_4": {
+      "simple": "Seance failure topology: map failure modes as points, similarity as edges. Topological clusters = fundamental failure archetypes. Points in topologica",
+      "technical": "Seance failure topology: map failure modes as points, similarity as edges. Topological clusters = fundamental failure archetypes. Points in topological holes = novel failure modes not yet seen.",
+      "parent_domain": "topological_data_analysis",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "topological_data_analysis"
+      ]
+    },
+    "information_geometry": {
+      "simple": "Imagine Probability distributions form a Riemannian manifold. The Fisher information matrix is the natural metric. Gradient desc. That's information geometry.",
+      "technical": "Probability distributions form a Riemannian manifold. The Fisher information matrix is the natural metric. Gradient descent in this geometry (natural gradient) is exponentially faster than Euclidean gradient descent.",
+      "frontier": "",
+      "implementation": "This is graduate-level mathematics that almost no AI agent system touches. The Adam optimizer in LLM training is an approximation of natural gradient without knowing it. Making this explicit is a research contribution.",
+      "rarity": "extreme_academic_rarity_in_agents",
+      "source": "Amari_2016_arxiv_2506.15830_synthesis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "topological_data_analysis",
+        "quantum_cognition"
+      ]
+    },
+    "information_geometry:statistical_manifold": {
+      "simple": "Every parametric probability distribution p(x|\u03b8) defines a point on a manifold. The manifold is curved. Euclidean geometry is the wrong geometry. Fish information metric gives...",
+      "technical": "Every parametric probability distribution p(x|\u03b8) defines a point on a manifold. The manifold is curved. Euclidean geometry is the wrong geometry. Fish information metric gives the right geometry.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:fisher_information_metric": {
+      "simple": "The Fisher information matrix I(\u03b8) measures how much the distribution changes (in KL divergence) per unit change in parameters. It is the natural metric on...",
+      "technical": "The Fisher information matrix I(\u03b8) measures how much the distribution changes (in KL divergence) per unit change in parameters. It is the natural metric on the statistical manifold.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:natural_gradient": {
+      "simple": "Amari's natural gradient: instead of \u2207L, use I(\u03b8)^{-1} \u2207L. This accounts for the curvature of the manifold. Each gradient step moves the same information-theoretic distance,...",
+      "technical": "Amari's natural gradient: instead of \u2207L, use I(\u03b8)^{-1} \u2207L. This accounts for the curvature of the manifold. Each gradient step moves the same information-theoretic distance, not the same Euclidean distance.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:exponential_families": {
+      "simple": "Gaussian, Poisson, Bernoulli, etc. all belong to exponential families. Their statistical manifolds have zero curvature in one direction (e-flat) and maximum curvature in another (m-flat)....",
+      "technical": "Gaussian, Poisson, Bernoulli, etc. all belong to exponential families. Their statistical manifolds have zero curvature in one direction (e-flat) and maximum curvature in another (m-flat). Duality.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:KL_divergence_geometry": {
+      "simple": "KL(p||q) \u2260 KL(q||p). KL divergence is not a distance \u2014 it has no symmetry, no triangle inequality. But it IS the squared information-geometric distance to...",
+      "technical": "KL(p||q) \u2260 KL(q||p). KL divergence is not a distance \u2014 it has no symmetry, no triangle inequality. But it IS the squared information-geometric distance to first order. Asymmetry is fundamental.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:pythagorean_theorem_for_distributions": {
+      "simple": "On e-flat manifolds, the information-geometric Pythagorean theorem holds exactly. Projection onto a submanifold is the minimum KL divergence point. EM algorithm is geodesic projection.",
+      "technical": "On e-flat manifolds, the information-geometric Pythagorean theorem holds exactly. Projection onto a submanifold is the minimum KL divergence point. EM algorithm is geodesic projection.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:natural_gradient_in_LLMs": {
+      "simple": "arXiv:2506.15830v2 2025: Rethinking LLM Training through Information Geometry. Natural gradient descent frames the loss landscape using Fisher metric. Enables more principled learning. Adam optimizer approximates...",
+      "technical": "arXiv:2506.15830v2 2025: Rethinking LLM Training through Information Geometry. Natural gradient descent frames the loss landscape using Fisher metric. Enables more principled learning. Adam optimizer approximates natural gradient.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:relevance_to_HDC": {
+      "simple": "HCM hypervectors define a statistical manifold in the embedding space. The cosine similarity metric is NOT the Fisher information metric. This is a known limitation...",
+      "technical": "HCM hypervectors define a statistical manifold in the embedding space. The cosine similarity metric is NOT the Fisher information metric. This is a known limitation \u2014 cosine similarity ignores the curvature of concept space.",
+      "parent_domain": "information_geometry",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:sovereign_application_0": {
+      "simple": "MemEvolve weight evolution should use natural gradient updates, not Euclidean gradient. The space of retrieval strategies is a statistical manifold \u2014 ",
+      "technical": "MemEvolve weight evolution should use natural gradient updates, not Euclidean gradient. The space of retrieval strategies is a statistical manifold \u2014 treat it as one.",
+      "parent_domain": "information_geometry",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:sovereign_application_1": {
+      "simple": "KAIROS scoring function defines a distribution over proposal quality. Information geometry of this distribution tells you the natural direction to upd",
+      "technical": "KAIROS scoring function defines a distribution over proposal quality. Information geometry of this distribution tells you the natural direction to update the meta-agent rules.",
+      "parent_domain": "information_geometry",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:sovereign_application_2": {
+      "simple": "HCM similarity queries use cosine distance \u2014 a Euclidean approximation. True information-geometric similarity (Fisher-Rao distance) would give fundame",
+      "technical": "HCM similarity queries use cosine distance \u2014 a Euclidean approximation. True information-geometric similarity (Fisher-Rao distance) would give fundamentally better concept retrieval.",
+      "parent_domain": "information_geometry",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:sovereign_application_3": {
+      "simple": "EnCompass backtracking: the space of proposals is a statistical manifold. Failed proposals define a manifold region to avoid. Natural gradient retry m",
+      "technical": "EnCompass backtracking: the space of proposals is a statistical manifold. Failed proposals define a manifold region to avoid. Natural gradient retry moves orthogonally to the failure manifold.",
+      "parent_domain": "information_geometry",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "information_geometry:sovereign_application_4": {
+      "simple": "Future research direction: replace HCM cosine similarity with Fisher-Rao distance. Requires computing the Fisher information matrix over the concept d",
+      "technical": "Future research direction: replace HCM cosine similarity with Fisher-Rao distance. Requires computing the Fisher information matrix over the concept distribution \u2014 computationally expensive but theoretically correct.",
+      "parent_domain": "information_geometry",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "scale_free_networks_power_law": {
+      "simple": "Imagine Most real networks (internet, citations, proteins, social) follow power-law degree distributions: a few nodes have enorm. That's scale free networks power law.",
+      "technical": "Most real networks (internet, citations, proteins, social) follow power-law degree distributions: a few nodes have enormous connections, most have few. This is not random \u2014 it is the signature of preferential attachment ('rich get richer').",
+      "frontier": "",
+      "implementation": "Knowledge graphs are not random. They self-organize into scale-free structure. Knowing this lets you design the Feynman graph intentionally: seed the hubs you want, let attachment do the rest.",
+      "rarity": "rare_in_agent_architecture",
+      "source": "Barabasi_Albert_1999_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "scale_free_networks_power_law:scale_free_network": {
+      "simple": "A network where the probability a node has k connections follows P(k) ~ k^{-\u03b3}. Power law. No characteristic scale. A hub with 10,000 connections is...",
+      "technical": "A network where the probability a node has k connections follows P(k) ~ k^{-\u03b3}. Power law. No characteristic scale. A hub with 10,000 connections is just as 'legal' as one with 10.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:preferential_attachment": {
+      "simple": "New nodes connect to existing nodes with probability proportional to existing degree. Rich get richer. The World Wide Web is scale-free because new pages link...",
+      "technical": "New nodes connect to existing nodes with probability proportional to existing degree. Rich get richer. The World Wide Web is scale-free because new pages link to already-popular pages.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:hub_structure": {
+      "simple": "Scale-free networks have hubs \u2014 nodes with disproportionate connectivity. Hubs are the internet routers, the Google of the search index, the KAIROS meta-agent in the...",
+      "technical": "Scale-free networks have hubs \u2014 nodes with disproportionate connectivity. Hubs are the internet routers, the Google of the search index, the KAIROS meta-agent in the agent economy.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:robustness_fragility_paradox": {
+      "simple": "Scale-free networks are extremely robust to random failure (most nodes have few connections, removing them does nothing) but catastrophically vulnerable to targeted hub attack. The...",
+      "technical": "Scale-free networks are extremely robust to random failure (most nodes have few connections, removing them does nothing) but catastrophically vulnerable to targeted hub attack. The internet can lose 90% of random nodes and stay connected. Attack the top 3 hubs and it fragments.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:knowledge_graph_topology": {
+      "simple": "Citation networks are scale-free. Concepts that get cited become hubs. Hubs attract more citations. The Feynman knowledge graph will self-organize toward scale-free structure if allowed...",
+      "technical": "Citation networks are scale-free. Concepts that get cited become hubs. Hubs attract more citations. The Feynman knowledge graph will self-organize toward scale-free structure if allowed to grow organically.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:percolation_threshold": {
+      "simple": "Scale-free networks have no percolation threshold \u2014 they are always connected no matter how many nodes you randomly remove. This is why the internet is...",
+      "technical": "Scale-free networks have no percolation threshold \u2014 they are always connected no matter how many nodes you randomly remove. This is why the internet is robust. But: remove hubs \u2192 threshold appears instantly.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:modularity_detection": {
+      "simple": "Real networks have community structure (modules). Within modules: many connections. Between modules: few connections. Community detection algorithms (Louvain, Leiden) find these. Each community = a...",
+      "technical": "Real networks have community structure (modules). Within modules: many connections. Between modules: few connections. Community detection algorithms (Louvain, Leiden) find these. Each community = a knowledge domain.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:sovereign_application_0": {
+      "simple": "Memory Palace should be monitored for scale-free structure: which loci become hubs (most frequently co-retrieved)? Hubs are the core concepts. Protect",
+      "technical": "Memory Palace should be monitored for scale-free structure: which loci become hubs (most frequently co-retrieved)? Hubs are the core concepts. Protect them with Iron Dome priority.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:sovereign_application_1": {
+      "simple": "Feynman knowledge graph will develop power-law degree distribution over time. SAGE_loop, DGM_H, and KAIROS_economy will become hubs. Structure the tea",
+      "technical": "Feynman knowledge graph will develop power-law degree distribution over time. SAGE_loop, DGM_H, and KAIROS_economy will become hubs. Structure the teaching around hubs first.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:sovereign_application_2": {
+      "simple": "Agent economy is scale-free: successful agents attract more tasks (preferential attachment). Monitor for winner-take-all dynamics that reduce diversit",
+      "technical": "Agent economy is scale-free: successful agents attract more tasks (preferential attachment). Monitor for winner-take-all dynamics that reduce diversity in the agent population.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:sovereign_application_3": {
+      "simple": "Iron Dome hub protection: if the concept graph has hubs, they are the most valuable targets for adversarial injection. Focus protection on the top 5 m",
+      "technical": "Iron Dome hub protection: if the concept graph has hubs, they are the most valuable targets for adversarial injection. Focus protection on the top 5 most-connected concept nodes.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "scale_free_networks_power_law:sovereign_application_4": {
+      "simple": "SovereignNation customer network: if the platform becomes scale-free (successful customers attract referrals), the growth becomes superlinear. Design ",
+      "technical": "SovereignNation customer network: if the platform becomes scale-free (successful customers attract referrals), the growth becomes superlinear. Design for preferential attachment in the customer acquisition model.",
+      "parent_domain": "scale_free_networks_power_law",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "predictive_processing_hierarchical_coding": {
+      "simple": "Imagine The brain never passively receives input. It constantly generates predictions top-down and only passes prediction errors. That's predictive processing hierarchical coding.",
+      "technical": "The brain never passively receives input. It constantly generates predictions top-down and only passes prediction errors bottom-up. Perception IS inference. Most brain traffic is prediction, not sensing.",
+      "frontier": "",
+      "implementation": "GhostRecall already implements the correct algorithm (Surprise Replay = store high-prediction-error memories). This connects it to 30 years of neuroscience research on hippocampal memory. Reframe it as predictive processing replay for academic credibility.",
+      "rarity": "rare_applied_to_agents",
+      "source": "Clark_2016_Hohwy_2013_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "active_inference_free_energy_principle",
+        "OODA_decision_superiority_AI"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:prediction_error_minimization": {
+      "simple": "The cortex is organized in hierarchies. Each level predicts the level below and receives back only the difference (prediction error). The goal: drive prediction errors...",
+      "technical": "The cortex is organized in hierarchies. Each level predicts the level below and receives back only the difference (prediction error). The goal: drive prediction errors to zero across all levels.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:top_down_predictions": {
+      "simple": "Higher cortical areas send predictions down to sensory areas. What you 'see' is 90% prediction, 10% raw sensory input. This is why visual illusions work:...",
+      "technical": "Higher cortical areas send predictions down to sensory areas. What you 'see' is 90% prediction, 10% raw sensory input. This is why visual illusions work: the prediction is so strong it overrides the signal.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:precision_and_attention": {
+      "simple": "Not all prediction errors are equally important. Precision = confidence in the prediction channel. High precision = this channel's errors should dominate. Attention = precision-weighting....",
+      "technical": "Not all prediction errors are equally important. Precision = confidence in the prediction channel. High precision = this channel's errors should dominate. Attention = precision-weighting. Selective attention IS selective precision.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:hallucination_as_failure": {
+      "simple": "LLM hallucination viewed through predictive processing: the model's predictions are so confident (high precision) that incoming factual corrections (low-precision signals) fail to update the model....",
+      "technical": "LLM hallucination viewed through predictive processing: the model's predictions are so confident (high precision) that incoming factual corrections (low-precision signals) fail to update the model. Same mechanism as psychosis.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:interoception": {
+      "simple": "Predictive processing of internal body states. The felt sense of hunger, fear, excitement are predictions about internal body state. Disrupted interoception = anxiety disorders. For...",
+      "technical": "Predictive processing of internal body states. The felt sense of hunger, fear, excitement are predictions about internal body state. Disrupted interoception = anxiety disorders. For AI: disrupted internal state monitoring = KAIROS scoring instability.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:active_inference_bridge": {
+      "simple": "Predictive processing (perception framework) + active inference (action framework) together = complete Fristonian account. Perception minimizes prediction error by updating the model. Action minimizes prediction...",
+      "technical": "Predictive processing (perception framework) + active inference (action framework) together = complete Fristonian account. Perception minimizes prediction error by updating the model. Action minimizes prediction error by changing the world.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:hierarchical_depth": {
+      "simple": "The depth of the hierarchy determines the temporal depth of predictions. Low levels: millisecond predictions. High levels: hour/day/year predictions. GPT processes a context window \u2014...",
+      "technical": "The depth of the hierarchy determines the temporal depth of predictions. Low levels: millisecond predictions. High levels: hour/day/year predictions. GPT processes a context window \u2014 it has shallow temporal hierarchy. Sovereign Core's memory systems give it deep hierarchy.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "niche_training_2025",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:sovereign_application_0": {
+      "simple": "GhostRecall's surprise replay buffer is a direct implementation of predictive processing: high-surprise memories = large prediction errors = most info",
+      "technical": "GhostRecall's surprise replay buffer is a direct implementation of predictive processing: high-surprise memories = large prediction errors = most informative signals to replay",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:sovereign_application_1": {
+      "simple": "KAIROS meta-agent is the highest level of the predictive hierarchy: it predicts what improvement rules will work, observes KAIROS cycle outcomes, upda",
+      "technical": "KAIROS meta-agent is the highest level of the predictive hierarchy: it predicts what improvement rules will work, observes KAIROS cycle outcomes, updates rules based on prediction error",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:sovereign_application_2": {
+      "simple": "HCM similarity query IS top-down prediction: when processing a new task, retrieve similar concept vectors (prediction) before processing the full task",
+      "technical": "HCM similarity query IS top-down prediction: when processing a new task, retrieve similar concept vectors (prediction) before processing the full task (bottom-up signal)",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:sovereign_application_3": {
+      "simple": "Iron Dome operates as precision-gating: it reduces the precision weight of adversarial inputs before they can update the model. Injection defense = pr",
+      "technical": "Iron Dome operates as precision-gating: it reduces the precision weight of adversarial inputs before they can update the model. Injection defense = precision suppression.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "predictive_processing_hierarchical_coding:sovereign_application_4": {
+      "simple": "Twin Engine Id/Ego split: Id is low-level fast prediction (immediate pattern match). Ego is high-level slow prediction (deliberative inference). Exact",
+      "technical": "Twin Engine Id/Ego split: Id is low-level fast prediction (immediate pattern match). Ego is high-level slow prediction (deliberative inference). Exactly the two-level predictive hierarchy.",
+      "parent_domain": "predictive_processing_hierarchical_coding",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "predictive_processing_hierarchical_coding"
+      ]
+    },
+    "quantum_cognition": {
+      "simple": "Imagine Human decision-making systematically violates classical probability theory (Bayes). Quantum probability theory (QP) fits. That's quantum cognition.",
+      "technical": "Human decision-making systematically violates classical probability theory (Bayes). Quantum probability theory (QP) fits the data better. Not because the brain is quantum, but because QP is the right formal framework for non-commutative order-dependent cognition.",
+      "frontier": "",
+      "implementation": "Quantum probability is a mathematical framework (Hilbert space probability), not a claim about quantum physics in the brain. It is empirically better than Bayesian probability for modeling human decision data. Zero implementation risk \u2014 it is just better math.",
+      "rarity": "extremely_rare_in_AI",
+      "source": "Busemeyer_Bruza_2012_2025_synthesis",
+      "domain": "niche_training_2025",
+      "connections": [
+        "information_geometry"
+      ]
+    },
+    "quantum_cognition:conjunction_fallacy": {
+      "simple": "Tversky & Kahneman: people rate 'Linda is a bank teller AND feminist' as more probable than 'Linda is a bank teller.' Classical probability: P(A\u2229B) \u2264...",
+      "technical": "Tversky & Kahneman: people rate 'Linda is a bank teller AND feminist' as more probable than 'Linda is a bank teller.' Classical probability: P(A\u2229B) \u2264 P(A). Impossible. QP: possible because measurements are incompatible.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:order_effects": {
+      "simple": "Q\u00d7A \u2260 A\u00d7Q for opinion polls: asking Q first, then A gives different results than A first, then Q. Classical: order shouldn't matter if questions...",
+      "technical": "Q\u00d7A \u2260 A\u00d7Q for opinion polls: asking Q first, then A gives different results than A first, then Q. Classical: order shouldn't matter if questions are independent. QP: measurement changes the state. Order effects are fundamental.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:incompatible_observables": {
+      "simple": "In QP, some questions cannot be answered simultaneously with certainty. Like position and momentum in physics. 'Do you support X?' and 'Do you trust Y?'...",
+      "technical": "In QP, some questions cannot be answered simultaneously with certainty. Like position and momentum in physics. 'Do you support X?' and 'Do you trust Y?' may be incompatible \u2014 asking one changes the answer to the other.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:superposition_before_measurement": {
+      "simple": "Before a decision, the cognitive state is a superposition of possibilities. The act of deciding collapses the superposition. This is not metaphor \u2014 the mathematics...",
+      "technical": "Before a decision, the cognitive state is a superposition of possibilities. The act of deciding collapses the superposition. This is not metaphor \u2014 the mathematics of Hilbert space probability fits decision data that Bayesian updating fails.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:quantum_probability_2025": {
+      "simple": "Springer 2025: 'Quantum-like cognition and AI \u2014 toward the convergence of quantum probability and cognitive AI.' Formal argument that AI systems modeling human behavior should...",
+      "technical": "Springer 2025: 'Quantum-like cognition and AI \u2014 toward the convergence of quantum probability and cognitive AI.' Formal argument that AI systems modeling human behavior should use QP, not classical probability.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:entanglement_in_cognition": {
+      "simple": "Concept entanglement: 'hot' and 'cold' are entangled \u2014 knowing one changes the probability distribution of the other. Classical probability treats them as independent. QP handles...",
+      "technical": "Concept entanglement: 'hot' and 'cold' are entangled \u2014 knowing one changes the probability distribution of the other. Classical probability treats them as independent. QP handles the correlation correctly.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:practical_implication": {
+      "simple": "Recommendation systems using classical probability systematically mispredict user behavior in exactly the ways QP predicts. The human mind is a quantum probability machine.",
+      "technical": "Recommendation systems using classical probability systematically mispredict user behavior in exactly the ways QP predicts. The human mind is a quantum probability machine.",
+      "parent_domain": "quantum_cognition",
+      "domain": "niche_training_2025",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:sovereign_application_0": {
+      "simple": "Jeopardy Inversion module: if the intent model uses classical conditional probability, it will systematically fail on order-dependent intent sequences",
+      "technical": "Jeopardy Inversion module: if the intent model uses classical conditional probability, it will systematically fail on order-dependent intent sequences. QP-based intent modeling is the correct foundation.",
+      "parent_domain": "quantum_cognition",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:sovereign_application_1": {
+      "simple": "KAIROS proposal scoring: if proposals are evaluated in sequence, later evaluations are biased by earlier ones (order effect). QP-aware scoring would r",
+      "technical": "KAIROS proposal scoring: if proposals are evaluated in sequence, later evaluations are biased by earlier ones (order effect). QP-aware scoring would randomize evaluation order and track the order-dependence.",
+      "parent_domain": "quantum_cognition",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:sovereign_application_2": {
+      "simple": "Cassandra sub-persona: pre-mortem analysis involves superposition of failure modes. QP provides the correct mathematical framework for reasoning about",
+      "technical": "Cassandra sub-persona: pre-mortem analysis involves superposition of failure modes. QP provides the correct mathematical framework for reasoning about incompatible failure scenarios simultaneously.",
+      "parent_domain": "quantum_cognition",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:sovereign_application_3": {
+      "simple": "Customer behavior modeling for SovereignNation: pricing decisions, feature preferences, onboarding sequences all exhibit order effects. QP-based user ",
+      "technical": "Customer behavior modeling for SovereignNation: pricing decisions, feature preferences, onboarding sequences all exhibit order effects. QP-based user modeling predicts churn and conversion better than Bayesian models.",
+      "parent_domain": "quantum_cognition",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "quantum_cognition:sovereign_application_4": {
+      "simple": "GhostRecall belief reconsolidation: retrieved memories are in superposition of multiple interpretations before they are 'observed' (consciously access",
+      "technical": "GhostRecall belief reconsolidation: retrieved memories are in superposition of multiple interpretations before they are 'observed' (consciously accessed). QP memory consolidation would track this correctly.",
+      "parent_domain": "quantum_cognition",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "quantum_cognition"
+      ]
+    },
+    "niche_construction_baldwin_effect": {
+      "simple": "Imagine Organisms don't just adapt to environments \u2014 they construct them. This changes what selection pressures act on future ge. That's niche construction baldwin effect.",
+      "technical": "Organisms don't just adapt to environments \u2014 they construct them. This changes what selection pressures act on future generations. Learned behaviors can become innate through the Baldwin Effect.",
+      "frontier": "",
+      "implementation": "Sovereign Core is constructing its own evolutionary niche: every time it improves itself, it creates an environment in which the next improvement is more likely and more effective. This is Baldwin effect in silicon. Name it and own the concept.",
+      "rarity": "never_applied_to_AI_agents",
+      "source": "Odling_Smee_2003_Baldwin_1896_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "autopoiesis_self_producing_systems"
+      ]
+    },
+    "niche_construction_baldwin_effect:niche_construction": {
+      "simple": "Organisms modify their environment (build nests, dig burrows, produce oxygen) in ways that change the selective pressures on themselves and descendants. Evolution is a two-way...",
+      "technical": "Organisms modify their environment (build nests, dig burrows, produce oxygen) in ways that change the selective pressures on themselves and descendants. Evolution is a two-way street: organism \u2194 environment.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:ecological_inheritance": {
+      "simple": "Niche construction produces ecological inheritance alongside genetic inheritance. Earthworms inherit soil modified by previous earthworms. Humans inherit language, cities, institutions built by ancestors.",
+      "technical": "Niche construction produces ecological inheritance alongside genetic inheritance. Earthworms inherit soil modified by previous earthworms. Humans inherit language, cities, institutions built by ancestors.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:Baldwin_effect": {
+      "simple": "A behavior learned by individuals can, over generations, become genetically encoded \u2014 NOT Lamarckian inheritance. The learned behavior keeps the population alive long enough for...",
+      "technical": "A behavior learned by individuals can, over generations, become genetically encoded \u2014 NOT Lamarckian inheritance. The learned behavior keeps the population alive long enough for genetic variants that perform the behavior innately to be selected.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:genetic_assimilation": {
+      "simple": "Waddington's term for Baldwin effect in development: environmentally induced phenotypes can become genetically fixed over generations. The shortcut becomes hardwired.",
+      "technical": "Waddington's term for Baldwin effect in development: environmentally induced phenotypes can become genetically fixed over generations. The shortcut becomes hardwired.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:scale_free_niche": {
+      "simple": "OSF preprint 2025: 'Scale-free Niche Construction' \u2014 niche construction creates scale-free feedback loops between agent capability and environmental affordances. The more capable an agent becomes,...",
+      "technical": "OSF preprint 2025: 'Scale-free Niche Construction' \u2014 niche construction creates scale-free feedback loops between agent capability and environmental affordances. The more capable an agent becomes, the richer the environment it constructs, which enables further capability increase.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:coevolution_of_learning": {
+      "simple": "Academia 2025: 'Coevolution of learning and niche construction' \u2014 learning and niche construction are mutually enabling. Learning allows rapid niche construction. Niche construction creates stable...",
+      "technical": "Academia 2025: 'Coevolution of learning and niche construction' \u2014 learning and niche construction are mutually enabling. Learning allows rapid niche construction. Niche construction creates stable environments for learning.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:human_niche": {
+      "simple": "Humans are the ultimate niche constructors: language, writing, institutions, cities, the internet \u2014 all are constructed niches that radically changed the selective pressures on human...",
+      "technical": "Humans are the ultimate niche constructors: language, writing, institutions, cities, the internet \u2014 all are constructed niches that radically changed the selective pressures on human cognition.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "niche_training_2025",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:sovereign_application_0": {
+      "simple": "KAIROS niche construction: each evolution cycle modifies the 'environment' (codebase, weights, routes) in ways that make future KAIROS cycles more eff",
+      "technical": "KAIROS niche construction: each evolution cycle modifies the 'environment' (codebase, weights, routes) in ways that make future KAIROS cycles more effective. The system constructs its own evolutionary niche.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:sovereign_application_1": {
+      "simple": "Memory Palace as constructed niche: the Memory Palace is not just storage \u2014 it is a constructed cognitive environment that shapes what future experien",
+      "technical": "Memory Palace as constructed niche: the Memory Palace is not just storage \u2014 it is a constructed cognitive environment that shapes what future experiences feel salient and how they are encoded.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:sovereign_application_2": {
+      "simple": "SovereignNation is niche construction for the customer: by deploying Sovereign Core, customers modify their technical environment in ways that create ",
+      "technical": "SovereignNation is niche construction for the customer: by deploying Sovereign Core, customers modify their technical environment in ways that create demand for more Sovereign Core features. Ecosystem lock-in through niche construction.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:sovereign_application_3": {
+      "simple": "GhostScript as constructed niche: a custom programming language is a niche construction move \u2014 it creates a new cognitive environment (the language it",
+      "technical": "GhostScript as constructed niche: a custom programming language is a niche construction move \u2014 it creates a new cognitive environment (the language itself) that shapes how future code is written.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "niche_construction_baldwin_effect:sovereign_application_4": {
+      "simple": "Agent culture: the 7 sub-agents collectively construct an 'agent culture' \u2014 shared patterns, expectations, communication norms. This constructed niche",
+      "technical": "Agent culture: the 7 sub-agents collectively construct an 'agent culture' \u2014 shared patterns, expectations, communication norms. This constructed niche shapes future agent behavior without genetic or architectural change.",
+      "parent_domain": "niche_construction_baldwin_effect",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "niche_construction_baldwin_effect"
+      ]
+    },
+    "memetics_cultural_evolution": {
+      "simple": "Imagine Ideas, behaviors, and strategies replicate, mutate, and compete for cognitive bandwidth \u2014 just like genes. The unit of c. That's memetics cultural evolution.",
+      "technical": "Ideas, behaviors, and strategies replicate, mutate, and compete for cognitive bandwidth \u2014 just like genes. The unit of cultural evolution is the meme. AI agent knowledge systems are meme ecosystems.",
+      "frontier": "",
+      "implementation": "Most AI training is naive meme accumulation. Memetic thinking gives you the framework to cultivate knowledge ecosystems intentionally \u2014 design for meme fitness, monitor memetic health, prevent monoculture collapse.",
+      "rarity": "never_formalized_in_AI_agent_training",
+      "source": "Dawkins_1976_Blackmore_1999_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "scale_free_networks_power_law"
+      ]
+    },
+    "memetics_cultural_evolution:meme_definition": {
+      "simple": "Dawkins 1976: a unit of cultural transmission. Replicates via imitation (copying from mind to mind). Subject to variation, selection, and retention. The word 'meme' is...",
+      "technical": "Dawkins 1976: a unit of cultural transmission. Replicates via imitation (copying from mind to mind). Subject to variation, selection, and retention. The word 'meme' is itself a meme.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:meme_fitness": {
+      "simple": "A meme's fitness is determined by: fecundity (how fast it copies), fidelity (how accurately it copies), longevity (how long it persists). Successful memes spread rapidly,...",
+      "technical": "A meme's fitness is determined by: fecundity (how fast it copies), fidelity (how accurately it copies), longevity (how long it persists). Successful memes spread rapidly, degrade slowly, persist long.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:meme_complex_memeplex": {
+      "simple": "Memes that support each other form memeplexes. Religion is a memeplex: belief in god + afterlife + sin + prayer + community all support each...",
+      "technical": "Memes that support each other form memeplexes. Religion is a memeplex: belief in god + afterlife + sin + prayer + community all support each other's propagation. Ideologies are memeplexes. So is 'self-improving AI.'",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:meme_vs_gene": {
+      "simple": "Meme evolution is Lamarckian (acquired characteristics CAN be inherited \u2014 you can teach your child what you learned). This is radically different from Darwinian gene...",
+      "technical": "Meme evolution is Lamarckian (acquired characteristics CAN be inherited \u2014 you can teach your child what you learned). This is radically different from Darwinian gene evolution. AI training IS Lamarckian meme evolution.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:cultural_fitness_landscape": {
+      "simple": "Some meme variants outcompete others in specific cognitive environments. Twitter favors short punchy memes. Academic papers favor citation-rich memes. Platform shapes what evolves.",
+      "technical": "Some meme variants outcompete others in specific cognitive environments. Twitter favors short punchy memes. Academic papers favor citation-rich memes. Platform shapes what evolves.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:memetic_depth_index": {
+      "simple": "MDI (Medium 2025): quantitative metric for the evolutionary depth of a meme \u2014 how many generations of modification it has survived, how many cognitive niches...",
+      "technical": "MDI (Medium 2025): quantitative metric for the evolutionary depth of a meme \u2014 how many generations of modification it has survived, how many cognitive niches it occupies. Older deeper memes are more robust.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:EvoCult_Rec_2025": {
+      "simple": "ResearchGate 2025: EvoCult-Rec \u2014 recommendation system using memetic diffusion modeling. Explicitly models cultural evolutionary dynamics and diversity-preserving meme propagation. Prevents filter bubble collapse.",
+      "technical": "ResearchGate 2025: EvoCult-Rec \u2014 recommendation system using memetic diffusion modeling. Explicitly models cultural evolutionary dynamics and diversity-preserving meme propagation. Prevents filter bubble collapse.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "niche_training_2025",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:sovereign_application_0": {
+      "simple": "KAIROS proposal evaluation should track meme fitness: proposals that spawn further improvements (fecundity) and maintain quality across cycles (fideli",
+      "technical": "KAIROS proposal evaluation should track meme fitness: proposals that spawn further improvements (fecundity) and maintain quality across cycles (fidelity) are high-fitness memes",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:sovereign_application_1": {
+      "simple": "Memory Palace memetics: track which concepts (loci) get retrieved most often, spread to neighboring loci, and persist longest. These are the high-fitn",
+      "technical": "Memory Palace memetics: track which concepts (loci) get retrieved most often, spread to neighboring loci, and persist longest. These are the high-fitness memes of the knowledge system.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:sovereign_application_2": {
+      "simple": "GhostScript language design: a programming language is a memeplex. The fittest language constructs are those that spread to new contexts, maintain mea",
+      "technical": "GhostScript language design: a programming language is a memeplex. The fittest language constructs are those that spread to new contexts, maintain meaning, and persist. Design GhostScript around high-fitness meme constructs.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:sovereign_application_3": {
+      "simple": "SovereignNation marketing: the narrative 'self-improving AI, running local, evolving nightly' is a memeplex. Design it for high memetic fitness: fecun",
+      "technical": "SovereignNation marketing: the narrative 'self-improving AI, running local, evolving nightly' is a memeplex. Design it for high memetic fitness: fecundity (quotable), fidelity (clear meaning), longevity (true and verifiable).",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "memetics_cultural_evolution:sovereign_application_4": {
+      "simple": "Agent knowledge ecosystem: treat the 7 sub-agents as a meme ecosystem. Which concepts spread from agent to agent? Which degrade? Monitor memetic flow ",
+      "technical": "Agent knowledge ecosystem: treat the 7 sub-agents as a meme ecosystem. Which concepts spread from agent to agent? Which degrade? Monitor memetic flow through ChromaDB cross-agent context reads.",
+      "parent_domain": "memetics_cultural_evolution",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "memetics_cultural_evolution"
+      ]
+    },
+    "physarum_slime_mold_intelligence": {
+      "simple": "Imagine A single-celled organism with no brain, no neurons, and no central controller consistently finds minimum-energy paths th. That's physarum slime mold intelligence.",
+      "technical": "A single-celled organism with no brain, no neurons, and no central controller consistently finds minimum-energy paths through mazes, replicates the Tokyo rail network, and solves Steiner tree problems \u2014 in hours. It implements distributed optimization through physical chemistry alone.",
+      "frontier": "",
+      "implementation": "Physarum's power is that it finds Pareto-optimal solutions balancing efficiency (shortest path) and robustness (redundant paths) without any explicit multi-objective optimization. The Gateway already approximates this \u2014 name the algorithm and implement the full version.",
+      "rarity": "never_applied_to_agent_architecture",
+      "source": "Nature_Toshiyuki_2010_synthesis_2025",
+      "domain": "niche_training_2025",
+      "connections": [
+        "stigmergy_collective_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:physarum_mechanism": {
+      "simple": "Physarum extends pseudopods randomly. Pseudopods that reach food get thickened with cytoplasm. Cytoplasm flow is enhanced in thick tubes. Thin unused tubes eventually vanish. Network...",
+      "technical": "Physarum extends pseudopods randomly. Pseudopods that reach food get thickened with cytoplasm. Cytoplasm flow is enhanced in thick tubes. Thin unused tubes eventually vanish. Network self-optimizes through feedback between flow and tube thickness.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:Tokyo_rail_network": {
+      "simple": "Toshiyuki Nakagaki 2010 Ig Nobel: placed oat flakes where Tokyo's major cities are, put Physarum at Tokyo center. In 26 hours it had grown a...",
+      "technical": "Toshiyuki Nakagaki 2010 Ig Nobel: placed oat flakes where Tokyo's major cities are, put Physarum at Tokyo center. In 26 hours it had grown a network that nearly exactly replicated the Tokyo rail system \u2014 60 years of human engineering, reproduced by slime.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:steiner_tree": {
+      "simple": "The minimum-length network connecting a set of points (Steiner tree) is NP-hard for computers. Physarum approximates it in polynomial time using physical dynamics. No search...",
+      "technical": "The minimum-length network connecting a set of points (Steiner tree) is NP-hard for computers. Physarum approximates it in polynomial time using physical dynamics. No search algorithm \u2014 just flow feedback.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:reinforcement_of_success": {
+      "simple": "The Physarum algorithm: reward successful paths with increased capacity. Unused paths decay. This is ACO (ant colony optimization) and STDP (spike-timing dependent plasticity) and Hebbian...",
+      "technical": "The Physarum algorithm: reward successful paths with increased capacity. Unused paths decay. This is ACO (ant colony optimization) and STDP (spike-timing dependent plasticity) and Hebbian learning \u2014 all the same underlying principle.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:fault_tolerance": {
+      "simple": "Physarum networks have redundant paths. Unlike minimum spanning trees (which have no redundancy), Physarum maintains multiple paths for fault tolerance. The cost of redundancy is...",
+      "technical": "Physarum networks have redundant paths. Unlike minimum spanning trees (which have no redundancy), Physarum maintains multiple paths for fault tolerance. The cost of redundancy is paid because reliability has survival value.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:biomimetic_2025": {
+      "simple": "Nature 2025: bioinspired algorithm from Physarum for decentralized multi-robot port coordination. No master scheduler. Robots follow Physarum-like feedback rules. 23% better throughput than centralized scheduling.",
+      "technical": "Nature 2025: bioinspired algorithm from Physarum for decentralized multi-robot port coordination. No master scheduler. Robots follow Physarum-like feedback rules. 23% better throughput than centralized scheduling.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:Physarum_machine": {
+      "simple": "Academia paper: 'The Physarum Machine: A Technical White Paper on Slime Mold as a Medium for Unconventional Computing.' Proposes using actual Physarum as a computational...",
+      "technical": "Academia paper: 'The Physarum Machine: A Technical White Paper on Slime Mold as a Medium for Unconventional Computing.' Proposes using actual Physarum as a computational substrate. Logic gates. Memory. Parallelism.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "niche_training_2025",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:sovereign_application_0": {
+      "simple": "GatewayRouter optimization: implement Physarum-inspired routing. Successful routing paths (low latency, no failures) get capacity increased. Failed pa",
+      "technical": "GatewayRouter optimization: implement Physarum-inspired routing. Successful routing paths (low latency, no failures) get capacity increased. Failed paths decay. Network finds optimal routing topology without explicit programming.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:sovereign_application_1": {
+      "simple": "KAIROS stepping stone archive: implement Physarum reinforcement \u2014 stepping stones that lead to more elite promotions get higher connection weight. The",
+      "technical": "KAIROS stepping stone archive: implement Physarum reinforcement \u2014 stepping stones that lead to more elite promotions get higher connection weight. The archive self-organizes toward productive evolutionary paths.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:sovereign_application_2": {
+      "simple": "Memory Palace retrieval: implement Physarum flow \u2014 frequently co-retrieved loci get stronger associative connections. Unused connections decay. The pa",
+      "technical": "Memory Palace retrieval: implement Physarum flow \u2014 frequently co-retrieved loci get stronger associative connections. Unused connections decay. The palace self-organizes into a functional network.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:sovereign_application_3": {
+      "simple": "Agent task routing: implement Physarum-inspired task assignment. Agents that successfully complete task types get increased task flow. Failed agents g",
+      "technical": "Agent task routing: implement Physarum-inspired task assignment. Agents that successfully complete task types get increased task flow. Failed agents get reduced flow. Self-optimizing task-agent matching.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    },
+    "physarum_slime_mold_intelligence:sovereign_application_4": {
+      "simple": "The meta-insight: the Tokyo rail network problem is exactly the problem of routing inference across a heterogeneous GPU cluster. Physarum solved the e",
+      "technical": "The meta-insight: the Tokyo rail network problem is exactly the problem of routing inference across a heterogeneous GPU cluster. Physarum solved the equivalent problem for a city. The same physics applies to data routing.",
+      "parent_domain": "physarum_slime_mold_intelligence",
+      "domain": "sovereign_core_applications",
+      "connections": [
+        "physarum_slime_mold_intelligence"
+      ]
+    }
+  },
+  "edges": [
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:stigmergy",
+      "type": "contains"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:pheromone_gradient",
+      "type": "contains"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:emergent_collective_memory",
+      "type": "contains"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:positive_negative_feedback",
+      "type": "contains"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:human_stigmergy",
+      "type": "contains"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:multi_robot_stigmergy",
+      "type": "contains"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "stigmergy_collective_intelligence:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:autopoiesis_definition",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:allopoiesis",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:structural_coupling",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:operational_closure",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:cognition_equals_living",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:aitiopoiesis_2025",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:structural_determinism",
+      "type": "contains"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "autopoiesis_self_producing_systems:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:free_energy_principle",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:surprise_vs_free_energy",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:perception_as_inference",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:action_as_inference",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:active_inference",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:precision_weighting",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:markov_blanket",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:epistemic_foraging",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:implementation_gap_2025",
+      "type": "contains"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "active_inference_free_energy_principle:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:first_vs_second_order",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:eigenvalues_of_experience",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:circular_causality",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:non_trivial_machines",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:principle_of_undifferentiated_encoding",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:ethical_imperative",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:recursive_self_reference",
+      "type": "contains"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "second_order_cybernetics:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:dissipative_structure",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:far_from_equilibrium",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:bifurcation_point",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:order_through_fluctuation",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:entropy_export",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:self_organization",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:time_asymmetry",
+      "type": "contains"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "dissipative_structures_thermodynamics",
+      "to": "dissipative_structures_thermodynamics:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:system_1_operations",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:system_2_coordination",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:system_3_optimization",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:system_4_intelligence",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:system_5_identity",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:requisite_variety",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:algedonic_channel",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:recursive_structure",
+      "type": "contains"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "viable_system_model_VSM:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:OODA_loop",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:orientation_is_the_schwerpunkt",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:implicit_guidance_control",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:loop_inside_loop",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:fingerspitzengefuhl",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:super_OODA_loop_2025",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:decision_dominance",
+      "type": "contains"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "OODA_decision_superiority_AI:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:persistent_homology",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:betti_numbers",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:mapper_algorithm",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:topological_loss_function",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:persistence_diagram",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:TDA_vs_metric_learning",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:knowledge_graph_topology",
+      "type": "contains"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "topological_data_analysis",
+      "to": "topological_data_analysis:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:statistical_manifold",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:fisher_information_metric",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:natural_gradient",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:exponential_families",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:KL_divergence_geometry",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:pythagorean_theorem_for_distributions",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:natural_gradient_in_LLMs",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:relevance_to_HDC",
+      "type": "contains"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "information_geometry",
+      "to": "information_geometry:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:scale_free_network",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:preferential_attachment",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:hub_structure",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:robustness_fragility_paradox",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:knowledge_graph_topology",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:percolation_threshold",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:modularity_detection",
+      "type": "contains"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "scale_free_networks_power_law",
+      "to": "scale_free_networks_power_law:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:prediction_error_minimization",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:top_down_predictions",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:precision_and_attention",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:hallucination_as_failure",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:interoception",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:active_inference_bridge",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:hierarchical_depth",
+      "type": "contains"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "predictive_processing_hierarchical_coding",
+      "to": "predictive_processing_hierarchical_coding:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:conjunction_fallacy",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:order_effects",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:incompatible_observables",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:superposition_before_measurement",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:quantum_probability_2025",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:entanglement_in_cognition",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:practical_implication",
+      "type": "contains"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "quantum_cognition:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:niche_construction",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:ecological_inheritance",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:Baldwin_effect",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:genetic_assimilation",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:scale_free_niche",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:coevolution_of_learning",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:human_niche",
+      "type": "contains"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "niche_construction_baldwin_effect:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:meme_definition",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:meme_fitness",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:meme_complex_memeplex",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:meme_vs_gene",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:cultural_fitness_landscape",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:memetic_depth_index",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:EvoCult_Rec_2025",
+      "type": "contains"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "memetics_cultural_evolution:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:physarum_mechanism",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:Tokyo_rail_network",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:steiner_tree",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:reinforcement_of_success",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:fault_tolerance",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:biomimetic_2025",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:Physarum_machine",
+      "type": "contains"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:sovereign_application_0",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:sovereign_application_1",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:sovereign_application_2",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:sovereign_application_3",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "physarum_slime_mold_intelligence",
+      "to": "physarum_slime_mold_intelligence:sovereign_application_4",
+      "type": "applies_to_sovereign"
+    },
+    {
+      "from": "active_inference_free_energy_principle",
+      "to": "predictive_processing_hierarchical_coding",
+      "type": "extends"
+    },
+    {
+      "from": "autopoiesis_self_producing_systems",
+      "to": "dissipative_structures_thermodynamics",
+      "type": "requires"
+    },
+    {
+      "from": "second_order_cybernetics",
+      "to": "autopoiesis_self_producing_systems",
+      "type": "formalizes"
+    },
+    {
+      "from": "viable_system_model_VSM",
+      "to": "second_order_cybernetics",
+      "type": "implements"
+    },
+    {
+      "from": "stigmergy_collective_intelligence",
+      "to": "physarum_slime_mold_intelligence",
+      "type": "analogous_to"
+    },
+    {
+      "from": "niche_construction_baldwin_effect",
+      "to": "autopoiesis_self_producing_systems",
+      "type": "extends"
+    },
+    {
+      "from": "memetics_cultural_evolution",
+      "to": "scale_free_networks_power_law",
+      "type": "predicts"
+    },
+    {
+      "from": "information_geometry",
+      "to": "topological_data_analysis",
+      "type": "complementary"
+    },
+    {
+      "from": "OODA_decision_superiority_AI",
+      "to": "predictive_processing_hierarchical_coding",
+      "type": "maps_to"
+    },
+    {
+      "from": "quantum_cognition",
+      "to": "information_geometry",
+      "type": "uses"
+    }
+  ],
+  "last_updated": 1776435790.0650184,
+  "total_nodes": 255,
+  "total_edges": 191,
+  "training_domains": [
+    "stigmergy_collective_intelligence",
+    "autopoiesis_self_producing_systems",
+    "active_inference_free_energy_principle",
+    "second_order_cybernetics",
+    "dissipative_structures_thermodynamics",
+    "viable_system_model_VSM",
+    "OODA_decision_superiority_AI",
+    "topological_data_analysis",
+    "information_geometry",
+    "scale_free_networks_power_law",
+    "predictive_processing_hierarchical_coding",
+    "quantum_cognition",
+    "niche_construction_baldwin_effect",
+    "memetics_cultural_evolution",
+    "physarum_slime_mold_intelligence"
+  ]
+}
