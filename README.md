@@ -116,6 +116,14 @@ python scripts/integration_test.py
 
 ---
 
+## Community Growth Guide
+
+If you're joining from Discussions and want to help grow this project, see:
+
+- **[docs/COMMUNITY_GROWTH.md](docs/COMMUNITY_GROWTH.md)** — what public setups to share, plus repository naming guidance for discoverability.
+
+---
+
 ## Architecture Overview
 
 ```
