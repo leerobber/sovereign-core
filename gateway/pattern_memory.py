@@ -138,7 +138,7 @@ class PatternStore:
     """
 
     # empty = use data/sovereign.db persistent store
-    def __init__(self, db_path: str = "") -> None:
+    def __init__(self, db_path: str = ":memory:") -> None:
         self._db_path = db_path
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
@@ -242,8 +242,7 @@ class PatternStore:
             A list of matching :class:`PatternRecord` objects.
         """
         # Only hardcoded column-name literals are ever appended to conditions;
-        # all user-supplied values flow through parameter binding (the "?" placeholders)
-        # so no SQL injection is possible.
+        # all user-supplied values are passed as parameters.
         conditions = []
         params: list[Any] = []
 
@@ -257,10 +256,13 @@ class PatternStore:
             conditions.append("pattern_type = ?")
             params.append(pattern_type)
 
-        where_clause = " AND ".join(conditions) if conditions else "1"
+        where_clause = ""
+        if conditions:
+            where_clause = "WHERE " + " AND ".join(conditions)
+
         query = f"""
             SELECT * FROM patterns
-            WHERE {where_clause}
+            {where_clause}
             ORDER BY created_at DESC
             LIMIT ?
         """
@@ -269,64 +271,120 @@ class PatternStore:
         cursor = self._conn.execute(query, params)
         rows = cursor.fetchall()
 
-        results: list[PatternRecord] = []
+        # Build PatternRecord objects
+        records = []
         for row in rows:
-            rec = self._row_to_pattern(row)
-            results.append(rec)
-            # Increment lookup counter
-            self._conn.execute(
-                "UPDATE patterns SET lookup_count = lookup_count + 1 WHERE pattern_id = ?",
-                (rec.pattern_id,),
+            rec = PatternRecord(
+                pattern_id=row["pattern_id"],
+                created_at=row["created_at"],
+                model_id=row["model_id"],
+                backend_id=row["backend_id"],
+                pattern_type=row["pattern_type"],
+                context=json.loads(row["context_json"]),
+                recommendation=json.loads(row["recommendation_json"]),
+                lookup_count=row["lookup_count"],
+                success_count=row["success_count"],
             )
-        self._conn.commit()
+            records.append(rec)
+
+        # Increment lookup_count for each matched pattern
+        if records:
+            pattern_ids = [r.pattern_id for r in records]
+            placeholders = ",".join("?" * len(pattern_ids))
+            with self._conn:
+                self._conn.execute(
+                    f"UPDATE patterns SET lookup_count = lookup_count + 1 WHERE pattern_id IN ({placeholders})",
+                    pattern_ids,
+                )
+            # Update in-memory lookup_count
+            for rec in records:
+                rec.lookup_count += 1
 
         logger.debug(
-            "PatternStore: lookup returned %d patterns (model=%s, backend=%s, type=%s)",
-            len(results),
+            "PatternStore.lookup: found %d patterns (model_id=%r, backend_id=%r, pattern_type=%r)",
+            len(records),
             model_id,
             backend_id,
             pattern_type,
         )
-        return results
+        return records
+
+    def get_pattern(self, pattern_id: str) -> Optional[PatternRecord]:
+        """Retrieve a single pattern by its ``pattern_id``.
+
+        Unlike :meth:`lookup`, this does **not** increment ``lookup_count``.
+
+        Args:
+            pattern_id: The unique identifier of the pattern.
+
+        Returns:
+            The :class:`PatternRecord` or ``None`` if not found.
+        """
+        cursor = self._conn.execute(
+            "SELECT * FROM patterns WHERE pattern_id = ?",
+            (pattern_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+
+        return PatternRecord(
+            pattern_id=row["pattern_id"],
+            created_at=row["created_at"],
+            model_id=row["model_id"],
+            backend_id=row["backend_id"],
+            pattern_type=row["pattern_type"],
+            context=json.loads(row["context_json"]),
+            recommendation=json.loads(row["recommendation_json"]),
+            lookup_count=row["lookup_count"],
+            success_count=row["success_count"],
+        )
 
     def record_outcome(
         self,
         pattern_id: str,
+        *,
         success: bool,
         latency_s: float = 0.0,
         context: Optional[dict[str, Any]] = None,
     ) -> LookupOutcome:
-        """Record whether an optimization based on *pattern_id* succeeded.
+        """Record an outcome after an agent uses a retrieved pattern.
 
-        Increments ``success_count`` for the referenced pattern if *success*
-        is ``True``. Always inserts a new :class:`LookupOutcome` row.
+        Increments ``success_count`` on the pattern if ``success=True``.
+        Creates and persists a :class:`LookupOutcome` record for analysis.
 
         Args:
-            pattern_id: The pattern whose outcome is being reported.
-            success:    Whether the optimization succeeded.
-            latency_s:  Optional latency measurement (e.g. time to apply fix).
-            context:    Additional metadata about the outcome.
+            pattern_id: The pattern whose outcome is being recorded.
+            success:    Whether the pattern led to a successful optimization.
+            latency_s:  Elapsed time for the optimization attempt.
+            context:    Additional metadata about the attempt.
 
         Returns:
             The created :class:`LookupOutcome` object.
 
         Raises:
-            ValueError: If *pattern_id* does not reference an existing pattern.
+            ValueError: If no pattern with the given ``pattern_id`` exists.
         """
-        # Verify the pattern exists
-        cursor = self._conn.execute(
-            "SELECT 1 FROM patterns WHERE pattern_id = ?", (pattern_id,)
-        )
-        if cursor.fetchone() is None:
+        # Verify pattern exists
+        pattern = self.get_pattern(pattern_id)
+        if pattern is None:
             raise ValueError(f"No pattern found with pattern_id={pattern_id!r}")
 
+        # Increment success_count if successful
+        if success:
+            with self._conn:
+                self._conn.execute(
+                    "UPDATE patterns SET success_count = success_count + 1 WHERE pattern_id = ?",
+                    (pattern_id,),
+                )
+
+        # Create and persist the outcome record
         outcome = LookupOutcome(
             pattern_id=pattern_id,
             success=success,
             latency_s=latency_s,
             context=context or {},
         )
-
         with self._conn:
             self._conn.execute(
                 """
@@ -343,11 +401,6 @@ class PatternStore:
                     json.dumps(outcome.context),
                 ),
             )
-            if success:
-                self._conn.execute(
-                    "UPDATE patterns SET success_count = success_count + 1 WHERE pattern_id = ?",
-                    (pattern_id,),
-                )
 
         logger.debug(
             "PatternStore: recorded outcome %s for pattern %s (success=%s)",
@@ -357,47 +410,127 @@ class PatternStore:
         )
         return outcome
 
-    def get_stats(self) -> PatternStats:
-        """Compute and return aggregated statistics about the store."""
+    def outcomes_for_pattern(self, pattern_id: str) -> list[LookupOutcome]:
+        """Retrieve all recorded outcomes for a given pattern.
+
+        Args:
+            pattern_id: The pattern whose outcomes to retrieve.
+
+        Returns:
+            A list of :class:`LookupOutcome` objects, ordered by timestamp.
+        """
+        cursor = self._conn.execute(
+            """
+            SELECT * FROM lookup_outcomes
+            WHERE pattern_id = ?
+            ORDER BY timestamp ASC
+            """,
+            (pattern_id,),
+        )
+        rows = cursor.fetchall()
+
+        outcomes = []
+        for row in rows:
+            outcome = LookupOutcome(
+                outcome_id=row["outcome_id"],
+                pattern_id=row["pattern_id"],
+                timestamp=row["timestamp"],
+                success=bool(row["success"]),
+                latency_s=row["latency_s"],
+                context=json.loads(row["context_json"]),
+            )
+            outcomes.append(outcome)
+
+        return outcomes
+
+    def all_patterns(self, limit: int = 100) -> list[PatternRecord]:
+        """Retrieve all patterns in the store, ordered by recency.
+
+        Args:
+            limit: Maximum number of patterns to return.
+
+        Returns:
+            A list of :class:`PatternRecord` objects.
+        """
+        cursor = self._conn.execute(
+            "SELECT * FROM patterns ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        )
+        rows = cursor.fetchall()
+
+        records = []
+        for row in rows:
+            rec = PatternRecord(
+                pattern_id=row["pattern_id"],
+                created_at=row["created_at"],
+                model_id=row["model_id"],
+                backend_id=row["backend_id"],
+                pattern_type=row["pattern_type"],
+                context=json.loads(row["context_json"]),
+                recommendation=json.loads(row["recommendation_json"]),
+                lookup_count=row["lookup_count"],
+                success_count=row["success_count"],
+            )
+            records.append(rec)
+
+        return records
+
+    def stats(self) -> PatternStats:
+        """Compute aggregated statistics about the pattern store.
+
+        Returns:
+            A :class:`PatternStats` object with counts, hit rates, and top patterns.
+        """
         cursor = self._conn.execute(
             """
             SELECT
                 COUNT(*) AS total_patterns,
-                SUM(lookup_count) AS total_lookups,
-                SUM(success_count) AS total_successes
+                COALESCE(SUM(lookup_count), 0) AS total_lookups,
+                COALESCE(SUM(success_count), 0) AS total_successes
             FROM patterns
             """
         )
         row = cursor.fetchone()
-        total_patterns = row["total_patterns"] or 0
-        total_lookups = row["total_lookups"] or 0
-        total_successes = row["total_successes"] or 0
+        total_patterns = row["total_patterns"]
+        total_lookups = row["total_lookups"]
+        total_successes = row["total_successes"]
 
         overall_hit_rate = 0.0
         if total_lookups > 0:
             overall_hit_rate = total_successes / total_lookups
 
-        # Breakdown by pattern_type
+        # Patterns by type
         cursor = self._conn.execute(
             """
             SELECT pattern_type, COUNT(*) AS count
             FROM patterns
             GROUP BY pattern_type
-            ORDER BY count DESC
             """
         )
-        patterns_by_type = {row["pattern_type"]: row["count"] for row in cursor.fetchall()}
+        patterns_by_type = {row["pattern_type"]: row["count"] for row in cursor}
 
-        # Top patterns by success rate (min 5 lookups to qualify)
+        # Top patterns by lookup count
         cursor = self._conn.execute(
             """
             SELECT * FROM patterns
-            WHERE lookup_count >= 5
-            ORDER BY (1.0 * success_count / lookup_count) DESC, lookup_count DESC
-            LIMIT 5
+            ORDER BY lookup_count DESC
+            LIMIT 10
             """
         )
-        top_patterns = [self._row_to_pattern(r).to_dict() for r in cursor.fetchall()]
+        top_patterns = []
+        for row in cursor:
+            rec = PatternRecord(
+                pattern_id=row["pattern_id"],
+                created_at=row["created_at"],
+                model_id=row["model_id"],
+                backend_id=row["backend_id"],
+                pattern_type=row["pattern_type"],
+                context=json.loads(row["context_json"]),
+                recommendation=json.loads(row["recommendation_json"]),
+                lookup_count=row["lookup_count"],
+                success_count=row["success_count"],
+            )
+            top_patterns.append(rec.to_dict())
 
         return PatternStats(
             total_patterns=total_patterns,
@@ -408,32 +541,7 @@ class PatternStore:
             top_patterns=top_patterns,
         )
 
-    def clear(self) -> None:
-        """Delete all patterns and outcomes from the store."""
-        with self._conn:
-            self._conn.execute("DELETE FROM lookup_outcomes")
-            self._conn.execute("DELETE FROM patterns")
-        logger.info("PatternStore: cleared all patterns and outcomes")
-
     def close(self) -> None:
         """Close the underlying SQLite connection."""
         self._conn.close()
-        logger.info("PatternStore: connection closed")
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    def _row_to_pattern(self, row: sqlite3.Row) -> PatternRecord:
-        """Convert a SQLite row into a :class:`PatternRecord`."""
-        return PatternRecord(
-            pattern_id=row["pattern_id"],
-            created_at=row["created_at"],
-            model_id=row["model_id"],
-            backend_id=row["backend_id"],
-            pattern_type=row["pattern_type"],
-            context=json.loads(row["context_json"]),
-            recommendation=json.loads(row["recommendation_json"]),
-            lookup_count=row["lookup_count"],
-            success_count=row["success_count"],
-        )
+        logger.info("PatternStore closed (db_path=%r)", self._db_path)
