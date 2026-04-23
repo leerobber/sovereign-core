@@ -137,7 +137,8 @@ class PatternStore:
         db_path: Path to the SQLite database file, or ``":memory:"``.
     """
 
-    def __init__(self, db_path: str = ""  # empty = use data/sovereign.db persistent store) -> None:
+    # empty = use data/sovereign.db persistent store
+    def __init__(self, db_path: str = "") -> None:
         self._db_path = db_path
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
@@ -241,10 +242,11 @@ class PatternStore:
             A list of matching :class:`PatternRecord` objects.
         """
         # Only hardcoded column-name literals are ever appended to conditions;
-        # all user-supplied values travel exclusively through the parameterised
-        # placeholder list, preventing SQL injection.
-        conditions: list[str] = []
+        # all user-supplied values flow through parameter binding (the "?" placeholders)
+        # so no SQL injection is possible.
+        conditions = []
         params: list[Any] = []
+
         if model_id is not None:
             conditions.append("model_id = ?")
             params.append(model_id)
@@ -255,79 +257,76 @@ class PatternStore:
             conditions.append("pattern_type = ?")
             params.append(pattern_type)
 
-        where_clause = (
-            "WHERE " + " AND ".join(conditions) if conditions else ""
-        )
+        where_clause = " AND ".join(conditions) if conditions else "1"
+        query = f"""
+            SELECT * FROM patterns
+            WHERE {where_clause}
+            ORDER BY created_at DESC
+            LIMIT ?
+        """
         params.append(limit)
 
-        rows = self._conn.execute(
-            # The where_clause is built exclusively from the hardcoded literals
-            # above; no user input flows into the clause itself.
-            f"SELECT * FROM patterns {where_clause} ORDER BY created_at DESC LIMIT ?",
-            params,
-        ).fetchall()
+        cursor = self._conn.execute(query, params)
+        rows = cursor.fetchall()
 
-        records = [self._row_to_record(row) for row in rows]
+        results: list[PatternRecord] = []
+        for row in rows:
+            rec = self._row_to_pattern(row)
+            results.append(rec)
+            # Increment lookup counter
+            self._conn.execute(
+                "UPDATE patterns SET lookup_count = lookup_count + 1 WHERE pattern_id = ?",
+                (rec.pattern_id,),
+            )
+        self._conn.commit()
 
-        # Instrument: increment lookup_count for every retrieved pattern.
-        # placeholders is constructed from len(records) — a count of
-        # already-fetched rows — not from any user-supplied input.
-        if records:
-            ids = [r.pattern_id for r in records]
-            placeholders = ",".join("?" * len(ids))
-            with self._conn:
-                self._conn.execute(
-                    f"UPDATE patterns SET lookup_count = lookup_count + 1"
-                    f" WHERE pattern_id IN ({placeholders})",
-                    ids,
-                )
-            for r in records:
-                r.lookup_count += 1
-
-        return records
-
-    def all_patterns(self, limit: int = 200) -> list[PatternRecord]:
-        """Retrieve patterns for meta-analysis without updating ``lookup_count``.
-
-        Used by the MemEvolveEngine to inspect pattern statistics without
-        polluting the retrieval telemetry.
-        """
-        rows = self._conn.execute(
-            "SELECT * FROM patterns ORDER BY created_at DESC LIMIT ?",
-            (limit,),
-        ).fetchall()
-        return [self._row_to_record(row) for row in rows]
+        logger.debug(
+            "PatternStore: lookup returned %d patterns (model=%s, backend=%s, type=%s)",
+            len(results),
+            model_id,
+            backend_id,
+            pattern_type,
+        )
+        return results
 
     def record_outcome(
         self,
         pattern_id: str,
-        *,
         success: bool,
         latency_s: float = 0.0,
         context: Optional[dict[str, Any]] = None,
     ) -> LookupOutcome:
-        """Record the outcome of applying a pattern retrieved from a lookup.
+        """Record whether an optimization based on *pattern_id* succeeded.
 
-        Persists a :class:`LookupOutcome` row and, when *success* is ``True``,
-        increments ``success_count`` on the parent pattern.
+        Increments ``success_count`` for the referenced pattern if *success*
+        is ``True``. Always inserts a new :class:`LookupOutcome` row.
 
         Args:
-            pattern_id: The pattern that was applied.
+            pattern_id: The pattern whose outcome is being reported.
             success:    Whether the optimization succeeded.
-            latency_s:  Observed latency of the optimized operation.
-            context:    Optional contextual metadata attached to this outcome.
+            latency_s:  Optional latency measurement (e.g. time to apply fix).
+            context:    Additional metadata about the outcome.
 
         Returns:
-            The created :class:`LookupOutcome`.
+            The created :class:`LookupOutcome` object.
+
+        Raises:
+            ValueError: If *pattern_id* does not reference an existing pattern.
         """
+        # Verify the pattern exists
+        cursor = self._conn.execute(
+            "SELECT 1 FROM patterns WHERE pattern_id = ?", (pattern_id,)
+        )
+        if cursor.fetchone() is None:
+            raise ValueError(f"No pattern found with pattern_id={pattern_id!r}")
+
         outcome = LookupOutcome(
             pattern_id=pattern_id,
             success=success,
             latency_s=latency_s,
             context=context or {},
         )
-        if self.get_pattern(pattern_id) is None:
-            raise ValueError(f"Unknown pattern_id: {pattern_id}")
+
         with self._conn:
             self._conn.execute(
                 """
@@ -339,109 +338,94 @@ class PatternStore:
                     outcome.outcome_id,
                     outcome.pattern_id,
                     outcome.timestamp,
-                    1 if success else 0,
-                    latency_s,
+                    int(outcome.success),
+                    outcome.latency_s,
                     json.dumps(outcome.context),
                 ),
             )
             if success:
                 self._conn.execute(
-                    "UPDATE patterns SET success_count = success_count + 1"
-                    " WHERE pattern_id = ?",
+                    "UPDATE patterns SET success_count = success_count + 1 WHERE pattern_id = ?",
                     (pattern_id,),
                 )
+
         logger.debug(
-            "PatternStore: outcome recorded pattern=%s success=%s",
+            "PatternStore: recorded outcome %s for pattern %s (success=%s)",
+            outcome.outcome_id,
             pattern_id,
             success,
         )
         return outcome
 
-    def get_pattern(self, pattern_id: str) -> Optional[PatternRecord]:
-        """Return a specific pattern by its ID, or ``None`` if not found."""
-        row = self._conn.execute(
-            "SELECT * FROM patterns WHERE pattern_id = ?",
-            (pattern_id,),
-        ).fetchone()
-        return self._row_to_record(row) if row else None
-
-    def outcomes_for_pattern(self, pattern_id: str) -> list[LookupOutcome]:
-        """Return all recorded outcomes for *pattern_id* in chronological order."""
-        rows = self._conn.execute(
-            "SELECT * FROM lookup_outcomes WHERE pattern_id = ? ORDER BY timestamp",
-            (pattern_id,),
-        ).fetchall()
-        return [
-            LookupOutcome(
-                outcome_id=row["outcome_id"],
-                pattern_id=row["pattern_id"],
-                timestamp=row["timestamp"],
-                success=bool(row["success"]),
-                latency_s=row["latency_s"],
-                context=json.loads(row["context_json"]),
-            )
-            for row in rows
-        ]
-
     def get_stats(self) -> PatternStats:
-        """Return aggregated statistics about the Pattern Memory store."""
-        total_row = self._conn.execute(
-            "SELECT COUNT(*) AS count,"
-            "       COALESCE(SUM(lookup_count), 0) AS lookups,"
-            "       COALESCE(SUM(success_count), 0) AS successes"
-            " FROM patterns"
-        ).fetchone()
+        """Compute and return aggregated statistics about the store."""
+        cursor = self._conn.execute(
+            """
+            SELECT
+                COUNT(*) AS total_patterns,
+                SUM(lookup_count) AS total_lookups,
+                SUM(success_count) AS total_successes
+            FROM patterns
+            """
+        )
+        row = cursor.fetchone()
+        total_patterns = row["total_patterns"] or 0
+        total_lookups = row["total_lookups"] or 0
+        total_successes = row["total_successes"] or 0
 
-        type_rows = self._conn.execute(
-            "SELECT pattern_type, COUNT(*) AS count"
-            " FROM patterns GROUP BY pattern_type"
-        ).fetchall()
+        overall_hit_rate = 0.0
+        if total_lookups > 0:
+            overall_hit_rate = total_successes / total_lookups
 
-        top_rows = self._conn.execute(
-            "SELECT pattern_id, model_id, backend_id, pattern_type,"
-            "       lookup_count, success_count"
-            " FROM patterns ORDER BY success_count DESC, lookup_count DESC LIMIT 5"
-        ).fetchall()
+        # Breakdown by pattern_type
+        cursor = self._conn.execute(
+            """
+            SELECT pattern_type, COUNT(*) AS count
+            FROM patterns
+            GROUP BY pattern_type
+            ORDER BY count DESC
+            """
+        )
+        patterns_by_type = {row["pattern_type"]: row["count"] for row in cursor.fetchall()}
 
-        total: int = total_row["count"] or 0
-        lookups: int = total_row["lookups"] or 0
-        successes: int = total_row["successes"] or 0
+        # Top patterns by success rate (min 5 lookups to qualify)
+        cursor = self._conn.execute(
+            """
+            SELECT * FROM patterns
+            WHERE lookup_count >= 5
+            ORDER BY (1.0 * success_count / lookup_count) DESC, lookup_count DESC
+            LIMIT 5
+            """
+        )
+        top_patterns = [self._row_to_pattern(r).to_dict() for r in cursor.fetchall()]
 
         return PatternStats(
-            total_patterns=total,
-            total_lookups=lookups,
-            total_successes=successes,
-            overall_hit_rate=successes / lookups if lookups > 0 else 0.0,
-            patterns_by_type={row["pattern_type"]: row["count"] for row in type_rows},
-            top_patterns=[
-                {
-                    "pattern_id": row["pattern_id"],
-                    "model_id": row["model_id"],
-                    "backend_id": row["backend_id"],
-                    "pattern_type": row["pattern_type"],
-                    "lookup_count": row["lookup_count"],
-                    "success_count": row["success_count"],
-                    "success_rate": (
-                        row["success_count"] / row["lookup_count"]
-                        if row["lookup_count"] > 0
-                        else 0.0
-                    ),
-                }
-                for row in top_rows
-            ],
+            total_patterns=total_patterns,
+            total_lookups=total_lookups,
+            total_successes=total_successes,
+            overall_hit_rate=overall_hit_rate,
+            patterns_by_type=patterns_by_type,
+            top_patterns=top_patterns,
         )
 
+    def clear(self) -> None:
+        """Delete all patterns and outcomes from the store."""
+        with self._conn:
+            self._conn.execute("DELETE FROM lookup_outcomes")
+            self._conn.execute("DELETE FROM patterns")
+        logger.info("PatternStore: cleared all patterns and outcomes")
+
     def close(self) -> None:
-        """Close the underlying database connection."""
+        """Close the underlying SQLite connection."""
         self._conn.close()
-        logger.debug("PatternStore: connection closed")
+        logger.info("PatternStore: connection closed")
 
     # ------------------------------------------------------------------
-    # Internal helpers
+    # Helpers
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _row_to_record(row: sqlite3.Row) -> PatternRecord:
+    def _row_to_pattern(self, row: sqlite3.Row) -> PatternRecord:
+        """Convert a SQLite row into a :class:`PatternRecord`."""
         return PatternRecord(
             pattern_id=row["pattern_id"],
             created_at=row["created_at"],
