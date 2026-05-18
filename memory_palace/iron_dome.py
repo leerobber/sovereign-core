@@ -609,6 +609,38 @@ class IronDome:
         self._log_event("INTEGRITY_CHECK", {"threat_level": threat_level, "chain_intact": chain_intact})
         return report
 
+    def validate_input(self, prompt: str) -> Dict:
+        """
+        Screen a raw inference prompt before it reaches the model.
+        Returns {"approved": bool, "threat_level": float, "reason": str}.
+        Called by iron_dome_middleware.IronDomeGuard.screen().
+        """
+        # Layer 3: pattern filter
+        is_clean, matched = self.decay.pattern_filter(prompt)
+
+        # Layer 2: trust score — wrap prompt in a synthetic entry dict
+        synthetic_entry = {
+            "content": prompt,
+            "source": "inference_request",
+            "entry_type": "general",
+        }
+        trusted, score, _ = self.trust.is_trusted(synthetic_entry)
+
+        approved = is_clean and trusted
+        threat_level = round(1.0 - score, 4)
+
+        reason = ""
+        if not is_clean:
+            reason = f"Injection pattern matched: {matched[0][:60]}"
+        elif not trusted:
+            reason = f"Low composite trust score: {score:.2f}"
+
+        return {
+            "approved": approved,
+            "threat_level": threat_level,
+            "reason": reason,
+        }
+
     def status_summary(self) -> str:
         lines = [
             "=== Iron Dome Status ===",
