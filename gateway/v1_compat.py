@@ -1,5 +1,5 @@
 """
-gateway/v1_compat.py — OpenAI-compatible /v1/chat/completions shim
+gateway/v1_compat.py -- OpenAI-compatible /v1/chat/completions shim
 
 This is the critical missing link. llm_local.py and every HyperAgents
 component calls:
@@ -147,7 +147,20 @@ async def chat_completions(req: OAIChatRequest, request: Request) -> OAIChatResp
             router=gateway_router,
             request_id=request_id,
         )
-    except HTTPException:
+    except HTTPException as http_exc:
+        if http_exc.status_code == 503:
+            # Local backends exhausted -- try free API fallbacks
+            logger.warning("Local backends failed -- trying API fallbacks")
+            try:
+                from gateway.api_fallback import fallback_inference
+                msgs = [{"role": m.role, "content": m.content} for m in req.messages]
+                fallback = fallback_inference(msgs, req.max_tokens)
+                if fallback:
+                    logger.info("API fallback succeeded via %s", fallback.get("gh05t3_backend"))
+                    from fastapi.responses import JSONResponse
+                    return JSONResponse(fallback)
+            except Exception as fb_exc:
+                logger.error("API fallback error: %s", fb_exc)
         raise
     except Exception as exc:
         logger.error("v1/chat/completions error: %s", exc)

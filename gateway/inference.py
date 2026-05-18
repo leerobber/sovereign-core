@@ -207,7 +207,7 @@ def _build_payload(req: InferenceRequest) -> dict:
     if req.messages is not None:
         # Chat mode
         return {
-            "model": req.model if req.model != "auto" else "llama3",
+            "model": req.model if req.model != "auto" else "llama3.2:3b",
             "messages": [m.model_dump() for m in req.messages],
             "options": opts,
             "stream": False,
@@ -215,7 +215,7 @@ def _build_payload(req: InferenceRequest) -> dict:
     else:
         # Generate mode
         return {
-            "model": req.model if req.model != "auto" else "llama3",
+            "model": req.model if req.model != "auto" else "llama3.2:3b",
             "prompt": req.prompt or "",
             "options": opts,
             "stream": False,
