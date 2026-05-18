@@ -41,8 +41,8 @@ DEFAULT_MODEL = LOCAL_PRIMARY_MODEL
 
 # ── Gateway config ────────────────────────────────────────────────────────────
 # Gateway auto-routes to the right hardware based on model name
-# Port 8080 = new Windows-compatible port (8000 blocked by WinError 10013)
-GATEWAY_URL = os.environ.get("SOVEREIGN_GATEWAY_URL", "http://localhost:8080")
+# Port 9000 — sovereign-core gateway (launch_gateway.py)
+GATEWAY_URL = os.environ.get("SOVEREIGN_GATEWAY_URL", "http://localhost:9000")
 GATEWAY_CHAT_PATH = "/v1/chat/completions"
 
 # ── SAGE role → model mapping ─────────────────────────────────────────────────

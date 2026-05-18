@@ -37,6 +37,7 @@ from gateway.config import BACKENDS, BACKEND_MAP, settings
 from gateway.health import HealthMonitor
 from gateway.inference import InferenceRequest, InferenceResponse, route_inference
 from gateway.kairos_routes import router as kairos_router
+from gateway.mem_evolve_routes import router as mem_evolve_router
 from gateway.metrics import INFERENCE_COUNTER, INFERENCE_LATENCY, ACTIVE_BACKENDS, record_request, metrics_output
 from gateway.models import ModelAssigner
 from gateway.router import GatewayRouter
@@ -161,6 +162,7 @@ def create_app() -> FastAPI:
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(status_router)
     app.include_router(kairos_router)
+    app.include_router(mem_evolve_router)
     app.include_router(ws_router)
     app.include_router(v1_router)   # ← OpenAI-compat: /v1/chat/completions + /v1/models
 

@@ -15,9 +15,11 @@ Or just import this module — the patches apply automatically.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
+import re
 import time
 import uuid
 from dataclasses import asdict, dataclass
@@ -28,6 +30,8 @@ logger = logging.getLogger(__name__)
 
 # Storage directory for agent state
 _AGENTS_DIR = Path(os.getenv("KAIROS_AGENTS_DIR", "data/kairos/agents"))
+# Storage directory for per-agent DGM-H archives
+_ARCHIVES_DIR = Path("data/kairos/archives")
 
 
 @dataclass
@@ -42,6 +46,7 @@ class CycleResult:
     latency_ms: float
     proposals: List[str]
     log: List[Dict[str, Any]]
+    ancestor_used: Optional[str] = None
 
 
 def _agents_dir() -> Path:
@@ -51,6 +56,26 @@ def _agents_dir() -> Path:
 
 def _agent_path(agent_id: str) -> Path:
     return _agents_dir() / f"{agent_id}.json"
+
+
+def _archive_path(agent_id: str) -> Path:
+    """Return the DGM-H archive path for a given agent."""
+    _ARCHIVES_DIR.mkdir(parents=True, exist_ok=True)
+    return _ARCHIVES_DIR / f"{agent_id}_dgmh.json"
+
+
+def _bottleneck_type_from_task(task: str) -> str:
+    """
+    Normalize a task string to snake_case using the first two words.
+    Falls back to 'arso_optimization' if the task is empty or has fewer than
+    two meaningful words.
+    """
+    words = re.findall(r"[A-Za-z]+", task)
+    if len(words) >= 2:
+        return f"{words[0].lower()}_{words[1].lower()}"
+    if len(words) == 1:
+        return words[0].lower()
+    return "arso_optimization"
 
 
 def _patch_load_or_create(cls):
@@ -124,6 +149,7 @@ def _patch_run_evolution_cycle(cls):
         t0 = time.time()
         agent_id = getattr(self, "agent_id", str(uuid.uuid4()))
         generation = getattr(self, "generation", 0) + 1
+        old_score = getattr(self, "score", 0.0)
         log = []
 
         proposals = []
@@ -131,17 +157,55 @@ def _patch_run_evolution_cycle(cls):
         verdict = "PARTIAL"
         elite_promoted = False
 
+        # --- DGM-H: load per-agent archive ---
+        from gateway.dgm_h_archive import DGMHArchive
+        archive = DGMHArchive.load(_archive_path(agent_id))
+
+        # Determine bottleneck type from the task we're about to run
+        task_str = f"ARSO cycle {generation} — optimize agent {agent_id}"
+        bottleneck_type = _bottleneck_type_from_task(task_str)
+
+        # Find nearest ancestor before running SAGE
+        ancestors = archive.find_nearest_ancestor(bottleneck_type, top_k=3)
+        best_ancestor = ancestors[0] if ancestors else None
+        ancestor_context = None
+        if best_ancestor is not None:
+            ancestor_context = best_ancestor.agent_state_snapshot
+            log.append({
+                "note": f"DGM-H ancestor loaded: node_id={best_ancestor.node_id} "
+                        f"gen={best_ancestor.generation} delta={best_ancestor.performance_delta:.3f}"
+            })
+
         try:
-            from hyperagents.sage_generate_loop import run_sage_loop, SAGEConfig
-            cfg = SAGEConfig(
-                task=f"ARSO cycle {generation} — optimize agent {agent_id}",
-                context={"agent_id": agent_id, "generation": generation},
-                max_cycles=2,
+            from hyperagents.sage_generate_loop import run_sage_loop
+            # Build bottleneck description; embed ancestor snapshot summary if available
+            bottleneck_desc = task_str
+            if ancestor_context is not None:
+                ancestor_summary = json.dumps(ancestor_context)[:300]
+                bottleneck_desc = f"{task_str}\n[ancestor_context: {ancestor_summary}]"
+
+            loop = asyncio.get_event_loop()
+            archive = await loop.run_in_executor(
+                None,
+                lambda: run_sage_loop(
+                    bottleneck_description=bottleneck_desc,
+                    max_generations=2,
+                    archive_path=None,
+                    score_threshold=0.6,
+                ),
             )
-            result = await run_sage_loop(cfg)
-            proposals = result.all_proposals
-            score = result.score
-            log = result.log
+            best = archive.best(3)
+            score = best[0].score if best else 0.0
+            proposals = [p.proposer_output for p in best]
+            log = [
+                {"gen": p.generation, "score": p.score, "verdict": p.verifier_verdict}
+                for p in archive.proposals
+            ]
+            if ancestor_context is not None:
+                log.append({
+                    "note": f"DGM-H ancestor used: node_id={best_ancestor.node_id} "
+                            f"gen={best_ancestor.generation} delta={best_ancestor.performance_delta:.3f}"
+                })
         except Exception as exc:
             logger.warning("SAGE loop unavailable: %s — using heuristic cycle", exc)
             # Heuristic fallback: score improves slightly each generation
@@ -170,7 +234,33 @@ def _patch_run_evolution_cycle(cls):
         self.score = score
         self.last_cycle_at = time.time()
 
-        # Persist
+        # --- DGM-H: persist successful cycle (score > 0) ---
+        if score > 0:
+            skill_domains = getattr(self, "skill_domains", [])
+            agent_state_snapshot = {
+                "generation": generation,
+                "score": score,
+                "tier": getattr(self, "tier", "standard"),
+                "skill_domains": skill_domains,
+            }
+            fix_diff_raw = "\n".join(proposals)
+            fix_diff = fix_diff_raw[:2000]
+            performance_delta = score - old_score if generation > 1 else 0.0
+            try:
+                archive.add_node(
+                    bottleneck_type=bottleneck_type,
+                    bottleneck_description=task_str,
+                    fix_diff=fix_diff,
+                    agent_state_snapshot=agent_state_snapshot,
+                    performance_before={"score": old_score, "generation": generation - 1},
+                    performance_after={"score": score, "generation": generation},
+                    performance_delta=performance_delta,
+                    parent_id=best_ancestor.node_id if best_ancestor is not None else None,
+                )
+            except Exception as exc:
+                logger.warning("DGM-H archive.add_node failed: %s", exc)
+
+        # Persist agent state
         _save_agent(self)
 
         latency_ms = (time.time() - t0) * 1000
@@ -184,6 +274,7 @@ def _patch_run_evolution_cycle(cls):
             latency_ms=round(latency_ms, 2),
             proposals=proposals,
             log=log,
+            ancestor_used=best_ancestor.node_id if best_ancestor is not None else None,
         )
     cls.run_evolution_cycle = run_evolution_cycle
 
@@ -201,6 +292,17 @@ def _save_agent(agent) -> None:
             data[k] = str(v)
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
+
+
+def get_dgmh_summary(agent_id: str) -> dict:
+    """
+    Load the DGM-H archive for the given agent and return its summary dict.
+
+    Returns an empty summary dict if the archive file does not exist yet.
+    """
+    from gateway.dgm_h_archive import DGMHArchive
+    archive = DGMHArchive.load(_archive_path(agent_id))
+    return archive.summary()
 
 
 def apply_patches():

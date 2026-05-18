@@ -39,7 +39,7 @@ class BackendConfig(BaseModel):
 BACKENDS: list[BackendConfig] = [
     BackendConfig(
         id="rtx5050",
-        url="http://localhost:8001",
+        url="http://localhost:11434",
         device_type=DeviceType.NVIDIA_GPU,
         vram_gib=8.0,
         weight=3.0,
@@ -47,7 +47,7 @@ BACKENDS: list[BackendConfig] = [
     ),
     BackendConfig(
         id="radeon780m",
-        url="http://localhost:8002",
+        url="http://localhost:11434",
         device_type=DeviceType.AMD_GPU,
         vram_gib=4.0,
         weight=2.0,
@@ -55,7 +55,7 @@ BACKENDS: list[BackendConfig] = [
     ),
     BackendConfig(
         id="ryzen7cpu",
-        url="http://localhost:8003",
+        url="http://localhost:11434",
         device_type=DeviceType.CPU,
         vram_gib=0.0,
         weight=1.0,
@@ -83,6 +83,7 @@ class GatewaySettings(BaseSettings):
         case_sensitive=False,
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     # Bind

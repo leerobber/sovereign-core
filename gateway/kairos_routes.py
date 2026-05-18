@@ -143,6 +143,28 @@ async def run_sage(req: SAGERequest, request: Request) -> SAGEResponse:
             "accepted_proposals": sum(1 for p in archive.proposals if p.accepted),
         })
 
+        # Persist to DGM-H lineage archive
+        try:
+            from gateway.kairos_ext import _archive_path, _bottleneck_type_from_task
+            from gateway.dgm_h_archive import DGMHArchive
+            dgmh = DGMHArchive.load(_archive_path(agent_id))
+            ancestors = dgmh.find_nearest_ancestor(_bottleneck_type_from_task(req.task), top_k=1)
+            parent_id = ancestors[0].node_id if ancestors else None
+            old_score = ancestors[0].performance_after.get("score", 0.0) if ancestors else 0.0
+            dgmh.add_node(
+                bottleneck_type=_bottleneck_type_from_task(req.task),
+                bottleneck_description=req.task[:300],
+                fix_diff="\n".join(proposals)[:2000],
+                agent_state_snapshot={"generation": generation, "score": round(top_score, 4),
+                                      "tier": "elite" if elite_promoted else "standard"},
+                performance_before={"score": old_score, "generation": generation - 1},
+                performance_after={"score": round(top_score, 4), "generation": generation},
+                performance_delta=round(top_score - old_score, 4),
+                parent_id=parent_id,
+            )
+        except Exception as _dgmh_err:
+            logger.debug("DGM-H persist skipped: %s", _dgmh_err)
+
         await _emit(request, "kairos.cycle_complete", {
             "agent_id": agent_id,
             "score": round(top_score, 4),
@@ -366,3 +388,35 @@ async def _emit(request: Request, event_type: str, data: dict) -> None:
         await event_bus.emit(event_type, data)
     except Exception:
         pass
+
+
+# ── ZERO Committee ─────────────────────────────────────────────────────────
+
+class ZEROReviewRequest(BaseModel):
+    context: str = Field(..., min_length=1)
+    max_chair_rounds: int = Field(default=3, ge=1, le=5)
+
+
+@router.post("/zero-committee/review")
+async def zero_committee_review(req: ZEROReviewRequest, request: Request) -> dict:
+    from gateway.zero_committee import get_committee
+    import dataclasses
+    decision = await get_committee().decide(req.context, req.max_chair_rounds)
+    await _emit(request, "kairos.zero_committee_decision", {
+        "verdict": decision.verdict, "audit_verdict": decision.audit_verdict,
+        "strategy_score": decision.strategy_score, "chair_activated": decision.chair_activated,
+    })
+    return dataclasses.asdict(decision)
+
+
+@router.get("/zero-committee/status")
+async def zero_committee_status() -> dict:
+    from gateway.zero_committee import ZEROCommittee
+    return {
+        "status": "available",
+        "gateway_url": ZEROCommittee.GATEWAY_URL,
+        "primary_brain": ZEROCommittee.PRIMARY_BRAIN,
+        "verifier_model": ZEROCommittee.VERIFIER_MODEL,
+        "consensus_threshold": ZEROCommittee.CONSENSUS_THRESHOLD,
+        "agents": ["proposer", "auditor", "strategist", "chair"],
+    }
