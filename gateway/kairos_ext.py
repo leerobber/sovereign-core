@@ -223,11 +223,37 @@ def _patch_run_evolution_cycle(cls):
         except Exception:
             verdict = "PASS" if score > 0.7 else "PARTIAL"
 
-        # Elite promotion
+        # Elite promotion — gated by ZERO Committee consensus
         tier = getattr(self, "tier", "standard")
         if score >= 0.85 and tier != "next_elite":
-            elite_promoted = True
-            self.tier = "elite" if tier == "standard" else "next_elite"
+            next_tier = "elite" if tier == "standard" else "next_elite"
+            promotion_context = (
+                f"Agent {agent_id} (generation={generation}, score={score:.4f}) qualifies for "
+                f"tier promotion from '{tier}' to '{next_tier}'.\n"
+                f"Bottleneck: {task_str[:200]}\n"
+                f"Top proposals:\n" + "\n".join(proposals[:2])[:600]
+            )
+            try:
+                from gateway.zero_committee import get_committee
+                zc_decision = await get_committee().decide(promotion_context, max_chair_rounds=2)
+                log.append({
+                    "zero_committee": {
+                        "verdict": zc_decision.verdict,
+                        "audit": zc_decision.audit_verdict,
+                        "strategy_score": zc_decision.strategy_score,
+                        "chair_activated": zc_decision.chair_activated,
+                        "reason": zc_decision.reason[:150],
+                    }
+                })
+                if zc_decision.verdict == "EXECUTE":
+                    elite_promoted = True
+                    self.tier = next_tier
+                else:
+                    log.append({"note": f"Promotion blocked by ZERO: {zc_decision.verdict} — {zc_decision.reason[:100]}"})
+            except Exception as _zc_err:
+                logger.warning("ZERO Committee unavailable: %s — auto-approving promotion", _zc_err)
+                elite_promoted = True
+                self.tier = next_tier
 
         # Update state
         self.generation = generation

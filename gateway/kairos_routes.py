@@ -116,28 +116,54 @@ async def run_sage(req: SAGERequest, request: Request) -> SAGEResponse:
             archive_path=archive_path,
             score_threshold=req.score_threshold,
         )
-        latency_ms = (time.time() - t0)
+        latency_ms = (time.time() - t0) * 1000
         # Persist SAGE cycle outcome to DB
         if _DB_AVAILABLE:
             try:
                 _db_log_event("kairos_sage_cycle", "kairos_routes",
                               f"SAGE cycle complete — agent {agent_id}",
-                              metadata={"agent_id": agent_id, "latency_ms": round(latency_ms*1000,1)})
-            except Exception: pass * 1000
+                              metadata={"agent_id": agent_id, "latency_ms": round(latency_ms, 1)})
+            except Exception: pass
 
         best = archive.best(5)
         top_score = best[0].score if best else 0.0
         top_verdict = best[0].verifier_verdict if best else "PARTIAL"
         proposals = [p.proposer_output[:500] for p in best[:3]]
         generation = len(archive.proposals)
-        elite_promoted = top_score >= 0.85
+
+        # Elite promotion — gated by ZERO Committee consensus
+        elite_promoted = False
+        tier = "standard"
+        if top_score >= 0.85:
+            promotion_context = (
+                f"Agent {agent_id} (generation={generation}, score={top_score:.4f}) qualifies "
+                f"for elite promotion.\nTask: {req.task[:200]}\n"
+                f"Top proposal:\n{proposals[0][:400] if proposals else 'N/A'}"
+            )
+            try:
+                from gateway.zero_committee import get_committee
+                zc = await get_committee().decide(promotion_context, max_chair_rounds=2)
+                logger.info(
+                    "ZERO Committee: agent=%s verdict=%s audit=%s score=%d",
+                    agent_id, zc.verdict, zc.audit_verdict, zc.strategy_score,
+                )
+                if zc.verdict == "EXECUTE":
+                    elite_promoted = True
+                    tier = "elite"
+                else:
+                    tier = "standard"
+                    logger.info("Promotion blocked: %s — %s", zc.verdict, zc.reason[:100])
+            except Exception as _zc_err:
+                logger.warning("ZERO Committee unavailable: %s — auto-approving", _zc_err)
+                elite_promoted = True
+                tier = "elite"
 
         # Persist agent state
         _save_agent(agent_id, {
             "agent_id": agent_id,
             "generation": generation,
             "score": round(top_score, 4),
-            "tier": "elite" if elite_promoted else "standard",
+            "tier": tier,
             "last_task": req.task[:100],
             "last_cycle_at": time.time(),
             "accepted_proposals": sum(1 for p in archive.proposals if p.accepted),
