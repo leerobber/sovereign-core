@@ -169,15 +169,14 @@ def create_app() -> FastAPI:
     # ── Core endpoints ────────────────────────────────────────────────────────
 
     @app.get("/dashboard", include_in_schema=False)
-async def dashboard() -> HTMLResponse:
-    """Real-time command interface — live backend health, KAIROS, latency graphs."""
-    html_path = _Path(__file__).parent / "dashboard.html"
-    if html_path.exists():
-        return HTMLResponse(content=html_path.read_text(), status_code=200)
-    return HTMLResponse(content="<h1>Dashboard file not found</h1>", status_code=404)
+    async def dashboard() -> HTMLResponse:
+        """Real-time command interface — live backend health, KAIROS, latency graphs."""
+        html_path = _Path(__file__).parent / "dashboard.html"
+        if html_path.exists():
+            return HTMLResponse(content=html_path.read_text(), status_code=200)
+        return HTMLResponse(content="<h1>Dashboard file not found</h1>", status_code=404)
 
-
-@app.get("/health", tags=["core"])
+    @app.get("/health", tags=["core"])
     async def health() -> dict:
         healthy = sum(1 for b in BACKENDS if _health_monitor.is_healthy(b.id))
         ACTIVE_BACKENDS.set(healthy)
