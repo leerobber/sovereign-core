@@ -140,17 +140,27 @@ async def route_inference(
     payload = _build_payload(req)
 
     last_error: Optional[Exception] = None
+    _seen_urls: set = set()
 
     for backend_id in candidates:
         backend = BACKEND_MAP.get(backend_id)
         if not backend:
             continue
 
+        # Deduplicate: skip backends that share a URL with one already tried.
+        # All three sovereign backends point to localhost:11434 — one failure
+        # on that URL tells us Ollama is unavailable; retrying the same URL
+        # just burns timeout budget without new information.
+        if backend.url in _seen_urls:
+            logger.debug("Skipping duplicate URL %s (%s)", backend.url, backend_id)
+            continue
+        _seen_urls.add(backend.url)
+
         try:
             result = await _call_backend(
                 backend_url=backend.url,
                 payload=payload,
-                timeout=req.timeout or 30.0,
+                timeout=req.timeout or 300.0,  # 300s: enough for gemma3:12b @ 8192 tokens
                 use_chat_mode=(req.messages is not None),
             )
 

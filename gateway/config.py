@@ -94,7 +94,7 @@ class GatewaySettings(BaseSettings):
     health_check_interval: float = 5.0
     backend_timeout: float = 30.0
     failure_threshold: int = 3
-    recovery_threshold: int = 2
+    recovery_threshold: int = 1  # one successful probe → HEALTHY (fast startup)
     latency_ema_alpha: float = 0.2
 
     # Security
