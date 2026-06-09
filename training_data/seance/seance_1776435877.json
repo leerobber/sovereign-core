@@ -1,0 +1,15 @@
+{
+  "session_id": 1776435877,
+  "timestamp": 1776435877,
+  "domain": "physarum_routing",
+  "failure_domain": "physarum_routing",
+  "scenario": "GatewayRouter fails to find optimal routing after backend topology change",
+  "failure_mode": "Static routing weights don't adapt to changing backend performance profiles",
+  "lesson": "Physarum-inspired feedback: increase capacity weight for low-latency paths, decay high-latency paths. The route to use IS the route that gets used successfully.",
+  "counterfactual": "If Physarum routing were active, weights would have converged to optimal within 50 requests automatically",
+  "implementation": "Add to GatewayRouter: on each success, backend.weight *= 1.01; on each failure, backend.weight *= 0.95; renormalize.",
+  "prevention": "Monitor backend weight distribution entropy \u2014 if one backend monopolizes (weight > 0.9), inject artificial exploration",
+  "source": "niche_training_2025",
+  "severity": "high",
+  "verified": true
+}

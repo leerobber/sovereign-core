@@ -1,0 +1,15 @@
+{
+  "session_id": 1776436077,
+  "timestamp": 1776436077,
+  "domain": "second_order_collapse",
+  "failure_domain": "second_order_collapse",
+  "scenario": "KAIROS meta-agent rewrites rules that disable its own ability to rewrite rules",
+  "failure_mode": "Second-order self-reference paradox \u2014 the observer observes itself and produces a contradiction",
+  "lesson": "Von Foerster's eigenvalue solution: stable self-referential systems converge to fixed points (eigenvalues) that are self-consistent. The meta-agent must have a meta-constraint: never write rules that prevent rule-rewriting.",
+  "counterfactual": "If SEED-SET ethics gate included 'preserve meta-agent rewriting capability' as a core axiom, this is blocked at the gate level before any rule is committed.",
+  "implementation": "",
+  "prevention": "Add axiom to SEED-SET: 'No proposal may reduce the system's capacity to generate future proposals.' This is Von Foerster's ethical imperative formalized.",
+  "source": "niche_training_2025",
+  "severity": "high",
+  "verified": true
+}

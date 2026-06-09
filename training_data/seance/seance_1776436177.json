@@ -1,0 +1,15 @@
+{
+  "session_id": 1776436177,
+  "timestamp": 1776436177,
+  "domain": "stigmergic_trace_pollution",
+  "failure_domain": "stigmergic_trace_pollution",
+  "scenario": "ChromaDB context layer fills with low-quality proposals that bias future SAGE cycles toward failed strategies",
+  "failure_mode": "Negative stigmergy: failed pheromone trails should evaporate but don't \u2014 they persist and mislead future agents",
+  "lesson": "Biological stigmergy has evaporation built-in. ChromaDB traces don't evaporate. Must implement explicit trace decay: score each context entry by the quality of proposals it influenced; decay low-quality traces.",
+  "counterfactual": "If context entries had TTL weighted by downstream proposal success rate, low-quality pheromones would expire within 24h",
+  "implementation": "",
+  "prevention": "Add to sage_context.py: on each SAGE cycle, update context entry weights based on whether proposals citing them became elite or failed. Prune entries with weight < 0.3 after 7 days.",
+  "source": "niche_training_2025",
+  "severity": "high",
+  "verified": true
+}

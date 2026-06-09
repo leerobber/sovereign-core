@@ -1,0 +1,182 @@
+{
+  "phase": "FULL_TRAINING",
+  "timestamp": "2026-04-16T17:11:53.313843",
+  "systems_trained": {
+    "memory_palace": {
+      "status": "COMPLETE",
+      "loci": 54,
+      "rooms": 6
+    },
+    "hcm": {
+      "status": "COMPLETE",
+      "vectors": 68,
+      "dimensions": 10000
+    },
+    "agent_spawner": {
+      "status": "COMPLETE",
+      "agents": 7,
+      "roles": [
+        "Architect",
+        "Researcher",
+        "Coder",
+        "Analyst",
+        "Monitor",
+        "Distiller",
+        "Evolver"
+      ]
+    },
+    "autotelic": {
+      "status": "COMPLETE",
+      "goals": 10,
+      "old_goals_completed": 3
+    },
+    "seance": {
+      "status": "COMPLETE",
+      "sessions": 13,
+      "patterns": 10
+    },
+    "feynman": {
+      "status": "COMPLETE",
+      "concepts": 33
+    },
+    "kairos_agents": {
+      "status": "PUSHED_TO_GITHUB",
+      "files": [
+        "kairos_routes.py",
+        "v1_compat.py",
+        "main.py",
+        "ws.py",
+        "status.py"
+      ]
+    },
+    "dgm": {
+      "status": "SOVEREIGN_WIRED",
+      "file": "llm_withtools_sovereign.py"
+    }
+  },
+  "nightly_automation": {
+    "name": "GH05T3 Daily Evolution + KAIROS",
+    "schedule": "3am America/New_York daily",
+    "kairos_cycles": 10,
+    "skill": "nightly_kairos_evolution.sh",
+    "last_run": "success"
+  },
+  "agent_training_tasks": [
+    "Architect: analyze architecture, propose improvements, close integration gaps",
+    "Researcher: monitor self-improving AI research, surface applicable techniques",
+    "Coder: implement improvements to sovereign-core, SAGE loop, GhostScript",
+    "Analyst: track GPU performance, latency distributions, KAIROS score progression",
+    "Monitor: health/security monitoring, anomaly detection, kill-switch assessment",
+    "Distiller: compress sessions into knowledge, update Memory Palace, run Seance",
+    "Evolver: coordinate nightly KAIROS cycles, meta-agent rewrites, autotelic goals"
+  ],
+  "ready_to_run": [
+    "bash scripts/ollama_start_all.sh",
+    "bash scripts/pull_models.sh",
+    "bash scripts/start_gateway.sh",
+    "bash scripts/smoke_test.sh",
+    "curl -X POST http://localhost:8000/kairos/evolve -d '{\"cycles\":10}'"
+  ],
+  "deep_train_results": {
+    "corpus_expansion": {
+      "memory_palace_loci": 83,
+      "hcm_vectors": 109,
+      "new_knowledge": 15,
+      "new_skills": 8,
+      "new_decisions": 6,
+      "cross_domain_concepts": 12
+    },
+    "adversarial_drill": {
+      "sessions_total": 13,
+      "new_sessions": 8,
+      "patterns_emerging": 10
+    },
+    "concept_synthesis": {
+      "concepts_total": 47,
+      "new_concepts": 14,
+      "remaining_gaps": 33
+    },
+    "goal_calibration": {
+      "goals_total": 21,
+      "active": 18,
+      "stretch_goals_added": 8
+    },
+    "agent_stress_test": {
+      "agents_tested": 7,
+      "all_passed": true
+    },
+    "kairos_dry_run": {
+      "cycles": 10,
+      "best_score": 1.0,
+      "avg_score": 0.65,
+      "elite_count": 3,
+      "archived_count": 3,
+      "meta_rewrites": 3
+    },
+    "final": {
+      "memory_palace_loci": 83,
+      "hcm_vectors": 109,
+      "feynman_concepts": 47,
+      "seance_sessions": 6,
+      "autotelic_goals": 21,
+      "elapsed_s": 17.8,
+      "timestamp": "2026-04-16T20:32:46.767748"
+    }
+  },
+  "last_deep_train": "2026-04-16T20:32:46.767890",
+  "full_training_v2": {
+    "memory_palace_loci": 103,
+    "hcm_vectors": 146,
+    "feynman_concepts": 59,
+    "seance_sessions": 9,
+    "autotelic_goals": 21,
+    "kairos_cycles_simulated": 35,
+    "domains_trained": 7,
+    "amplifiers": 13,
+    "cold_systems": 0,
+    "timestamp": "2026-04-16T21:19:19.284706"
+  },
+  "niche_training_v1": {
+    "timestamp": "2026-04-17T14:24:37",
+    "domains_ingested": 15,
+    "domain_list": [
+      "stigmergy_collective_intelligence",
+      "autopoiesis_self_producing_systems",
+      "active_inference_free_energy_principle",
+      "second_order_cybernetics",
+      "dissipative_structures_thermodynamics",
+      "viable_system_model_VSM",
+      "OODA_decision_superiority_AI",
+      "topological_data_analysis",
+      "information_geometry",
+      "scale_free_networks_power_law",
+      "predictive_processing_hierarchical_coding",
+      "quantum_cognition",
+      "niche_construction_baldwin_effect",
+      "memetics_cultural_evolution",
+      "physarum_slime_mold_intelligence"
+    ],
+    "rarity_breakdown": {
+      "critical_never_applied": 4,
+      "extremely_rare": 4,
+      "very_rare": 1,
+      "rare": 6
+    },
+    "hcm_vectors_before": 151,
+    "hcm_vectors_after": 348,
+    "feynman_nodes_before": 59,
+    "feynman_nodes_after": 255,
+    "feynman_edges_added": 191,
+    "memory_palace_loci_before": 13,
+    "memory_palace_loci_after": 28,
+    "autotelic_goals_before": 24,
+    "autotelic_goals_after": 39,
+    "seance_sessions_added": 6,
+    "total_seance_sessions": 18,
+    "total_concepts_ingested": 108,
+    "total_applications_ingested": 73,
+    "github_raw_data": "training_data/sovereign_training_v1.json",
+    "ghost_memory_entries": 15,
+    "strategic_insight": "15 domains virtually no other AI agent is trained on \u2014 stigmergy, autopoiesis, active inference, second-order cybernetics, dissipative structures, VSM, OODA, TDA, info geometry, scale-free networks, predictive processing, quantum cognition, niche construction, memetics, Physarum"
+  }
+}

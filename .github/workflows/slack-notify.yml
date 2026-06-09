@@ -1,0 +1,50 @@
+name: Slack Notify
+
+on:
+  push:
+    branches: [main, master, claude/new-session-GYmE5]
+  pull_request:
+    types: [opened, closed, merged]
+  release:
+    types: [published]
+  issues:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Push notification
+        if: github.event_name == 'push'
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: "engineering"
+          slack-message: |
+            :git: *${{ github.repository }}* — push to `${{ github.ref_name }}`
+            ${{ github.event.commits[0].message }}
+            by ${{ github.actor }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Release notification
+        if: github.event_name == 'release'
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: "releases"
+          slack-message: |
+            :rocket: *${{ github.repository }}* — release `${{ github.event.release.tag_name }}`
+            ${{ github.event.release.name }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: PR notification
+        if: github.event_name == 'pull_request'
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: "engineering"
+          slack-message: |
+            :pr: *${{ github.repository }}* — PR `${{ github.event.action }}`
+            ${{ github.event.pull_request.title }}
+            by ${{ github.actor }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

@@ -15,7 +15,7 @@ import statistics
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, Optional
+from typing import Any, Deque, Optional
 
 
 @dataclass
@@ -48,7 +48,7 @@ class BackendStats:
     requests_per_second: float = 0.0
     tokens_per_second: float = 0.0
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "backend_id": self.backend_id,
             "total_requests": self.total_requests,
@@ -161,7 +161,7 @@ class ThroughputBenchmark:
         """Return stats for every backend that has recorded at least one request."""
         return [self.stats(bid) for bid in self._records]
 
-    def report(self) -> list[dict]:
+    def report(self) -> list[dict[str, Any]]:
         """Return a JSON-serialisable benchmark report."""
         return [s.to_dict() for s in self.all_stats()]
 

@@ -1,0 +1,15 @@
+{
+  "session_id": 1776436277,
+  "timestamp": 1776436277,
+  "domain": "meme_monoculture_collapse",
+  "failure_domain": "meme_monoculture_collapse",
+  "scenario": "After 90 days of KAIROS evolution, all elite agents converge to identical strategies \u2014 diversity collapses",
+  "failure_mode": "Memetic monoculture: preferential attachment in the stepping stone archive causes all agents to build on the same successful proposals, eliminating variation",
+  "lesson": "Biological diversity requires random drift AND selection. KAIROS has selection but may lack drift. Low-fitness memes need preservation to prevent monoculture.",
+  "counterfactual": "Maintain a 'minority report' archive: preserve the most diverse proposals (maximally different from elite consensus) even if their scores are moderate",
+  "implementation": "",
+  "prevention": "Add diversity pressure to group_evolution.py: when elite pool similarity (cosine) > 0.85, force inclusion of at least 2 maximally-different agents regardless of score.",
+  "source": "niche_training_2025",
+  "severity": "high",
+  "verified": true
+}

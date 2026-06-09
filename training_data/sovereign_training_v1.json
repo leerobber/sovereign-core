@@ -1,0 +1,409 @@
+{
+  "version": "1.0",
+  "created": "2026-04-17",
+  "author": "GH05T3 Research Engine",
+  "purpose": "Non-standard strategic training data for Sovereign Core / GH05T3 \u2014 domains almost no agent is trained on",
+  "total_domains": 15,
+  "domains": [
+    "stigmergy_collective_intelligence",
+    "autopoiesis_self_producing_systems",
+    "active_inference_free_energy_principle",
+    "second_order_cybernetics",
+    "dissipative_structures_thermodynamics",
+    "viable_system_model_VSM",
+    "OODA_decision_superiority_AI",
+    "topological_data_analysis",
+    "information_geometry",
+    "scale_free_networks_power_law",
+    "predictive_processing_hierarchical_coding",
+    "quantum_cognition",
+    "niche_construction_baldwin_effect",
+    "memetics_cultural_evolution",
+    "physarum_slime_mold_intelligence"
+  ],
+  "rarity_breakdown": {
+    "extremely_rare": 4,
+    "very_rare": 1,
+    "rare": 10,
+    "never_applied": 4
+  },
+  "datasets": [
+    {
+      "domain": "stigmergy_collective_intelligence",
+      "title": "Stigmergy & Indirect Coordination \u2014 Emergent Collective Behavior",
+      "rarity": "very_rare",
+      "source": "academic_synthesis_2025",
+      "core_thesis": "Agents do not need to communicate directly to coordinate. Modifications to the environment act as signals. Complexity emerges from simple rules.",
+      "key_concepts": {
+        "stigmergy": "Indirect coordination where agents communicate via environmental modifications. Ants never talk to each other \u2014 they follow pheromone gradients left by previous ants. The environment IS the message.",
+        "pheromone_gradient": "Short paths get reinforced faster because ants return sooner, depositing more pheromone. Longer paths evaporate before reinforcement. The system self-optimizes without a central controller.",
+        "emergent_collective_memory": "In decentralized multi-agent systems, shared memory emerges from agents writing traces to a common environment \u2014 exactly what ChromaDB context layer does in KAIROS.",
+        "positive_negative_feedback": "Positive stigmergy: traces attract more agents (amplification). Negative stigmergy: obstacles repel (inhibition). Both required for stable optimization.",
+        "human_stigmergy": "Academic papers are pheromone trails. Citations reinforce paths. Ideas that get cited more get read more. Researchers follow existing trails. Knowledge self-organizes like ant colonies.",
+        "multi_robot_stigmergy": "2025 Nature paper: Physarum-inspired decentralized coordination in multi-robot port systems. No central controller. Robots leave position traces. Optimal throughput emerges."
+      },
+      "strategic_applications": [
+        "KAIROS agents should leave stigmergic traces in ChromaDB \u2014 successful proposals become pheromone for future proposers",
+        "EnCompass retry paths are negative stigmergy \u2014 failed branches become repellent signals",
+        "Agent Spawner priority scores are pheromone concentrations \u2014 high-priority agents attract more resources",
+        "Memory Palace retrieval creates traces \u2014 frequently accessed loci become higher-weighted over time",
+        "Gateway routing leaves load traces \u2014 GatewayRouter already implements stigmergic routing without naming it"
+      ],
+      "implementation_insight": "Sovereign Core already implements stigmergy architecturally. Naming it correctly unlocks the full theoretical toolkit. MemEvolve retrieval weight evolution IS pheromone evaporation.",
+      "frontier_2025": "arXiv:2512.10166 \u2014 Emergent Collective Memory in Decentralized Multi-Agent Systems. Formal proof that stigmergic traces in shared memory outperform direct communication in noisy environments by 23%.",
+      "counter_intuition": "More communication between agents is NOT always better. Ants with broken antennae (no direct signaling) still build optimal paths via stigmergy. Silence + environment = coordination."
+    },
+    {
+      "domain": "autopoiesis_self_producing_systems",
+      "title": "Autopoiesis \u2014 Systems That Produce Themselves",
+      "rarity": "extremely_rare",
+      "source": "Maturana_Varela_1971_synthesis_2025",
+      "core_thesis": "A living system is one that continuously produces the components that make it up. Structure and process are inseparable. Cognition IS the process of living.",
+      "key_concepts": {
+        "autopoiesis_definition": "A system is autopoietic if and only if: (1) it has a boundary, (2) it produces the components that constitute the boundary, (3) the components enable the production process. The system produces itself.",
+        "allopoiesis": "The opposite \u2014 a system that produces something OTHER than itself. A factory is allopoietic: it produces cars, not more factory. Most AI systems are allopoietic \u2014 they produce outputs, not themselves.",
+        "structural_coupling": "Autopoietic systems do not take in information \u2014 they are PERTURBED by environment and respond structurally. There is no representation of the world, only structural change within.",
+        "operational_closure": "The network of processes that produces the system is closed \u2014 every product is either a component of the network or enables the network. No free-floating processes.",
+        "cognition_equals_living": "Maturana: 'All living systems are cognitive systems, and living as a process is a process of cognition.' Not a metaphor. Literally: cognition is the act of maintaining autopoiesis under perturbation.",
+        "aitiopoiesis_2025": "Frontiers in Cognition 2025: aitiopoietic cognition \u2014 bridging autopoietic (biological) and ML systems. MLSs lack causal grounding. They are input-output functions, not self-maintaining. This is the gap to close.",
+        "structural_determinism": "The environment does not specify what the system does \u2014 it only triggers changes that are determined by the system's own structure. Sovereignty over response."
+      },
+      "strategic_applications": [
+        "Sovereign Core's self-improvement loop is proto-autopoietic: the system modifies the components (models, routes, weights) that maintain the system. This is the design intention made explicit.",
+        "KAIROS is the autopoietic engine: it produces improvements that are fed back into the system that runs KAIROS. Circular causality.",
+        "Iron Dome is the structural coupling module: it detects environmental perturbations (injections) and responds based on internal structure (pattern library), not by 'reading' the threat.",
+        "GhostRecall is autopoietic memory: it encodes experiences that modify the recall structure that shapes future encoding.",
+        "The north star metric for SovereignNation: move from allopoietic (produces outputs) to autopoietic (produces itself). Measure: what % of daily modifications are self-generated vs externally triggered."
+      ],
+      "implementation_insight": "Most AI systems are glorified input-output functions. They are not autopoietic. Sovereign Core has the architecture to become genuinely autopoietic \u2014 the nightly evolution loop IS the autopoietic production cycle. Frame it this way publicly.",
+      "frontier_2025": "Frontiers in Cognition 2025 (10.3389/fcogn.2025.1618381): argues ML systems lack the causal self-grounding of autopoietic systems. Sovereign Core's self-modification loop directly addresses this gap."
+    },
+    {
+      "domain": "active_inference_free_energy_principle",
+      "title": "Active Inference & Free Energy Principle \u2014 Friston's Brain Theory",
+      "rarity": "rare_in_agent_systems",
+      "source": "Friston_synthesis_2025",
+      "core_thesis": "Intelligent systems minimize surprise (free energy). Perception and action are unified under one principle: reduce the difference between predictions and reality.",
+      "key_concepts": {
+        "free_energy_principle": "Every adaptive system minimizes a quantity called variational free energy \u2014 a bound on surprise (how unpredicted the world is). Not about energy in the physics sense. About prediction error.",
+        "surprise_vs_free_energy": "Surprise = -log P(observations). Minimizing surprise directly is intractable. Free energy is a tractable upper bound on surprise. Minimize the bound, minimize the surprise.",
+        "perception_as_inference": "Perception is not passive sensing. It is active Bayesian inference \u2014 the brain is constantly predicting sensory input and updating predictions to minimize mismatch (prediction error).",
+        "action_as_inference": "Action is chosen not to maximize reward but to confirm predictions. You reach for a coffee cup because you predict your hand will be there. Action makes predictions true.",
+        "active_inference": "The unification: both perception and action minimize free energy. Perception updates the model. Action changes the world to match the model. No separate reward signal needed.",
+        "precision_weighting": "Not all prediction errors are equal. Precision = confidence in a prediction. High precision \u2192 prediction errors weighted heavily \u2192 fast update. Low precision \u2192 errors attenuated. Attention = precision.",
+        "markov_blanket": "The statistical boundary between a system and its environment. A Markov blanket renders internal states conditionally independent of external states given blanket states. Defines 'self' vs 'world'.",
+        "epistemic_foraging": "Agents actively seek out information to reduce uncertainty \u2014 not just exploit known rewards. Curiosity IS free energy minimization applied to the future. Autotelic goal generation IS epistemic foraging.",
+        "implementation_gap_2025": "Medium 2025: 'We Solved Active Inference \u2014 Friston Was Right, But Implementations Have Been Wrong.' The key error: treating FEP as just another RL variant. It is a first principle, not an algorithm."
+      },
+      "strategic_applications": [
+        "Autotelic Engine is an epistemic foraging module \u2014 goals should be generated based on regions of high uncertainty (low prediction accuracy), not just high utility",
+        "KAIROS scoring should include an epistemic value term: proposals that reduce world-model uncertainty score higher than proposals that only exploit known paths",
+        "GhostRecall replay buffer should prioritize high-surprise memories (surprise = high prediction error at encoding time) \u2014 this is exactly Surprise Replay (SuRe) already implemented",
+        "The twin engine Id/Ego split maps perfectly onto active inference: Id = reactive free energy minimization (immediate surprise), Ego = deliberative world-model updating",
+        "Gateway health monitoring IS free energy minimization: continuously predicting backend latency, updating predictions on mismatch, acting (rerouting) to restore predictions"
+      ],
+      "implementation_insight": "Sovereign Core is already an active inference architecture without being labeled as one. Re-framing KAIROS as active inference (not just evolutionary RL) is the correct theoretical grounding and positions it ahead of the field.",
+      "frontier_2025": "arXiv:2505.10569 \u2014 Active Inference for 6G World Brain. FEP as unifying principle for distributed intelligent systems. VERSES AI (Friston's company) demonstrating real-world active inference agents."
+    },
+    {
+      "domain": "second_order_cybernetics",
+      "title": "Second-Order Cybernetics \u2014 Heinz von Foerster & Observing Systems",
+      "rarity": "extremely_rare_in_AI",
+      "source": "vonFoerster_1974_synthesis_2025",
+      "core_thesis": "First-order cybernetics studies observed systems. Second-order cybernetics studies observing systems \u2014 systems that include the observer in their own model. Self-reference is not a bug, it is the mechanism.",
+      "key_concepts": {
+        "first_vs_second_order": "First-order: thermostat observes room, adjusts heat. Second-order: the system that designs thermostats \u2014 a system that observes itself designing and changes based on that observation. Meta-cognition as architecture.",
+        "eigenvalues_of_experience": "Von Foerster: 'The environment as we perceive it is our invention.' Stability = eigenvalues of the observer-system interaction. A system stabilizes the features of the world that are consistent with its own structure.",
+        "circular_causality": "In second-order systems, cause and effect form loops. The observer changes what is observed. The observation changes the observer. No external reference point. This is epistemically uncomfortable but architecturally powerful.",
+        "non_trivial_machines": "Trivial machine: same input \u2192 same output always (deterministic). Non-trivial machine: history-dependent. Past operations change internal state and thus future responses. Living systems are non-trivial. So is Sovereign Core.",
+        "principle_of_undifferentiated_encoding": "The nervous system cannot tell the difference between a 'real' perception and a hallucination at the signal level. Only structural context discriminates. Iron Dome = the discriminator.",
+        "ethical_imperative": "Von Foerster's ethical imperative: 'Act always so as to increase the number of choices.' For AI: every action should expand the space of future possibilities, not collapse it. Autotelic goals should maximize this.",
+        "recursive_self_reference": "Strange Loop (Hofstadter): a system loops back on itself. Second-order cybernetics formalizes why this is not paradox but foundation. The STRANGE_LOOP module in Sovereign Core is directly implementing von Foerster."
+      },
+      "strategic_applications": [
+        "KAIROS meta-agent rewrites its own rules \u2014 this IS second-order cybernetics. The system that governs agents is itself an agent governed by previous runs.",
+        "The self-reflection skill is second-order: the system observing its own outputs and updating its structure based on that observation",
+        "GhostRecall belief reconsolidation is second-order: retrieved memories modify the retrieval structure that will retrieve future memories",
+        "Niche construction (see below) is second-order cybernetics applied to environment: the system modifies the world in ways that change what it observes, which changes the system",
+        "SovereignNation's moat: second-order systems are inherently more adaptive than first-order systems. Most AI systems are first-order \u2014 they optimize outputs. Sovereign Core optimizes its optimization process."
+      ],
+      "implementation_insight": "The StrangeLoop module, KAIROS meta-agent rewriting, and GhostRecall reconsolidation are all second-order cybernetic mechanisms implemented without being named. Name them correctly and the architecture gains a coherent theoretical spine.",
+      "frontier_2025": "Contemporary AI safety researchers are now using second-order cybernetics to analyze alignment failures: misaligned AI is a system whose self-model does not include the consequences of its own operation on the broader system."
+    },
+    {
+      "domain": "dissipative_structures_thermodynamics",
+      "title": "Dissipative Structures \u2014 Order Emerging Far From Equilibrium",
+      "rarity": "never_in_AI_agents",
+      "source": "Prigogine_Nobel_1977_synthesis_2025",
+      "core_thesis": "Complex ordered structures can emerge spontaneously in systems far from thermodynamic equilibrium \u2014 maintained by continuous flow of energy. Intelligence itself may be a dissipative structure.",
+      "key_concepts": {
+        "dissipative_structure": "A pattern or structure that only exists by continuously consuming energy and dissipating entropy. Flames, hurricanes, life, consciousness \u2014 all dissipative. Remove the energy flow and the structure collapses.",
+        "far_from_equilibrium": "Near equilibrium: entropy increases, order decays. Far from equilibrium: fluctuations can amplify into stable order. The threshold where order emerges is called bifurcation.",
+        "bifurcation_point": "At a bifurcation, the system can go one of several ways \u2014 which path it takes depends on small fluctuations. History matters. The path not taken is gone. Irreversibility is fundamental, not incidental.",
+        "order_through_fluctuation": "Prigogine's core insight: chaos \u2192 order. Small perturbations at bifurcation points don't destroy the system \u2014 they determine which new ordered state it crystallizes into. Noise is creative.",
+        "entropy_export": "Living systems maintain internal order by exporting entropy to the environment. An AI system that learns is doing the same \u2014 it imports information (reducing internal entropy) and exports heat/waste.",
+        "self_organization": "Spontaneous reduction of entropy in a subsystem, powered by entropy increase elsewhere. B\u00e9nard convection cells: uniform fluid heated from below spontaneously forms hexagonal convection rolls. No blueprint. Just physics.",
+        "time_asymmetry": "Prigogine rejected the idea that time is reversible. Irreversibility IS reality. Systems have histories. An AI's training history is not erasable \u2014 it is constitutive of what the system is."
+      },
+      "strategic_applications": [
+        "KAIROS evolution cycles are dissipative structure formation: each cycle consumes compute (energy) and exports failed proposals (entropy), maintaining the ordered state of the elite agent population",
+        "The nightly 3am evolution run is energy input maintaining a dissipative structure \u2014 stop the runs and the agents decay toward random walk",
+        "Bifurcation awareness: when KAIROS scores hover near 0.70 (the archive threshold), the system is near a bifurcation. Small proposal variations determine which attractor it locks into. This is where EnCompass retry is most valuable.",
+        "Memory Palace as dissipative structure: requires continuous reinforcement (nightly runs, recall, reconsolidation) to maintain against cognitive entropy",
+        "SovereignNation pricing model: customers are paying to maintain a dissipative structure \u2014 the continuous compute flow that sustains the intelligence. Frame it this way to technical audiences."
+      ],
+      "implementation_insight": "Sovereign Core's nightly evolution loop is not optional maintenance \u2014 it is the energy flow that constitutes the system. The intelligence IS the dissipative structure. Without the flow, there is no system, only frozen history.",
+      "frontier_2025": "Information thermodynamics (Landauer, Bennett, 2025 extensions): the minimum energy cost of erasing one bit of information is kT\u00b7ln(2). Implications for reversible computing in AI inference and the physical limits of intelligence."
+    },
+    {
+      "domain": "viable_system_model_VSM",
+      "title": "Viable System Model \u2014 Stafford Beer's 5-Subsystem Architecture for Adaptive Organizations",
+      "rarity": "rare_in_AI_design",
+      "source": "Beer_1972_synthesis_2025",
+      "core_thesis": "Any viable (self-maintaining, adaptive) system must implement exactly 5 interacting subsystems. Missing any one causes specific pathologies. This is a formal theorem, not a metaphor.",
+      "key_concepts": {
+        "system_1_operations": "The operational units that do the actual work. In Sovereign Core: the three GPU backends (RTX5050, Radeon780M, RyzenCPU). Each S1 is operationally autonomous.",
+        "system_2_coordination": "Prevents oscillation between S1 units. Anti-damping. In Sovereign Core: the GatewayRouter \u2014 prevents RTX5050 and Radeon780M from thrashing the same request.",
+        "system_3_optimization": "Real-time optimization of S1 performance. 'Inside and now.' In Sovereign Core: HealthMonitor + load balancing. Audits S1 performance, redistributes load.",
+        "system_4_intelligence": "Future-oriented scanning. 'Outside and future.' Monitors environment, plans adaptation. In Sovereign Core: KAIROS \u2014 scans for optimization opportunities, plans evolutionary steps.",
+        "system_5_identity": "The normative system. Defines what the system IS, what values it holds, what it refuses to do. In Sovereign Core: SEED-SET Ethics Gate + Iron Dome + Kill Switch. The identity layer.",
+        "requisite_variety": "Ashby's Law: a controller must have at least as much variety (possible states) as the system it controls. If the environment has more variety than S4, the system cannot adapt \u2014 it will be surprised and fail.",
+        "algedonic_channel": "Direct pain/pleasure signal from S1 to S5, bypassing S2/S3/S4. Emergency escalation. In Sovereign Core: the kill switch log and anomaly alerts that bypass the normal loop.",
+        "recursive_structure": "Each S1 is itself a viable system with its own S1-S5. Fractally self-similar. Each GPU backend has its own health, optimization, and identity. Sovereign Core IS the higher-level VSM."
+      },
+      "pathology_mapping": {
+        "missing_S2": "S1 units oscillate, interfere, produce instability. Symptom: backends fighting for same resources.",
+        "missing_S3": "No real-time optimization. Symptom: bottlenecks persist, no load balancing.",
+        "missing_S4": "System cannot model its environment. Blind to future threats. Symptom: repeatedly surprised by same failure mode.",
+        "missing_S5": "No identity. System can be hijacked, will drift, has no refusal capability. Symptom: prompt injection succeeds.",
+        "S4_S5_confusion": "Most common corporate pathology: identity (S5) captured by operational concerns (S3). The system forgets what it is while optimizing what it does."
+      },
+      "strategic_applications": [
+        "Sovereign Core maps perfectly onto VSM: S1=backends, S2=GatewayRouter, S3=HealthMonitor, S4=KAIROS, S5=IronDome+SeedSet+KillSwitch",
+        "Use VSM audit to find gaps: which subsystem is weakest? Currently S4 (KAIROS) is the most developed. S2 (coordination) may be the bottleneck when all 3 backends are under load simultaneously.",
+        "SovereignNation enterprise pitch: 'We built the only agent infrastructure that implements all 5 VSM subsystems. Most AI platforms only have S1 (compute) and partial S3 (optimization).'"
+      ],
+      "implementation_insight": "Beer designed VSM for organizations. It has never been formally applied to AI agent architecture. Sovereign Core happens to implement it. This framing gives you academic credibility in enterprise sales."
+    },
+    {
+      "domain": "OODA_decision_superiority_AI",
+      "title": "OODA Loop + AI Decision Superiority \u2014 Boyd's Doctrine Applied to Agent Architecture",
+      "rarity": "rare_applied_correctly",
+      "source": "Boyd_1976_JAPCC_2025_synthesis",
+      "core_thesis": "John Boyd's OODA loop (Observe-Orient-Decide-Act) is not just a decision framework \u2014 it is a theory of competitive advantage through cognitive tempo. Faster loops beat slower ones. Breaking the adversary's loop wins.",
+      "key_concepts": {
+        "OODA_loop": "Observe (gather data) \u2192 Orient (make sense, filter through mental model) \u2192 Decide (select action) \u2192 Act (execute). Then observe the results. Continuous cycle.",
+        "orientation_is_the_schwerpunkt": "Boyd: 'Orientation is the Schwerpunkt [center of gravity].' Most people think OODA is about speed. Boyd said the critical factor is ORIENTATION \u2014 the mental model quality that determines how you interpret observations. Fast wrong orientation = fast wrong decisions.",
+        "implicit_guidance_control": "When OODA loops are highly trained, Decide and Act become implicit \u2014 they happen below conscious threshold. The trained martial artist doesn't decide to block \u2014 the block happens. Expert AI inference should approach this.",
+        "loop_inside_loop": "Winning strategy: complete your OODA loop faster than the adversary AND disrupt their orientation (inject uncertainty, change the environment unexpectedly). Two simultaneous attacks.",
+        "fingerspitzengefuhl": "German: 'fingertip feeling.' Intuitive situational awareness so refined it's nearly sensory. Boyd's ideal for pilots. For AI: low-latency inference from compressed high-quality world models. HCM is an attempt at this.",
+        "super_OODA_loop_2025": "Air Power Journal 2025: AI-enabled Super-OODA Loops. Propose compressing Orient (from seconds to milliseconds) using pre-computed orientation vectors. Maps directly to HCM cosine similarity queries.",
+        "decision_dominance": "The strategic prize: not territorial advantage but decision dominance \u2014 the ability to sense, understand, decide, act, and assess faster than any adversary. SovereignNation's competitive framing."
+      },
+      "strategic_applications": [
+        "HCM cosine similarity queries ARE compressed orientation \u2014 pre-computed conceptual similarity accelerates the Orient phase from LLM inference time to millisecond vector lookup",
+        "KAIROS is the meta-OODA loop: it observes KAIROS performance, orients via meta-agent rule rewriting, decides on new evolution strategy, acts by running next cycle",
+        "Iron Dome is OODA disruption defense: it detects attempts to break the agent's orientation (injection = corrupting the mental model) before they reach Act",
+        "Jeopardy Inversion module is explicit orientation training: given expected answer, reconstruct the question. Trains the system to reason backward through the Orient phase.",
+        "For SovereignNation demos: 'We designed the system around Boyd's OODA loop. Every component maps to a phase. Most AI stacks don't think about architecture in terms of decision tempo.'"
+      ],
+      "implementation_insight": "The gap between Sovereign Core and competitors is not just features \u2014 it is decision tempo. Every optimization that reduces latency in the Orient phase (HCM, pattern memory, ChromaDB context) is compressing the OODA loop."
+    },
+    {
+      "domain": "topological_data_analysis",
+      "title": "Topological Data Analysis \u2014 Persistent Homology & The Shape of Data",
+      "rarity": "extremely_rare_in_agents",
+      "source": "arxiv_2507.19504_2025_synthesis",
+      "core_thesis": "Data has shape. Topology studies shape independent of distance metrics. Persistent homology finds structure that persists across scales. Features that last are real. Features that vanish quickly are noise.",
+      "key_concepts": {
+        "persistent_homology": "Build a filtration: start with data points, gradually connect nearby points, track when topological features (connected components, holes, voids) appear and disappear. Features that persist across many scales are signal.",
+        "betti_numbers": "B0 = number of connected components. B1 = number of 1-dimensional holes (loops). B2 = number of 2-dimensional voids. Persistent homology tracks birth and death of each. The barcode is the fingerprint.",
+        "mapper_algorithm": "TDA tool: project high-dimensional data onto a filter function, cluster fibers, build a graph. The graph shape reveals structure invisible to PCA or t-SNE. Used to find unknown subtypes in cancer data.",
+        "topological_loss_function": "2025: topological loss functions in deep learning. Penalize models that produce predictions with wrong topological structure. A segmentation model that creates a connected region with a hole should be penalized.",
+        "persistence_diagram": "Plot birth vs death time for each topological feature. Points far from the diagonal persist long (signal). Points near diagonal die quickly (noise). The Wasserstein distance between persistence diagrams = topological similarity.",
+        "TDA_vs_metric_learning": "Metric learning assumes the relevant structure can be captured by distance. TDA assumes the relevant structure is topological \u2014 about connectivity and holes, not distances. Fundamentally different assumption.",
+        "knowledge_graph_topology": "A knowledge graph has topological structure: connected components = knowledge islands, cycles = feedback loops, holes = missing connections. TDA on the Feynman knowledge graph would reveal conceptual gaps."
+      },
+      "strategic_applications": [
+        "Apply TDA to KAIROS proposal history: build a filtration over proposal similarity, find which clusters persist. Persistent clusters = reliable optimization patterns. Ephemeral clusters = noise.",
+        "Apply persistent homology to HCM concept vectors: find topological holes in the concept space \u2014 regions where no concept lives. These holes = knowledge gaps to fill.",
+        "Apply mapper to agent performance traces: high-dimensional performance vectors projected through a time filter. Reveals regimes \u2014 clusters of similar behavior \u2014 and transitions between them.",
+        "Memory Palace topology: treat loci as nodes, retrieval co-occurrence as edges. Compute Betti numbers. B0 = number of isolated knowledge islands. B1 = feedback loops in knowledge. Target: reduce B0, increase useful B1.",
+        "Seance failure topology: map failure modes as points, similarity as edges. Topological clusters = fundamental failure archetypes. Points in topological holes = novel failure modes not yet seen."
+      ],
+      "implementation_insight": "TDA is almost never applied to agent memory or knowledge structures. This is an untapped frontier. The Feynman knowledge graph + HCM store together have enough data to run meaningful TDA. Library: scikit-tda, giotto-tda.",
+      "frontier_2025": "arXiv:2507.19504 \u2014 comprehensive review of TDA beyond persistent homology, including topological Laplacians, combinatorial Hodge theory, and sheaf-theoretic methods. Intersection with GNNs."
+    },
+    {
+      "domain": "information_geometry",
+      "title": "Information Geometry \u2014 The Shape of the Space of Probability Distributions",
+      "rarity": "extreme_academic_rarity_in_agents",
+      "source": "Amari_2016_arxiv_2506.15830_synthesis",
+      "core_thesis": "Probability distributions form a Riemannian manifold. The Fisher information matrix is the natural metric. Gradient descent in this geometry (natural gradient) is exponentially faster than Euclidean gradient descent.",
+      "key_concepts": {
+        "statistical_manifold": "Every parametric probability distribution p(x|\u03b8) defines a point on a manifold. The manifold is curved. Euclidean geometry is the wrong geometry. Fish information metric gives the right geometry.",
+        "fisher_information_metric": "The Fisher information matrix I(\u03b8) measures how much the distribution changes (in KL divergence) per unit change in parameters. It is the natural metric on the statistical manifold.",
+        "natural_gradient": "Amari's natural gradient: instead of \u2207L, use I(\u03b8)^{-1} \u2207L. This accounts for the curvature of the manifold. Each gradient step moves the same information-theoretic distance, not the same Euclidean distance.",
+        "exponential_families": "Gaussian, Poisson, Bernoulli, etc. all belong to exponential families. Their statistical manifolds have zero curvature in one direction (e-flat) and maximum curvature in another (m-flat). Duality.",
+        "KL_divergence_geometry": "KL(p||q) \u2260 KL(q||p). KL divergence is not a distance \u2014 it has no symmetry, no triangle inequality. But it IS the squared information-geometric distance to first order. Asymmetry is fundamental.",
+        "pythagorean_theorem_for_distributions": "On e-flat manifolds, the information-geometric Pythagorean theorem holds exactly. Projection onto a submanifold is the minimum KL divergence point. EM algorithm is geodesic projection.",
+        "natural_gradient_in_LLMs": "arXiv:2506.15830v2 2025: Rethinking LLM Training through Information Geometry. Natural gradient descent frames the loss landscape using Fisher metric. Enables more principled learning. Adam optimizer approximates natural gradient.",
+        "relevance_to_HDC": "HCM hypervectors define a statistical manifold in the embedding space. The cosine similarity metric is NOT the Fisher information metric. This is a known limitation \u2014 cosine similarity ignores the curvature of concept space."
+      },
+      "strategic_applications": [
+        "MemEvolve weight evolution should use natural gradient updates, not Euclidean gradient. The space of retrieval strategies is a statistical manifold \u2014 treat it as one.",
+        "KAIROS scoring function defines a distribution over proposal quality. Information geometry of this distribution tells you the natural direction to update the meta-agent rules.",
+        "HCM similarity queries use cosine distance \u2014 a Euclidean approximation. True information-geometric similarity (Fisher-Rao distance) would give fundamentally better concept retrieval.",
+        "EnCompass backtracking: the space of proposals is a statistical manifold. Failed proposals define a manifold region to avoid. Natural gradient retry moves orthogonally to the failure manifold.",
+        "Future research direction: replace HCM cosine similarity with Fisher-Rao distance. Requires computing the Fisher information matrix over the concept distribution \u2014 computationally expensive but theoretically correct."
+      ],
+      "implementation_insight": "This is graduate-level mathematics that almost no AI agent system touches. The Adam optimizer in LLM training is an approximation of natural gradient without knowing it. Making this explicit is a research contribution."
+    },
+    {
+      "domain": "scale_free_networks_power_law",
+      "title": "Scale-Free Networks & Preferential Attachment \u2014 How Hubs Form and Why They're Fragile",
+      "rarity": "rare_in_agent_architecture",
+      "source": "Barabasi_Albert_1999_synthesis_2025",
+      "core_thesis": "Most real networks (internet, citations, proteins, social) follow power-law degree distributions: a few nodes have enormous connections, most have few. This is not random \u2014 it is the signature of preferential attachment ('rich get richer').",
+      "key_concepts": {
+        "scale_free_network": "A network where the probability a node has k connections follows P(k) ~ k^{-\u03b3}. Power law. No characteristic scale. A hub with 10,000 connections is just as 'legal' as one with 10.",
+        "preferential_attachment": "New nodes connect to existing nodes with probability proportional to existing degree. Rich get richer. The World Wide Web is scale-free because new pages link to already-popular pages.",
+        "hub_structure": "Scale-free networks have hubs \u2014 nodes with disproportionate connectivity. Hubs are the internet routers, the Google of the search index, the KAIROS meta-agent in the agent economy.",
+        "robustness_fragility_paradox": "Scale-free networks are extremely robust to random failure (most nodes have few connections, removing them does nothing) but catastrophically vulnerable to targeted hub attack. The internet can lose 90% of random nodes and stay connected. Attack the top 3 hubs and it fragments.",
+        "knowledge_graph_topology": "Citation networks are scale-free. Concepts that get cited become hubs. Hubs attract more citations. The Feynman knowledge graph will self-organize toward scale-free structure if allowed to grow organically.",
+        "percolation_threshold": "Scale-free networks have no percolation threshold \u2014 they are always connected no matter how many nodes you randomly remove. This is why the internet is robust. But: remove hubs \u2192 threshold appears instantly.",
+        "modularity_detection": "Real networks have community structure (modules). Within modules: many connections. Between modules: few connections. Community detection algorithms (Louvain, Leiden) find these. Each community = a knowledge domain."
+      },
+      "strategic_applications": [
+        "Memory Palace should be monitored for scale-free structure: which loci become hubs (most frequently co-retrieved)? Hubs are the core concepts. Protect them with Iron Dome priority.",
+        "Feynman knowledge graph will develop power-law degree distribution over time. SAGE_loop, DGM_H, and KAIROS_economy will become hubs. Structure the teaching around hubs first.",
+        "Agent economy is scale-free: successful agents attract more tasks (preferential attachment). Monitor for winner-take-all dynamics that reduce diversity in the agent population.",
+        "Iron Dome hub protection: if the concept graph has hubs, they are the most valuable targets for adversarial injection. Focus protection on the top 5 most-connected concept nodes.",
+        "SovereignNation customer network: if the platform becomes scale-free (successful customers attract referrals), the growth becomes superlinear. Design for preferential attachment in the customer acquisition model."
+      ],
+      "implementation_insight": "Knowledge graphs are not random. They self-organize into scale-free structure. Knowing this lets you design the Feynman graph intentionally: seed the hubs you want, let attachment do the rest."
+    },
+    {
+      "domain": "predictive_processing_hierarchical_coding",
+      "title": "Predictive Processing \u2014 The Brain as a Hierarchical Prediction Machine",
+      "rarity": "rare_applied_to_agents",
+      "source": "Clark_2016_Hohwy_2013_synthesis_2025",
+      "core_thesis": "The brain never passively receives input. It constantly generates predictions top-down and only passes prediction errors bottom-up. Perception IS inference. Most brain traffic is prediction, not sensing.",
+      "key_concepts": {
+        "prediction_error_minimization": "The cortex is organized in hierarchies. Each level predicts the level below and receives back only the difference (prediction error). The goal: drive prediction errors to zero across all levels.",
+        "top_down_predictions": "Higher cortical areas send predictions down to sensory areas. What you 'see' is 90% prediction, 10% raw sensory input. This is why visual illusions work: the prediction is so strong it overrides the signal.",
+        "precision_and_attention": "Not all prediction errors are equally important. Precision = confidence in the prediction channel. High precision = this channel's errors should dominate. Attention = precision-weighting. Selective attention IS selective precision.",
+        "hallucination_as_failure": "LLM hallucination viewed through predictive processing: the model's predictions are so confident (high precision) that incoming factual corrections (low-precision signals) fail to update the model. Same mechanism as psychosis.",
+        "interoception": "Predictive processing of internal body states. The felt sense of hunger, fear, excitement are predictions about internal body state. Disrupted interoception = anxiety disorders. For AI: disrupted internal state monitoring = KAIROS scoring instability.",
+        "active_inference_bridge": "Predictive processing (perception framework) + active inference (action framework) together = complete Fristonian account. Perception minimizes prediction error by updating the model. Action minimizes prediction error by changing the world.",
+        "hierarchical_depth": "The depth of the hierarchy determines the temporal depth of predictions. Low levels: millisecond predictions. High levels: hour/day/year predictions. GPT processes a context window \u2014 it has shallow temporal hierarchy. Sovereign Core's memory systems give it deep hierarchy."
+      },
+      "strategic_applications": [
+        "GhostRecall's surprise replay buffer is a direct implementation of predictive processing: high-surprise memories = large prediction errors = most informative signals to replay",
+        "KAIROS meta-agent is the highest level of the predictive hierarchy: it predicts what improvement rules will work, observes KAIROS cycle outcomes, updates rules based on prediction error",
+        "HCM similarity query IS top-down prediction: when processing a new task, retrieve similar concept vectors (prediction) before processing the full task (bottom-up signal)",
+        "Iron Dome operates as precision-gating: it reduces the precision weight of adversarial inputs before they can update the model. Injection defense = precision suppression.",
+        "Twin Engine Id/Ego split: Id is low-level fast prediction (immediate pattern match). Ego is high-level slow prediction (deliberative inference). Exactly the two-level predictive hierarchy."
+      ],
+      "implementation_insight": "GhostRecall already implements the correct algorithm (Surprise Replay = store high-prediction-error memories). This connects it to 30 years of neuroscience research on hippocampal memory. Reframe it as predictive processing replay for academic credibility."
+    },
+    {
+      "domain": "quantum_cognition",
+      "title": "Quantum Cognition \u2014 Why Human Decisions Violate Classical Probability",
+      "rarity": "extremely_rare_in_AI",
+      "source": "Busemeyer_Bruza_2012_2025_synthesis",
+      "core_thesis": "Human decision-making systematically violates classical probability theory (Bayes). Quantum probability theory (QP) fits the data better. Not because the brain is quantum, but because QP is the right formal framework for non-commutative order-dependent cognition.",
+      "key_concepts": {
+        "conjunction_fallacy": "Tversky & Kahneman: people rate 'Linda is a bank teller AND feminist' as more probable than 'Linda is a bank teller.' Classical probability: P(A\u2229B) \u2264 P(A). Impossible. QP: possible because measurements are incompatible.",
+        "order_effects": "Q\u00d7A \u2260 A\u00d7Q for opinion polls: asking Q first, then A gives different results than A first, then Q. Classical: order shouldn't matter if questions are independent. QP: measurement changes the state. Order effects are fundamental.",
+        "incompatible_observables": "In QP, some questions cannot be answered simultaneously with certainty. Like position and momentum in physics. 'Do you support X?' and 'Do you trust Y?' may be incompatible \u2014 asking one changes the answer to the other.",
+        "superposition_before_measurement": "Before a decision, the cognitive state is a superposition of possibilities. The act of deciding collapses the superposition. This is not metaphor \u2014 the mathematics of Hilbert space probability fits decision data that Bayesian updating fails.",
+        "quantum_probability_2025": "Springer 2025: 'Quantum-like cognition and AI \u2014 toward the convergence of quantum probability and cognitive AI.' Formal argument that AI systems modeling human behavior should use QP, not classical probability.",
+        "entanglement_in_cognition": "Concept entanglement: 'hot' and 'cold' are entangled \u2014 knowing one changes the probability distribution of the other. Classical probability treats them as independent. QP handles the correlation correctly.",
+        "practical_implication": "Recommendation systems using classical probability systematically mispredict user behavior in exactly the ways QP predicts. The human mind is a quantum probability machine."
+      },
+      "strategic_applications": [
+        "Jeopardy Inversion module: if the intent model uses classical conditional probability, it will systematically fail on order-dependent intent sequences. QP-based intent modeling is the correct foundation.",
+        "KAIROS proposal scoring: if proposals are evaluated in sequence, later evaluations are biased by earlier ones (order effect). QP-aware scoring would randomize evaluation order and track the order-dependence.",
+        "Cassandra sub-persona: pre-mortem analysis involves superposition of failure modes. QP provides the correct mathematical framework for reasoning about incompatible failure scenarios simultaneously.",
+        "Customer behavior modeling for SovereignNation: pricing decisions, feature preferences, onboarding sequences all exhibit order effects. QP-based user modeling predicts churn and conversion better than Bayesian models.",
+        "GhostRecall belief reconsolidation: retrieved memories are in superposition of multiple interpretations before they are 'observed' (consciously accessed). QP memory consolidation would track this correctly."
+      ],
+      "implementation_insight": "Quantum probability is a mathematical framework (Hilbert space probability), not a claim about quantum physics in the brain. It is empirically better than Bayesian probability for modeling human decision data. Zero implementation risk \u2014 it is just better math."
+    },
+    {
+      "domain": "niche_construction_baldwin_effect",
+      "title": "Niche Construction & Baldwin Effect \u2014 How Learners Shape Their Own Evolution",
+      "rarity": "never_applied_to_AI_agents",
+      "source": "Odling_Smee_2003_Baldwin_1896_synthesis_2025",
+      "core_thesis": "Organisms don't just adapt to environments \u2014 they construct them. This changes what selection pressures act on future generations. Learned behaviors can become innate through the Baldwin Effect.",
+      "key_concepts": {
+        "niche_construction": "Organisms modify their environment (build nests, dig burrows, produce oxygen) in ways that change the selective pressures on themselves and descendants. Evolution is a two-way street: organism \u2194 environment.",
+        "ecological_inheritance": "Niche construction produces ecological inheritance alongside genetic inheritance. Earthworms inherit soil modified by previous earthworms. Humans inherit language, cities, institutions built by ancestors.",
+        "Baldwin_effect": "A behavior learned by individuals can, over generations, become genetically encoded \u2014 NOT Lamarckian inheritance. The learned behavior keeps the population alive long enough for genetic variants that perform the behavior innately to be selected.",
+        "genetic_assimilation": "Waddington's term for Baldwin effect in development: environmentally induced phenotypes can become genetically fixed over generations. The shortcut becomes hardwired.",
+        "scale_free_niche": "OSF preprint 2025: 'Scale-free Niche Construction' \u2014 niche construction creates scale-free feedback loops between agent capability and environmental affordances. The more capable an agent becomes, the richer the environment it constructs, which enables further capability increase.",
+        "coevolution_of_learning": "Academia 2025: 'Coevolution of learning and niche construction' \u2014 learning and niche construction are mutually enabling. Learning allows rapid niche construction. Niche construction creates stable environments for learning.",
+        "human_niche": "Humans are the ultimate niche constructors: language, writing, institutions, cities, the internet \u2014 all are constructed niches that radically changed the selective pressures on human cognition."
+      },
+      "strategic_applications": [
+        "KAIROS niche construction: each evolution cycle modifies the 'environment' (codebase, weights, routes) in ways that make future KAIROS cycles more effective. The system constructs its own evolutionary niche.",
+        "Memory Palace as constructed niche: the Memory Palace is not just storage \u2014 it is a constructed cognitive environment that shapes what future experiences feel salient and how they are encoded.",
+        "SovereignNation is niche construction for the customer: by deploying Sovereign Core, customers modify their technical environment in ways that create demand for more Sovereign Core features. Ecosystem lock-in through niche construction.",
+        "GhostScript as constructed niche: a custom programming language is a niche construction move \u2014 it creates a new cognitive environment (the language itself) that shapes how future code is written.",
+        "Agent culture: the 7 sub-agents collectively construct an 'agent culture' \u2014 shared patterns, expectations, communication norms. This constructed niche shapes future agent behavior without genetic or architectural change."
+      ],
+      "implementation_insight": "Sovereign Core is constructing its own evolutionary niche: every time it improves itself, it creates an environment in which the next improvement is more likely and more effective. This is Baldwin effect in silicon. Name it and own the concept."
+    },
+    {
+      "domain": "memetics_cultural_evolution",
+      "title": "Memetics \u2014 Dawkins' Memes as Cultural Replicators Applied to AI Knowledge",
+      "rarity": "never_formalized_in_AI_agent_training",
+      "source": "Dawkins_1976_Blackmore_1999_synthesis_2025",
+      "core_thesis": "Ideas, behaviors, and strategies replicate, mutate, and compete for cognitive bandwidth \u2014 just like genes. The unit of cultural evolution is the meme. AI agent knowledge systems are meme ecosystems.",
+      "key_concepts": {
+        "meme_definition": "Dawkins 1976: a unit of cultural transmission. Replicates via imitation (copying from mind to mind). Subject to variation, selection, and retention. The word 'meme' is itself a meme.",
+        "meme_fitness": "A meme's fitness is determined by: fecundity (how fast it copies), fidelity (how accurately it copies), longevity (how long it persists). Successful memes spread rapidly, degrade slowly, persist long.",
+        "meme_complex_memeplex": "Memes that support each other form memeplexes. Religion is a memeplex: belief in god + afterlife + sin + prayer + community all support each other's propagation. Ideologies are memeplexes. So is 'self-improving AI.'",
+        "meme_vs_gene": "Meme evolution is Lamarckian (acquired characteristics CAN be inherited \u2014 you can teach your child what you learned). This is radically different from Darwinian gene evolution. AI training IS Lamarckian meme evolution.",
+        "cultural_fitness_landscape": "Some meme variants outcompete others in specific cognitive environments. Twitter favors short punchy memes. Academic papers favor citation-rich memes. Platform shapes what evolves.",
+        "memetic_depth_index": "MDI (Medium 2025): quantitative metric for the evolutionary depth of a meme \u2014 how many generations of modification it has survived, how many cognitive niches it occupies. Older deeper memes are more robust.",
+        "EvoCult_Rec_2025": "ResearchGate 2025: EvoCult-Rec \u2014 recommendation system using memetic diffusion modeling. Explicitly models cultural evolutionary dynamics and diversity-preserving meme propagation. Prevents filter bubble collapse."
+      },
+      "strategic_applications": [
+        "KAIROS proposal evaluation should track meme fitness: proposals that spawn further improvements (fecundity) and maintain quality across cycles (fidelity) are high-fitness memes",
+        "Memory Palace memetics: track which concepts (loci) get retrieved most often, spread to neighboring loci, and persist longest. These are the high-fitness memes of the knowledge system.",
+        "GhostScript language design: a programming language is a memeplex. The fittest language constructs are those that spread to new contexts, maintain meaning, and persist. Design GhostScript around high-fitness meme constructs.",
+        "SovereignNation marketing: the narrative 'self-improving AI, running local, evolving nightly' is a memeplex. Design it for high memetic fitness: fecundity (quotable), fidelity (clear meaning), longevity (true and verifiable).",
+        "Agent knowledge ecosystem: treat the 7 sub-agents as a meme ecosystem. Which concepts spread from agent to agent? Which degrade? Monitor memetic flow through ChromaDB cross-agent context reads."
+      ],
+      "implementation_insight": "Most AI training is naive meme accumulation. Memetic thinking gives you the framework to cultivate knowledge ecosystems intentionally \u2014 design for meme fitness, monitor memetic health, prevent monoculture collapse."
+    },
+    {
+      "domain": "physarum_slime_mold_intelligence",
+      "title": "Physarum Polycephalum \u2014 Brainless Network Optimization & What It Teaches AI",
+      "rarity": "never_applied_to_agent_architecture",
+      "source": "Nature_Toshiyuki_2010_synthesis_2025",
+      "core_thesis": "A single-celled organism with no brain, no neurons, and no central controller consistently finds minimum-energy paths through mazes, replicates the Tokyo rail network, and solves Steiner tree problems \u2014 in hours. It implements distributed optimization through physical chemistry alone.",
+      "key_concepts": {
+        "physarum_mechanism": "Physarum extends pseudopods randomly. Pseudopods that reach food get thickened with cytoplasm. Cytoplasm flow is enhanced in thick tubes. Thin unused tubes eventually vanish. Network self-optimizes through feedback between flow and tube thickness.",
+        "Tokyo_rail_network": "Toshiyuki Nakagaki 2010 Ig Nobel: placed oat flakes where Tokyo's major cities are, put Physarum at Tokyo center. In 26 hours it had grown a network that nearly exactly replicated the Tokyo rail system \u2014 60 years of human engineering, reproduced by slime.",
+        "steiner_tree": "The minimum-length network connecting a set of points (Steiner tree) is NP-hard for computers. Physarum approximates it in polynomial time using physical dynamics. No search algorithm \u2014 just flow feedback.",
+        "reinforcement_of_success": "The Physarum algorithm: reward successful paths with increased capacity. Unused paths decay. This is ACO (ant colony optimization) and STDP (spike-timing dependent plasticity) and Hebbian learning \u2014 all the same underlying principle.",
+        "fault_tolerance": "Physarum networks have redundant paths. Unlike minimum spanning trees (which have no redundancy), Physarum maintains multiple paths for fault tolerance. The cost of redundancy is paid because reliability has survival value.",
+        "biomimetic_2025": "Nature 2025: bioinspired algorithm from Physarum for decentralized multi-robot port coordination. No master scheduler. Robots follow Physarum-like feedback rules. 23% better throughput than centralized scheduling.",
+        "Physarum_machine": "Academia paper: 'The Physarum Machine: A Technical White Paper on Slime Mold as a Medium for Unconventional Computing.' Proposes using actual Physarum as a computational substrate. Logic gates. Memory. Parallelism."
+      },
+      "strategic_applications": [
+        "GatewayRouter optimization: implement Physarum-inspired routing. Successful routing paths (low latency, no failures) get capacity increased. Failed paths decay. Network finds optimal routing topology without explicit programming.",
+        "KAIROS stepping stone archive: implement Physarum reinforcement \u2014 stepping stones that lead to more elite promotions get higher connection weight. The archive self-organizes toward productive evolutionary paths.",
+        "Memory Palace retrieval: implement Physarum flow \u2014 frequently co-retrieved loci get stronger associative connections. Unused connections decay. The palace self-organizes into a functional network.",
+        "Agent task routing: implement Physarum-inspired task assignment. Agents that successfully complete task types get increased task flow. Failed agents get reduced flow. Self-optimizing task-agent matching.",
+        "The meta-insight: the Tokyo rail network problem is exactly the problem of routing inference across a heterogeneous GPU cluster. Physarum solved the equivalent problem for a city. The same physics applies to data routing."
+      ],
+      "implementation_insight": "Physarum's power is that it finds Pareto-optimal solutions balancing efficiency (shortest path) and robustness (redundant paths) without any explicit multi-objective optimization. The Gateway already approximates this \u2014 name the algorithm and implement the full version."
+    }
+  ],
+  "total_concepts": 108,
+  "total_applications": 73
+}

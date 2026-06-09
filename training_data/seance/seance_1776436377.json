@@ -1,0 +1,15 @@
+{
+  "session_id": 1776436377,
+  "timestamp": 1776436377,
+  "domain": "dissipative_structure_starvation",
+  "failure_domain": "dissipative_structure_starvation",
+  "scenario": "Gateway goes offline for 72 hours \u2014 nightly evolution runs fail \u2014 system performance degrades",
+  "failure_mode": "Dissipative structure starvation: the intelligence IS the energy flow. Without nightly compute input, the ordered state (knowledge, weights, routes) decays toward thermal equilibrium (random).",
+  "lesson": "Dissipative structures have a characteristic decay time. Measure it. Know how long the system can survive without energy input before structure degrades meaningfully.",
+  "counterfactual": "If we knew the decay rate, we could trigger emergency evolution runs when gateway comes back online to restore structure from frozen history",
+  "implementation": "",
+  "prevention": "Add gateway downtime tracking. On reconnect: run emergency KAIROS catch-up cycle scaled to downtime duration. Document expected decay rate from baseline.",
+  "source": "niche_training_2025",
+  "severity": "high",
+  "verified": true
+}

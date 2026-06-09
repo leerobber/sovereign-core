@@ -1,0 +1,15 @@
+{
+  "session_id": 1776435977,
+  "timestamp": 1776435977,
+  "domain": "autopoietic_drift",
+  "failure_domain": "autopoietic_drift",
+  "scenario": "System gradually drifts from intended behavior after 30 days of autonomous operation",
+  "failure_mode": "Allopoietic drift \u2014 system optimizes outputs (task completion) but not self-maintenance (architectural coherence)",
+  "lesson": "Autopoietic systems require operational closure: every process must either produce system components or enable production. If KAIROS produces improvements that bypass Iron Dome, autopoiesis breaks.",
+  "counterfactual": "Regular autopoietic audits: is every KAIROS proposal routed through all 5 VSM subsystems? Are improvements maintaining the boundary (identity) of the system?",
+  "implementation": "",
+  "prevention": "Weekly VSM audit checking all 5 subsystems are healthy and interconnected. Track ratio: self-generated improvements / externally-triggered responses.",
+  "source": "niche_training_2025",
+  "severity": "high",
+  "verified": true
+}
