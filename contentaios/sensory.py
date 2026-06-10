@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import Awaitable, Callable, Optional
 
 from contentaios.types import KernelEvent, Priority
@@ -186,7 +187,7 @@ class PollingSensoryInput(SensoryInput):
     async def _run(self) -> None:
         """
         Run the polling loop that repeatedly calls the configured fetcher and forwards any returned events to the active event sink.
-        
+
         This background task continues until the instance's `_running` flag is cleared. On each iteration it awaits the async `fetcher()`; if a `KernelEvent` is returned and an `EventSink` is set, the event is forwarded to the sink, then the task sleeps for the configured `_interval_s` before repeating.
         """
         while self._running:
@@ -194,3 +195,63 @@ class PollingSensoryInput(SensoryInput):
             if event is not None and self._emit is not None:
                 await self._emit(event)
             await asyncio.sleep(self._interval_s)
+
+
+class HttpPollingSensoryInput(SensoryInput):
+    """HTTP polling input that fetches events from a JSON endpoint."""
+
+    def __init__(self, name: str, url: str, *, interval_s: float = 1.0) -> None:
+        self.name = name
+        self._url = url
+        self._interval_s = interval_s
+        self._runner: Optional[asyncio.Task[None]] = None
+        self._emit: Optional[EventSink] = None
+        self._running = False
+
+    async def start(self, emit: EventSink) -> None:
+        self._emit = emit
+        self._running = True
+        self._runner = asyncio.create_task(self._run())
+
+    async def stop(self) -> None:
+        self._running = False
+        if self._runner:
+            self._runner.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._runner
+            self._runner = None
+
+    async def wait_idle(self) -> None:
+        await asyncio.sleep(0)
+
+    async def _run(self) -> None:
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            while self._running:
+                try:
+                    async with session.get(self._url) as resp:
+                        items = await resp.json()
+                        if isinstance(items, list) and self._emit is not None:
+                            for item in items:
+                                if isinstance(item, dict) and "type" in item:
+                                    event = KernelEvent(
+                                        source=self.name,
+                                        type=item["type"],
+                                        payload=item.get("payload", {}),
+                                    )
+                                    await self._emit(event)
+                except Exception:
+                    pass
+                await asyncio.sleep(self._interval_s)
+
+
+class WebhookPushBridge:
+    """Maps incoming webhook payloads to PushSensoryInput push calls."""
+
+    def __init__(self, sensor: PushSensoryInput) -> None:
+        self._sensor = sensor
+
+    async def handle_payload(self, payload: dict) -> None:
+        event_type = payload.get("type", "unknown")
+        event_payload = payload.get("payload", {})
+        await self._sensor.push(type=event_type, payload=event_payload)

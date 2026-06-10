@@ -45,7 +45,7 @@ class OAIMessage(BaseModel):
 
 class OAIChatRequest(BaseModel):
     model: str = "auto"
-    messages: List[OAIMessage]
+    messages: List[OAIMessage] = Field(default_factory=list)
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=2048, ge=1, le=32768)
     stream: bool = False
@@ -77,115 +77,67 @@ class OAIChatResponse(BaseModel):
 
 # ── Route handler ─────────────────────────────────────────────────────────────
 
-@router.post("/chat/completions", response_model=OAIChatResponse)
-async def chat_completions(req: OAIChatRequest, request: Request) -> OAIChatResponse:
+@router.post("/chat/completions")
+async def chat_completions(request: Request):
     """
     OpenAI-compatible chat completions endpoint.
-    Routes through the Sovereign Core GPU mesh.
+    Routes through the Sovereign Core GPU mesh via GatewayRouter.
     Called by: llm_local.py, contentai-pro LLM adapter, Termux agent.
     """
-    request_id = f"chatcmpl-{uuid.uuid4().hex[:12]}"
-    t0 = time.time()
+    from fastapi.responses import Response as _Response
 
-    # ── Iron Dome screening ──────────────────────────────────────────────
-    if _IRON_DOME_ACTIVE:
-        full_prompt = " ".join(m.content for m in req.messages)
-        _allowed, _reason = _iron_dome.screen(full_prompt, req.model, "v1_compat")
-        if not _allowed:
-            raise HTTPException(status_code=400, detail=_reason)
-
-    # Get router from app state
-    try:
-        gateway_router = request.app.state.router
-    except AttributeError:
+    # Get router: try app state first, fall back to module-level variable
+    gateway_router = getattr(request.app.state, "router", None)
+    if gateway_router is None:
+        try:
+            import gateway.main as _gm
+            gateway_router = getattr(_gm, "_router", None)
+        except Exception:
+            pass
+    if gateway_router is None:
         raise HTTPException(status_code=503, detail="Gateway router not initialized")
 
-    # Convert OpenAI messages → Ollama chat format
-    from gateway.inference import InferenceRequest, InferenceOptions, ChatMessage, route_inference
+    # Read raw body
+    body = await request.body()
 
-    chat_messages = [
-        ChatMessage(role=m.role, content=m.content)
-        for m in req.messages
-    ]
+    # Optional: iron dome screening on the raw body
+    if _IRON_DOME_ACTIVE:
+        try:
+            import json as _json
+            req_data = _json.loads(body) if body else {}
+            messages = req_data.get("messages", [])
+            full_prompt = " ".join(m.get("content", "") for m in messages if isinstance(m, dict))
+            model = req_data.get("model", "auto")
+            _allowed, _reason = _iron_dome.screen(full_prompt, model, "v1_compat")
+            if not _allowed:
+                raise HTTPException(status_code=400, detail=_reason)
+        except HTTPException:
+            raise
+        except Exception:
+            pass
 
-    # Extract system message if present
-    system_content = None
-    non_system = []
-    for m in chat_messages:
-        if m.role == "system":
-            system_content = m.content
-        else:
-            non_system.append(m)
+    # Extract optional model_id query param for routing hint
+    model_id = request.query_params.get("model_id")
 
-    # Build inference request
-    infer_req = InferenceRequest(
-        model=req.model,
-        messages=non_system if non_system else chat_messages,
-        options=InferenceOptions(
-            temperature=req.temperature,
-            top_p=req.top_p,
-            num_predict=req.max_tokens,
-            stop=req.stop or [],
-            seed=req.seed,
-        ),
-        stream=False,
+    # Forward through the gateway router (uses router._session internally)
+    status_code, resp_headers, resp_body = await gateway_router.route(
+        path="/v1/chat/completions",
+        method="POST",
+        headers=dict(request.headers),
+        body=body or b"{}",
+        model_id=model_id,
     )
 
-    # If there's a system message, prepend it as the first user message context
-    # (Ollama handles system via the model's system field)
-    if system_content and non_system:
-        # Prepend system context to first user message
-        first = non_system[0]
-        infer_req.messages[0] = ChatMessage(
-            role="user",
-            content=f"[System]: {system_content}\n\n[User]: {first.content}"
-        )
-
-    try:
-        result = await route_inference(
-            req=infer_req,
-            router=gateway_router,
-            request_id=request_id,
-        )
-    except HTTPException as http_exc:
-        if http_exc.status_code == 503:
-            # Local backends exhausted -- try free API fallbacks
-            logger.warning("Local backends failed -- trying API fallbacks")
-            try:
-                from gateway.api_fallback import fallback_inference
-                msgs = [{"role": m.role, "content": m.content} for m in req.messages]
-                fallback = fallback_inference(msgs, req.max_tokens)
-                if fallback:
-                    logger.info("API fallback succeeded via %s", fallback.get("gh05t3_backend"))
-                    from fastapi.responses import JSONResponse
-                    return JSONResponse(fallback)
-            except Exception as fb_exc:
-                logger.error("API fallback error: %s", fb_exc)
-        raise
-    except Exception as exc:
-        logger.error("v1/chat/completions error: %s", exc)
-        raise HTTPException(status_code=503, detail=str(exc))
-
-    latency = time.time() - t0
-
-    # Estimate tokens (Ollama gives us real counts)
-    prompt_tokens = result.prompt_eval_count or _estimate_tokens(req.messages)
-    completion_tokens = result.eval_count or _estimate_tokens_str(result.response)
-
-    return OAIChatResponse(
-        id=request_id,
-        created=int(t0),
-        model=result.model,
-        choices=[OAIChoice(
-            index=0,
-            message=OAIMessage(role="assistant", content=result.response),
-            finish_reason="stop",
-        )],
-        usage=OAIUsage(
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            total_tokens=prompt_tokens + completion_tokens,
-        ),
+    # Pass the backend response through directly
+    clean_headers = {
+        k: v for k, v in resp_headers.items()
+        if k.lower() not in ("content-length", "transfer-encoding", "connection")
+    }
+    return _Response(
+        content=resp_body,
+        status_code=status_code,
+        headers=clean_headers,
+        media_type="application/json",
     )
 
 
