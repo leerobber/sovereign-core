@@ -1,0 +1,3 @@
+@echo off
+echo Redirecting to unified launcher...
+start "" "C:\Users\leer4\START_ALL.bat"

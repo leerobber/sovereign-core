@@ -1,0 +1,37 @@
+@echo off
+title Ollama — RTX 5050 Vulkan Mode
+color 0A
+echo.
+echo  ============================================================
+echo   OLLAMA GPU START — RTX 5050 Vulkan (Blackwell fix)
+echo  ============================================================
+
+taskkill /F /IM ollama.exe 2>nul
+timeout /t 3 /nobreak >nul
+
+echo  Setting Vulkan GPU env vars...
+set OLLAMA_VULKAN=true
+set GGML_VK_VISIBLE_DEVICES=0
+set CUDA_VISIBLE_DEVICES=
+set OLLAMA_NEW_ENGINE=false
+set OLLAMA_FLASH_ATTENTION=true
+set OLLAMA_KEEP_ALIVE=24h
+set OLLAMA_NUM_PARALLEL=2
+
+echo  Launching Ollama...
+start "Ollama RTX5050-Vulkan" /D "C:\Users\leer4\AppData\Local\Programs\Ollama" cmd /k "set OLLAMA_VULKAN=true && set GGML_VK_VISIBLE_DEVICES=0 && set CUDA_VISIBLE_DEVICES= && set OLLAMA_NEW_ENGINE=false && set OLLAMA_FLASH_ATTENTION=true && set OLLAMA_KEEP_ALIVE=24h && ollama.exe serve"
+
+echo  Waiting for Ollama to come up...
+timeout /t 8 /nobreak >nul
+curl -s http://127.0.0.1:11434/api/version
+echo.
+echo  Loading qwen2.5:7b...
+powershell -Command "$b='{}' -f '{\"model\":\"qwen2.5:7b\",\"prompt\":\"ready\",\"stream\":false,\"keep_alive\":\"24h\"}'; Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/generate' -Method POST -ContentType 'application/json' -Body $b | Out-Null"
+echo.
+echo  Checking GPU usage:
+C:\Users\leer4\AppData\Local\Programs\Ollama\ollama.exe ps
+echo.
+echo  PROCESSOR should show GPU not CPU.
+echo  If still CPU: run fix_ollama_gpu.bat to install CUDA Toolkit DLLs.
+echo.
+pause
