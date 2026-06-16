@@ -62,3 +62,9 @@ logs/
 
 # Benchmark output
 benchmark_results/
+
+# Runtime artifacts (never commit)
+*.pid
+*.log.err
+data/
+ghost_protocol/ghost_sessions.json
