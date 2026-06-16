@@ -33,7 +33,7 @@ from pathlib import Path as _Path
 
 from gateway.auction import InsufficientCreditsError, ResourceType, auctioneer as _auctioneer
 from gateway.benchmark import ThroughputBenchmark
-from gateway.config import BACKENDS, BACKEND_MAP, settings
+from gateway.config import BACKENDS, BACKEND_MAP, settings, SILOS, SILO_MAP
 from gateway.health import HealthMonitor
 from gateway.inference import InferenceRequest, InferenceResponse, route_inference
 from gateway.kairos_routes import router as kairos_router
@@ -173,7 +173,7 @@ def create_app() -> FastAPI:
         """Real-time command interface — live backend health, KAIROS, latency graphs."""
         html_path = _Path(__file__).parent / "dashboard.html"
         if html_path.exists():
-            return HTMLResponse(content=html_path.read_text(), status_code=200)
+            return HTMLResponse(content=html_path.read_text(encoding="utf-8", errors="replace"), status_code=200)
         return HTMLResponse(content="<h1>Dashboard file not found</h1>", status_code=404)
 
     @app.get("/health", tags=["core"])
@@ -230,6 +230,33 @@ def create_app() -> FastAPI:
             return result
         except InsufficientCreditsError as e:
             raise HTTPException(status_code=402, detail=str(e))
+
+    @app.get("/silos", tags=["mesh"])
+    async def silos_status() -> dict:
+        """Health-check all registered project silos (Jarvis, MYTHOS, openclaw, verelene_v5, etc.)."""
+        import httpx
+        results = {}
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            for silo in SILOS:
+                try:
+                    resp = await client.get(f"{silo.url}/health")
+                    results[silo.id] = {
+                        "label": silo.label,
+                        "role": silo.role,
+                        "url": silo.url,
+                        "status": "online" if resp.status_code == 200 else "degraded",
+                        "http": resp.status_code,
+                    }
+                except Exception as e:
+                    results[silo.id] = {
+                        "label": silo.label,
+                        "role": silo.role,
+                        "url": silo.url,
+                        "status": "offline",
+                        "error": str(e)[:80],
+                    }
+        online = sum(1 for v in results.values() if v["status"] == "online")
+        return {"silos": results, "online": online, "total": len(SILOS)}
 
     @app.get("/ledger/tail", tags=["ledger"])
     async def ledger_tail(n: int = 20) -> dict:
