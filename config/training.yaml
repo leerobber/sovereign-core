@@ -1,0 +1,20 @@
+paths:
+  project_root: /home/leer4/sovereign-project
+  raw_logs: datasets/raw
+  processed: datasets/processed
+  adapters: models/adapters
+  ollama: models/ollama
+
+backends:
+  default_cloud: kaggle
+  allow_runpod: false
+  local_max_examples: 500
+
+inference:
+  strategy: ollama_gpu_then_cpu
+  embed_strategy: npu_then_ollama
+  npu_embed_url: http://localhost:8111
+  local_ai_mesh_url: http://localhost:8011
+  ollama_url: http://localhost:11434
+
+schema_version: "1.0"

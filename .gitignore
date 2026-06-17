@@ -1,0 +1,8 @@
+sovereign-env/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/*.db
+llama.cpp/
+*.egg-info/
+.dist/

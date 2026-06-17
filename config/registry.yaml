@@ -1,0 +1,222 @@
+# Sovereign Ecosystem Registry
+# Single source of truth for all repos and their roles.
+# Updated: 2026-06-16
+# This reflects ACTUAL paths on disk — not aspirational structure.
+
+sovereign_ecosystem:
+
+  # ── Core orchestration layer ────────────────────────────────────────────────
+  sovereign_core:
+    role: "Inference gateway and request router"
+    windows_path: "C:\\Users\\leer4\\sovereign-core"
+    wsl_path: "/mnt/c/Users/leer4/sovereign-core"
+    port: 9000
+    status: "active — gateway running, older system"
+    key_modules:
+      - "gateway/main.py"          # FastAPI gateway entrypoint
+      - "gateway/router.py"        # Latency-aware, capability-aware backend router (EMA)
+      - "gateway/health.py"        # Backend health monitor
+      - "gateway/models.py"        # ModelAssigner — capability ordering
+      - "gateway/kairos.py"        # Kairos self-improvement integration
+      - "gateway/inference.py"     # Inference dispatch layer
+      - "gateway/config.py"        # Backend config (BACKENDS list)
+      - "ghost_protocol/ghost_agent.py"           # Pairing agent (port 8006)
+      - "ghost_protocol/fortress/sovereign_security.py"  # Security middleware
+      - "memory_palace/ghost_recall.py"           # Memory retrieval
+      - "memory_palace/iron_dome.py"              # Memory protection layer
+      - "nemotron/ab_router.py"                   # A/B test routing
+      - "hyperagents/sage_generate_loop.py"       # SAGE self-improvement loop
+      - "kairos/group_evolution.py"               # Group evolution for agent populations
+      - "synthetic_architect/mhc_layer.py"        # MHC gene architecture
+    notes: >
+      Original orchestrator. Gateway port is 9000 (not 8000).
+      GH05T3 was built later as a more complete system on 8001/8002.
+      These two gateways overlap in function — consolidation needed.
+
+  # ── Agent backend (main active system) ─────────────────────────────────────
+  gh05t3:
+    role: "Agent backend, pipeline, and MCP server"
+    windows_path: "C:\\Users\\leer4\\GH05T3"
+    wsl_path: "/mnt/c/Users/leer4/GH05T3"
+    ports:
+      backend: 8001
+      gateway_v3: 8002
+      pipeline: 8099
+      serve: 7861
+      payments: 7862
+      landing: 8765
+      supervisor: 8090
+      sage_engine: 8098
+      npu_embed: 8111
+    status: "primary active system — supervisor manages 16 services"
+    key_modules:
+      - "backend/server.py"              # FastAPI backend (port 8001)
+      - "backend/gateway_v3.py"          # API gateway v3 (port 8002, SwarmBus)
+      - "backend/memory_cortex.py"       # Memory with semantic embeddings
+      - "backend/site_agents/"           # Site agent fleet (ops, sales, dev, etc.)
+      - "sovereignnation/pipeline_backend.py"   # ORACLE/FORGE/CODEX/NEXUS pipeline (port 8099)
+      - "sovereignnation/npu_embedding_service.py"  # BGE-large ONNX + MiniLM (port 8111)
+      - "sovereignnation/npu_embed_client.py"   # Drop-in ChromaDB/LangChain wrapper
+      - "sovereignnation/serve.py"       # Ollama proxy + demo-mode bypass (port 7861)
+      - "sovereignnation/capability_client.py"  # IBAC token client
+      - "sovereignnation/ibac_daemon.py"        # Intent-Based Access Control (mounted in sage, port 8098)
+      - "sovereignnation/skills_manager.py"     # Hermes-style skill reflection
+      - "supervisor.py"                  # Process supervisor (start/restart/health for all services)
+      - "kairos/"                        # KAIROS self-improvement engine
+      - "continuous_learner.py"          # Continuous training loop
+      - "amplifier.py"                   # Variant amplifier (--variants 5)
+      - "agents_bootstrap.py"            # Agent bootstrapper
+      - "bridge/"                        # Claude↔Gemini bridge (memory_store, mesh)
+    sovereign_models_in_ollama:
+      - "avery-sovereign (F16, 1.5B)"
+      - "oracle-sovereign (Q8_0, 1.5B)"
+      - "forge-sovereign (Q8_0, 1.5B)"
+      - "codex-sovereign (Q8_0, 1.5B)"
+      - "nexus-sovereign (Q8_0, 1.5B)"
+      - "sentinel-sovereign (Q8_0, 1.5B)"
+      - "gh05t3-sovereign (Q4_K_M, 7.6B)"
+
+  # ── Economy layer ───────────────────────────────────────────────────────────
+  agent_economy:
+    role: "Agent credit economy — transaction ledger and training data source"
+    windows_path: "C:\\Users\\leer4\\Documents\\agent-economy"
+    port: 8081
+    status: "active — 3,059 agents, 1.46M+ transactions, Gen0→Gen20"
+    key_modules:
+      - "main.py"            # FastAPI economy API
+      - "data/economy.db"    # SQLite ledger (critical — graceful shutdown required)
+    huggingface: "tastytator/sovereign-economy (115,813 training pairs)"
+    notes: >
+      Provides agent credits to GH05T3 services via economy_bridge.py.
+      SQLite DB must never be force-killed (data loss risk).
+
+  # ── Local inference mesh ────────────────────────────────────────────────────
+  local_ai_mesh:
+    role: "Multi-model inference mesh with NPU routing and ChromaDB"
+    windows_path: "C:\\Users\\leer4\\Documents\\local-ai-mesh"
+    port: 8011
+    status: "active"
+    key_modules:
+      - "main.py"             # Mesh entrypoint (--api --port 8011 --skip-checks)
+      - "model_manager.py"    # Routes embed() to NPU service (8111) first, Ollama fallback
+    notes: >
+      Embeddings route through NPU service (port 8111) first, Ollama nomic-embed-text
+      as fallback. Uses mesh venv.
+
+  # ── Client-facing brand layer (static assets, NOT a code repo) ─────────────
+  aethyro_assets:
+    role: "Client-facing marketing and demo assets — NOT a code repo"
+    windows_path: "C:\\Users\\leer4\\Documents"
+    status: "static files only"
+    key_files:
+      - "aethyro.html"              # Main landing page
+      - "aethyro_landing/"          # Landing page assets
+      - "aethyro_launch/"           # Launch kit
+      - "aethyro_ops/"              # Ops materials
+      - "demo_video.html"           # Animated demo (no voice, subtitles)
+    notes: >
+      Aethyro is the CLIENT-FACING BRAND. SovereignNation is the internal tech layer.
+      These are marketing assets served from sovereign-core/GH05T3, not a standalone repo.
+      No "Aethyro" or "SovereignNation" standalone repos exist on disk.
+
+  # ── Other active silos ──────────────────────────────────────────────────────
+  mythos:
+    role: "Cybersecurity research platform"
+    windows_path: "C:\\Users\\leer4\\MYTHOS"
+    status: "active research"
+
+  jarvis:
+    role: "Personal assistant agent layer"
+    windows_path: "C:\\Users\\leer4\\Jarvis"
+    status: "active"
+
+  openclaw:
+    role: "MCP integration hub (Docker, skills, tool registry)"
+    windows_path: "C:\\Users\\leer4\\openclaw"
+    status: "active"
+
+
+# ── Architecture decisions (ground truth) ────────────────────────────────────
+architecture_decisions:
+
+  dual_gateway_problem: >
+    sovereign-core/gateway (port 9000) and GH05T3/backend/gateway_v3 (port 8002)
+    BOTH act as gateways. This is a consolidation debt. Current active path is
+    GH05T3 (8002). sovereign-core gateway is older and less used.
+
+  orchestration_model: >
+    GH05T3 supervisor.py is the actual process orchestrator for 16 services.
+    sovereign-core gateway/router.py handles inference routing with EMA latency tracking.
+    These two need to be wired: supervisor starts services → gateway routes between them.
+
+  inference_strategy: "Local-only: Ollama (GPU, CUDA) → NPU embed (AMD XDNA) → CPU fallback"
+
+  embedding_stack:
+    primary: "BGE-large-en-v1.5 ONNX via AMD VitisAI EP (port 8111) — 1024-dim"
+    fallback: "MiniLM-L6-v2 via sentence-transformers (port 8111) — 384-dim"
+    client: "npu_embed_client.py — drop-in ChromaDB + LangChain wrapper"
+
+  pipeline_agents: "oracle → forge → nexus (sequential, each sees prior output)"
+
+  dataset_pipeline: >
+    Agent runs → economy_bridge logs task completions → economy.db →
+    ETL to JSONL → HuggingFace tastytator/sovereign-economy →
+    Kaggle/Lightning AI SFT → GGUF merge → Ollama (avery/oracle/forge/codex/nexus-sovereign)
+
+  fine_tuning_framework: "PyTorch Lightning + PEFT (LoRA/QLoRA) + Hugging Face Transformers"
+
+  training_targets:
+    - "Kaggle T4 (free, JSONL SFT)"
+    - "Lightning AI (CLI configured, not yet tested)"
+    - "RunPod RTX 3090 (~$0.40/hr, on-demand only)"
+
+  logging_schema:
+    fields: ["task_id", "input", "tools_used", "agent_name", "messages", "feedback"]
+    format: "JSONL"
+    economy_db: "C:\\Users\\leer4\\Documents\\agent-economy\\data\\economy.db"
+
+  security_note: >
+    IBAC daemon (ibac_daemon.py) mounts in sage-engine at port 8098.
+    capability_client.py INCORRECTLY hardcodes port 8112 — this is a known bug
+    (separate fix task: chip task_7adab9a3). Auto-fallback to local-mode
+    token minting prevents visible breakage but network-mode IBAC is non-functional.
+
+
+# ── Inter-repo connections (actual, not aspirational) ────────────────────────
+connections:
+  - from: "GH05T3/supervisor"
+    to: "agent-economy"
+    type: "process management + HTTP"
+    detail: "supervisor starts economy-api; economy_bridge.py logs task credits via POST /task/complete"
+
+  - from: "GH05T3/pipeline_backend"
+    to: "Ollama:11434"
+    type: "HTTP"
+    detail: "All pipeline agents (oracle/forge/codex/nexus) call Ollama /api/chat"
+
+  - from: "GH05T3/npu_embed"
+    to: "local-ai-mesh"
+    type: "HTTP (inbound)"
+    detail: "local-ai-mesh model_manager.py routes embed() to npu_embed service (8111) first"
+
+  - from: "sovereign-core/gateway"
+    to: "Ollama:11434"
+    type: "HTTP"
+    detail: "gateway/router.py dispatches inference to Ollama backend via aiohttp"
+
+  - from: "GH05T3/backend"
+    to: "sovereign-core/gateway"
+    type: "NOT CONNECTED (gap)"
+    detail: "These two gateways run independently. Wiring them is consolidation work item."
+
+
+# ── Known gaps / pending work ─────────────────────────────────────────────────
+gaps:
+  - "sovereign-core gateway (9000) and GH05T3 gateway_v3 (8002) not wired — consolidation needed"
+  - "IBAC wrong port bug (8112 vs 8098) in capability_client.py — fix pending"
+  - "No standalone Aethyro, SovereignNation, or Avery repos — aspirational only"
+  - "Lightning AI CLI configured but untested"
+  - "Cerebras key dead (401) — needs refresh at cloud.cerebras.ai"
+  - "n8n + Aethyro CPA offering architecture not designed yet"
+  - "cloudflared auto-start not wired into supervisor"
+  - "nexus v32 training on Kaggle — status unknown"

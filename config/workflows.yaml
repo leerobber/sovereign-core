@@ -1,0 +1,17 @@
+training_flywheel:
+  trigger: manual
+  steps:
+    - etl_raw_logs
+    - eval_quality_gate
+    - select_backend
+    - train
+    - export_ollama
+    - eval_regression
+    - deploy_router
+    - economy_credit
+
+gateway_health:
+  trigger: on_startup
+  steps:
+    - probe_registry
+    - aggregate_supervisor_status

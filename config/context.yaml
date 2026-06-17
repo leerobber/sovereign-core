@@ -1,0 +1,31 @@
+architecture_decisions:
+  gateway_integration: >
+    Supervisor (8090) starts sovereign-core gateway (9000).
+    GH05T3 gateway_v3 (8002) delegates inference to sovereign-core.
+    Single external inference URL: http://localhost:9000
+  orchestration_model: >
+    Supervisor manages processes; sovereign-core routes inference;
+    GH05T3 executes agents; economy + local-ai-mesh coordinate rewards/embeddings.
+  wsl_lineage: >
+    /home/leer4/sovereign-core is the Grok Build refactor target (dev :8000).
+    Windows /mnt/c/Users/leer4/sovereign-core is production gateway (:9000).
+  dataset_pipeline: "Structured logging → ETL → versioned JSONL → fine-tuning"
+  training_strategy: "Hybrid: local RTX 5050 for small LoRA + free GPU cloud (Kaggle T4, Lightning AI) for SFT/DPO"
+  inference_strategy: >
+    Generation: Ollama on RTX 5050 (CUDA) → CPU fallback.
+    Embeddings: NPU BGE ONNX (:8111) via local-ai-mesh (:8011) → Ollama nomic-embed-text fallback.
+    Zero paid cloud API for inference.
+
+canonical_ports:
+  sovereign_core_gateway: 9000
+  sovereign_core_wsl_dev: 8000
+  gh05t3_gateway: 8002
+  gh05t3_supervisor: 8090
+  agent_economy: 8081
+  local_ai_mesh: 8011
+  npu_embed: 8111
+  ollama: 11434
+
+paths:
+  sovereign_project_root: /home/leer4/sovereign-project
+  registry: config/registry.yaml

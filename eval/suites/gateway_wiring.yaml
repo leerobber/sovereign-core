@@ -1,0 +1,8 @@
+name: gateway_wiring
+checks:
+  - name: sovereign_health
+    url: http://localhost:8000/health
+  - name: sovereign_models
+    url: http://localhost:8000/v1/models
+  - name: sovereign_repos
+    url: http://localhost:8000/v1/repos

@@ -1,0 +1,38 @@
+# Sovereign Core Configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+
+ollama:
+  base_url: "http://localhost:11434"
+  timeout: 120
+  retry_attempts: 3
+
+models:
+  cpu:
+    name: "llama3.2:3b"
+    display_name: "Llama 3.2 3B"
+    device: "cpu"
+    max_tokens: 4096
+    priority: 1
+  gpu:
+    name: "qwen2.5:7b"
+    display_name: "Qwen 2.5 7B"
+    device: "gpu"
+    max_tokens: 8192
+    priority: 2
+
+routing:
+  complexity_threshold: 100  # tokens — below goes CPU, above goes GPU
+  max_queue_size: 50
+  timeout_seconds: 120
+  fallback_enabled: true
+
+memory:
+  database_path: "data/sovereign.db"
+  max_conversations: 1000
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"

@@ -1,0 +1,5 @@
+name: training_quality
+checks:
+  - name: raw_logs_dir
+    url: file:///home/leer4/sovereign-project/datasets/raw
+    expect_status: 200

@@ -1,0 +1,6 @@
+name: agents
+checks:
+  - name: sovereign_agents
+    url: http://localhost:8000/v1/agents
+  - name: gh05t3_gateway
+    url: http://localhost:8002/health
