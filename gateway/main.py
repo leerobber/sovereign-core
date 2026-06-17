@@ -23,10 +23,10 @@ import logging
 import time
 import uuid
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, HTMLResponse
 from pathlib import Path as _Path
@@ -218,19 +218,6 @@ def create_app() -> FastAPI:
             logger.error("Inference error [%s]: %s", request_id, exc)
             raise HTTPException(status_code=503, detail=str(exc))
 
-    @app.post("/auction/bid", tags=["auction"])
-    async def auction_bid(resource_type: str, votes: int, agent_id: str = "anonymous") -> dict:
-        try:
-            rt = ResourceType(resource_type)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Unknown resource: {resource_type}")
-        try:
-            result = _auctioneer.bid(agent_id=agent_id, resource=rt, votes=votes)
-            await event_bus.emit("auction.completed", result)
-            return result
-        except InsufficientCreditsError as e:
-            raise HTTPException(status_code=402, detail=str(e))
-
     @app.get("/ledger/tail", tags=["ledger"])
     async def ledger_tail(n: int = 20) -> dict:
         try:
@@ -252,7 +239,194 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
-if __name__ == "__main__":
+
+@app.get("/benchmark", summary="Full throughput benchmark report")
+async def benchmark_report() -> JSONResponse:
+    """Return detailed per-backend throughput statistics."""
+    return JSONResponse({"benchmark": _benchmark.report()})
+
+
+@app.post("/benchmark/reset", summary="Reset benchmark counters")
+async def benchmark_reset(
+    backend_id: Optional[str] = Query(default=None, description="Reset a specific backend only"),
+) -> JSONResponse:
+    """Clear accumulated benchmark data (optionally for a single backend)."""
+    if backend_id is not None and backend_id not in BACKEND_MAP:
+        raise HTTPException(status_code=404, detail=f"Unknown backend: {backend_id}")
+    _benchmark.reset(backend_id)
+    return JSONResponse({"reset": True, "backend_id": backend_id})
+
+
+# ---------------------------------------------------------------------------
+# Inference proxy endpoint
+# ---------------------------------------------------------------------------
+@app.api_route(
+    "/v1/{path:path}",
+    methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    summary="Proxy inference request to best available backend",
+)
+async def proxy_inference(
+    request: Request,
+    path: str,
+    model_id: Optional[str] = Query(default=None, description="Target model identifier"),
+    vram_gib: float = Query(default=0.0, ge=0.0, description="Minimum VRAM required (GiB)"),
+) -> Response:
+    """Forward the request to the best available backend.
+
+    Query parameters ``model_id`` and ``vram_gib`` inform the routing decision.
+    All other query parameters and the request body are forwarded verbatim.
+    """
+    body = await request.body()
+    forward_headers = {
+        k: v
+        for k, v in request.headers.items()
+        if k.lower() not in {"host", "content-length"}
+    }
+
+    # Preserve original query string (minus our routing hints) on the forwarded URL
+    fwd_path = f"/{path}"
+
+    # Derive an auction-based routing hint: prefer the backend that most recently
+    # won a settled auction so that allocation decisions influence request dispatch.
+    priority_map = _auctioneer.allocation_priority()
+    priority_backend_id: Optional[str] = next(iter(priority_map), None)
+
+    status, resp_headers, resp_body = await _router.route(
+        path=fwd_path,
+        method=request.method,
+        headers=forward_headers,
+        body=body,
+        model_id=model_id,
+        vram_required_gib=vram_gib,
+        priority_backend_id=priority_backend_id,
+    )
+
+    # Strip hop-by-hop headers before returning
+    skip_headers = {"transfer-encoding", "connection", "keep-alive", "content-encoding"}
+    clean_headers = {k: v for k, v in resp_headers.items() if k.lower() not in skip_headers}
+
+    return Response(
+        content=resp_body,
+        status_code=status,
+        headers=clean_headers,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Auction endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post("/auction/credits", summary="Top up agent credits")
+async def auction_top_up(
+    agent_id: str = Query(..., description="Agent identifier"),
+    amount: int = Query(..., ge=1, description="Credits to add"),
+) -> JSONResponse:
+    """Register (or top up) an agent with the given credit amount."""
+    try:
+        result = _auctioneer.top_up(agent_id, amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return JSONResponse(result)
+
+
+@app.post("/auction/bid", summary="Place a quadratic bid")
+async def auction_bid(
+    agent_id: str = Query(..., description="Bidding agent identifier"),
+    resource_type: ResourceType = Query(..., description="Resource category"),
+    backend_id: str = Query(..., description="Target compute backend ID"),
+    votes: int = Query(..., ge=1, description="Quadratic votes to cast (cost = votes²)"),
+) -> JSONResponse:
+    """Submit a bid for a resource slot on the specified backend.
+
+    The credit cost of *votes* votes is ``votes²``.  Credits are reserved
+    at bid time and charged to the winner at settlement.
+    """
+    if backend_id not in BACKEND_MAP:
+        raise HTTPException(status_code=404, detail=f"Unknown backend: {backend_id!r}")
+    try:
+        auction_id, bid = _auctioneer.place_bid(agent_id, resource_type, backend_id, votes)
+    except InsufficientCreditsError as exc:
+        raise HTTPException(status_code=402, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return JSONResponse(
+        {
+            "auction_id": auction_id,
+            "agent_id": bid.agent_id,
+            "resource_type": bid.resource_type.value,
+            "backend_id": bid.backend_id,
+            "votes": bid.votes,
+            "credit_cost_if_winner": bid.credit_cost,
+        }
+    )
+
+
+@app.get("/auction/status", summary="Current auction state")
+async def auction_status() -> JSONResponse:
+    """Return all open auctions and per-agent credit balances."""
+    return JSONResponse(_auctioneer.status())
+
+
+@app.post("/auction/settle", summary="Settle one or all open auctions")
+async def auction_settle(
+    auction_id: Optional[str] = Query(
+        default=None, description="Settle a specific auction; omit to settle all"
+    ),
+) -> JSONResponse:
+    """Settle the specified auction (or all open auctions).
+
+    The Vickrey second-price rule is applied: the highest-vote bidder wins
+    but pays only ``second_highest_votes²`` credits.
+    """
+    try:
+        if auction_id is not None:
+            result = _auctioneer.settle_auction(auction_id)
+            results = [result]
+        else:
+            results = _auctioneer.settle_all()
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return JSONResponse(
+        {
+            "settled": [
+                {
+                    "auction_id": r.auction_id,
+                    "resource_type": r.resource_type.value,
+                    "backend_id": r.backend_id,
+                    "winner_agent_id": r.winner_agent_id,
+                    "winning_votes": r.winning_votes,
+                    "payment_credits": r.payment_credits,
+                    "bid_count": len(r.all_bids),
+                }
+                for r in results
+            ]
+        }
+    )
+
+
+@app.get("/auction/metrics", summary="Allocation fairness metrics")
+async def auction_metrics() -> JSONResponse:
+    """Return Gini coefficient and utilization statistics for all settled auctions."""
+    m = _auctioneer.metrics()
+    return JSONResponse(
+        {
+            "total_auctions": m.total_auctions,
+            "total_credits_spent": m.total_credits_spent,
+            "gini_coefficient": m.gini_coefficient,
+            "unique_winners": m.unique_winners,
+            "unique_winners_ratio": m.unique_winners_ratio,
+            "utilization_by_backend": m.utilization_by_backend,
+            "utilization_by_resource": m.utilization_by_resource,
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
+# Entrypoint
+# ---------------------------------------------------------------------------
+def run() -> None:  # pragma: no cover
     uvicorn.run(
         "gateway.main:app",
         host=settings.host,
@@ -261,3 +435,7 @@ if __name__ == "__main__":
         loop="asyncio",
         log_level="info",
     )
+
+
+if __name__ == "__main__":  # pragma: no cover
+    run()
