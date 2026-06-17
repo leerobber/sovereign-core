@@ -1,81 +1,189 @@
-# sovereign-core
+# SovereignCore
 
-Central hub for Sovereign Core — autonomous AI agent platform architecture, system-level epics, and cross-subsystem coordination.
+**The self-improving, locally-run AI agent operating system.**
+
+> Self-improving. Memory-protected. Ethics-gated. Zero cloud dependency.
+
+[![License](https://img.shields.io/badge/license-AGPL--3.0-green)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://python.org)
+[![Status](https://img.shields.io/badge/status-active%20development-brightgreen)]()
 
 ---
 
-## Research Tracks
+## What This Is
 
-- [RES-11: Google DeepMind SIMA — Cross-Environment Skill Transfer](docs/RES-11-cross-environment-skill-transfer.md) — transferable resource rebalancing skill across VRAM, RAM, CPU, and network bottlenecks.
+SovereignCore is a complete autonomous AI agent infrastructure that runs **entirely on your hardware**. It self-improves nightly through an evolutionary proposal system, protects its own memory against adversarial attacks, and never requires an internet connection or cloud API.
 
-## Heterogeneous Compute Gateway (KAN-86)
+**It is not a wrapper around GPT. It is not a chatbot framework. It is an operating system for autonomous AI.**
 
-A latency-aware, capability-aware HTTP gateway that orchestrates the tri-GPU inference mesh.
+---
 
-### Architecture
+## Key Systems
 
-| Device | Endpoint | Role |
-|---|---|---|
-| RTX 5050 | `localhost:8001` | Primary GPU inference (NVIDIA, 8 GiB VRAM) |
-| Radeon 780M | `localhost:8002` | Secondary GPU inference (AMD, 4 GiB VRAM) |
-| Ryzen 7 CPU | `localhost:8003` | CPU fallback |
-| **Gateway** | **`localhost:8000`** | **Request routing & load balancing** |
+### 🧠 KAIROS — Self-Improvement Engine
+A SAGE evolutionary loop: **Proposer → Critic → Verifier → Meta-Agent**
 
-### Features
+Every night at 3am:
+- 7 specialized agents generate improvement proposals in parallel
+- Proposals are peer-reviewed through group evolution
+- A 3-gate verification pipeline filters every proposal (Ethics → Sim → CLARA)
+- Elite proposals (score ≥ 0.85) are deployed autonomously
+- The Meta-Agent rewrites improvement rules every 3 cycles
 
-- **Latency-aware routing** — Exponential Moving Average (EMA) per backend; lower-latency backends are preferred within each device-type tier.
-- **Capability-aware routing** — model size / VRAM requirements are matched to the most suitable device (large models → NVIDIA GPU → AMD GPU → CPU).
-- **Health check & failover** — periodic `/health` probes with configurable failure/recovery thresholds (circuit-breaker pattern).
-- **Transparent failover** — if the preferred backend is unreachable, the request is automatically retried on the next candidate.
-- **Throughput benchmarking** — per-backend request counts, avg/p50/p95/p99 latency, and requests-per-second over a rolling window.
-- **VAULT-ready** — model-to-device assignment is hot-reloadable via the `ModelAssigner` API.
+**Result:** The system gets measurably smarter every night without human intervention.
 
-### Endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Gateway + backend health summary |
-| `GET` | `/metrics` | EMA latency readings + benchmark snapshot |
-| `GET` | `/benchmark` | Full per-backend throughput report |
-| `POST` | `/benchmark/reset` | Clear benchmark counters |
-| `*` | `/v1/{path}` | Proxy inference request to best backend |
-
-Query parameters on `/v1/*`:
-
-- `model_id` — model identifier (e.g. `deepseek-coder-33b`, `mistral-7b`) for capability-based routing.
-- `vram_gib` — explicit minimum VRAM requirement in GiB.
-
-### Quick Start
-
-```bash
-pip install -r requirements.txt
-python -m gateway.main          # starts on localhost:8000
+```
+Last 30 days:
+  Average elite proposals per cycle: 9/10
+  EnCompass backtrack retry success: 54.5%
+  Group evolution elite rate: 5/7 agents
+  Gate accuracy: 9/9 correct decisions
 ```
 
-Or via the installed script:
+---
 
-```bash
-pip install -e .
-sovereign-gateway
+### 🛡️ Iron Dome — Memory Protection
+5-layer indestructible memory security (research: arXiv:2601.05504, 2603.20357, 2604.02623)
+
+| Layer | What it does |
+|---|---|
+| Hash Chain Ledger | Every write SHA-256 chained — tampering breaks chain instantly |
+| Composite Trust Scoring | 5 orthogonal signals score every write before it touches memory |
+| Pattern Filter | 20 known injection attack patterns blocked at the gate |
+| k-Anonymity Retrieval | Untrusted agents can't probe memory structure |
+| Snapshot Vault | Full memory state sealed and verified every 24h |
+
+---
+
+### 🧬 GhostRecall — Never-Forget Memory Intelligence
+7-layer neuroscience-backed memory architecture (research: arXiv:2603.29023, 2511.22367, EM-LLM ICLR 2025)
+
+- **Thalamic Gateway** — routes by surprise, importance, and emotional valence
+- **Hippocampal Encoder** — one-shot episodic encoding with temporal + semantic graph
+- **Valence Engine** — Damasio somatic marker: emotional weight determines retrieval priority
+- **Surprise Replay Buffer** — SuRe-inspired nightly replay, EMA consolidation, no catastrophic forgetting
+- **Belief Hierarchy** — identity persistence with reconsolidation (learns vs. accumulates)
+- **Engram Vault** — "forgotten" memories preserved as traces, reactivated by semantic context
+
+**Nothing is ever truly deleted.**
+
+---
+
+### ⚖️ Ethics & Safety Gates
+5 independent systems that run before any self-modification deploys:
+
+1. **SEED-SET Ethics Gate** — 8 value axioms, 0.0 alignment = blocked
+2. **Sim-Before-Deploy** — simulates impact before production deployment
+3. **CLARA Formal Reasoning** — DARPA-inspired causal chain verification
+4. **Kill Switch** — immutable, cannot be modified by any proposal
+5. **Strange Loop** — identity verification, detects destabilization attempts
+
+---
+
+### 🖥️ Heterogeneous Compute Gateway
+Intelligent routing across local GPU cluster:
+
+```
+RTX 5050 (8GB VRAM)  → complex reasoning, large context, architecture tasks
+Radeon 780M (4GB)    → code generation, fast inference, debugging
+Ryzen 7 CPU          → health checks, simple tasks, fallback
 ```
 
-### Configuration
+---
 
-All settings are overridable via environment variables prefixed with `GATEWAY_`:
+## Quick Start
 
-| Variable | Default | Description |
+```bash
+git clone https://github.com/leerobber/sovereign-core
+cd sovereign-core
+cp .env.example .env
+# Edit .env with your local model endpoints
+
+# Start the gateway
+python gateway/main.py
+
+# Run a KAIROS evolution cycle
+python scripts/nightly_full_evolution.py
+
+# Run the full integration test suite
+python scripts/integration_test.py
+```
+
+**Requirements:**
+- Python 3.11+
+- Ollama with at least one local model (Qwen2.5, Llama, DeepSeek-Coder)
+- 8GB+ VRAM recommended (4GB minimum)
+
+---
+
+## Community Growth Guide
+
+If you're joining from Discussions and want to help grow this project, see:
+
+- **[docs/COMMUNITY_GROWTH.md](docs/COMMUNITY_GROWTH.md)** — what public setups to share, plus repository naming guidance for discoverability.
+
+---
+
+## Architecture Overview
+
+```
+SovereignCore
+├── KAIROS/          — Self-improvement engine (SAGE loop)
+│   ├── encompass_backtrack.py  — EnCompass retry on failure
+│   ├── group_evolution.py      — 7-agent parallel evolution
+│   └── federated_node_context.py — Multi-node routing intelligence
+├── memory_palace/   — Memory systems
+│   ├── iron_dome.py            — 5-layer memory protection
+│   ├── ghost_recall.py         — 7-layer neuroscience memory
+│   └── memory_palace.py        — Spatial memory architecture
+├── omega/           — Core agent systems
+│   ├── feynman/                — CLARA formal reasoning + knowledge graph
+│   ├── spawner/                — Dynamic agent scheduling
+│   ├── ghost_protocol/         — Security (kill switch, stealth, veil)
+│   └── twin_engine/            — Id/Ego dual processing loop
+└── gateway/         — Heterogeneous compute router
+```
+
+---
+
+## Commercial Use
+
+SovereignCore is licensed under **AGPL-3.0**.
+
+For commercial deployments, enterprise support, and SLA-backed managed instances, see **[SovereignNation](https://sovereignnation.ai)** — the commercial platform built on this stack.
+
+| Tier | Price | Features |
 |---|---|---|
-| `GATEWAY_HOST` | `0.0.0.0` | Bind host |
-| `GATEWAY_PORT` | `8000` | Bind port |
-| `GATEWAY_HEALTH_CHECK_INTERVAL` | `5.0` | Seconds between health probes |
-| `GATEWAY_BACKEND_TIMEOUT` | `30.0` | Per-request forwarding timeout (s) |
-| `GATEWAY_FAILURE_THRESHOLD` | `3` | Failures before marking backend unhealthy |
-| `GATEWAY_RECOVERY_THRESHOLD` | `2` | Successes needed to restore a backend |
-| `GATEWAY_LATENCY_EMA_ALPHA` | `0.2` | EMA smoothing factor (0–1) |
+| Developer | $99/mo | SDK, 1 agent, community support |
+| Team | $499/mo | 5 agents, Iron Dome, GhostRecall, API |
+| Professional | $1,499/mo | Unlimited agents, full KAIROS, priority support |
+| Enterprise | Custom | Dedicated deployment, SLA, custom integration |
 
-### Running Tests
+---
 
-```bash
-pip install -r requirements.txt
-python -m pytest tests/ -v
-```
+## Research Citations
+
+This project implements or is inspired by:
+
+- arXiv:2601.05504 — Memory Poisoning Attack and Defense on LLM-Agents
+- arXiv:2603.20357 — Memory Poisoning and Secure Multi-Agent Systems
+- arXiv:2604.02623 — Poison Once, Exploit Forever (eTAMP)
+- arXiv:2603.29023 — Human-Like Lifelong Memory: Neuroscience-Grounded Architecture
+- arXiv:2511.22367 — SuRe: Surprise-Driven Prioritised Replay
+- arXiv:2601.09113 — The AI Hippocampus: How Far are We From Human Memory?
+- EM-LLM (ICLR 2025) — Human-Inspired Episodic Memory for Infinite Context LLMs
+- Google Titans — Persistent + Long-Term Memory Architecture
+- eLifeSciences:109530 — Neural Traces of Forgotten Memories Persist
+
+---
+
+## Built By
+
+**Robert "Terry" Lee Jr.**
+Self-taught systems architect. Fabrication worker by day. Sovereign AI builder by night.
+
+[GitHub](https://github.com/leerobber) | [SovereignNation](https://sovereignnation.ai)
+
+---
+
+*"The infrastructure for AI that thinks, learns, and evolves — on your terms."*

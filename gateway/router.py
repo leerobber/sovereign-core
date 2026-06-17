@@ -102,7 +102,7 @@ class GatewayRouter:
     # ------------------------------------------------------------------
     async def start(self) -> None:
         connector = aiohttp.TCPConnector(limit=100)
-        timeout = aiohttp.ClientTimeout(total=self._cfg.backend_timeout)
+        timeout = aiohttp.ClientTimeout(total=120, connect=10)
         self._session = aiohttp.ClientSession(connector=connector, timeout=timeout)
 
     async def stop(self) -> None:
@@ -258,14 +258,14 @@ class GatewayRouter:
 
         except asyncio.TimeoutError:
             latency = time.monotonic() - start
-            self._latency.record(backend.id, self._cfg.unhealthy_latency_penalty)
+            self._latency.record(backend.id, 10.0)
             self._benchmark.record(backend.id, latency, success=False)
             logger.warning("Timeout reaching backend %s after %.1fs", backend.id, latency)
             return 0, {}, b""
 
         except aiohttp.ClientError as exc:
             latency = time.monotonic() - start
-            self._latency.record(backend.id, self._cfg.unhealthy_latency_penalty)
+            self._latency.record(backend.id, 10.0)
             self._benchmark.record(backend.id, latency, success=False)
             logger.warning("ClientError reaching backend %s: %s", backend.id, exc)
             return 0, {}, b""

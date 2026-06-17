@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sovereign Core — Command Interface</title>
+<style>
+  :root {
+    --bg: #030712;
+    --surface: #0d1117;
+    --surface2: #161b22;
+    --border: #21262d;
+    --ghost: #a855f7;
+    --ghost2: #7c3aed;
+    --nvidia: #76b900;
+    --amd: #ed1c24;
+    --cpu: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --cyan: #06b6d4;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --glow: 0 0 20px rgba(168,85,247,0.3);
+    --glow-sm: 0 0 8px rgba(168,85,247,0.2);
+    --font: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(168,85,247,0.015) 2px, rgba(168,85,247,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--glow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--ghost), var(--ghost2));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: var(--glow);
+    animation: pulse-logo 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-logo {
+    0%, 100% { box-shadow: 0 0 8px rgba(168,85,247,0.4); }
+    50% { box-shadow: 0 0 24px rgba(168,85,247,0.8); }
+  }
+
+  .logo-text h1 { font-size: 16px; color: var(--ghost); letter-spacing: 2px; }
+  .logo-text p  { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  .ws-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .ws-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    transition: background 0.3s;
+  }
+
+  .ws-dot.connected { background: var(--green); animation: blink 2s infinite; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .uptime { font-size: 11px; color: var(--muted); }
+
+  /* Layout */
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
+    height: calc(100vh - 65px);
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-row: 1 / 3;
+  }
+
+  /* Content area */
+  .content {
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ghost);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-body { padding: 14px; }
+
+  /* Backend cards */
+  .backend-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .backend-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .backend-card.nvidia::before { background: var(--nvidia); }
+  .backend-card.amd::before    { background: var(--amd); }
+  .backend-card.cpu::before    { background: var(--cpu); }
+
+  .backend-card.healthy {
+    border-color: rgba(34,197,94,0.3);
+    box-shadow: 0 0 10px rgba(34,197,94,0.05);
+  }
+
+  .backend-card.unhealthy {
+    border-color: rgba(239,68,68,0.3);
+    opacity: 0.7;
+  }
+
+  .backend-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .backend-name { font-size: 12px; font-weight: bold; }
+  .backend-model { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .status-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+
+  .status-badge.healthy  { background: rgba(34,197,94,0.15);  color: var(--green); }
+  .status-badge.unhealthy{ background: rgba(239,68,68,0.15);  color: var(--red); }
+  .status-badge.unknown  { background: rgba(139,148,158,0.15); color: var(--muted); }
+
+  .backend-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .stat { font-size: 10px; }
+  .stat-label { color: var(--muted); }
+  .stat-value { color: var(--text); font-weight: bold; }
+
+  /* Latency bar */
+  .latency-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .latency-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    background: linear-gradient(90deg, var(--green), var(--yellow));
+  }
+
+  /* Event stream */
+  .event-stream {
+    height: 220px;
+    overflow-y: auto;
+    font-size: 11px;
+    font-family: var(--font);
+    padding: 8px;
+    background: #010409;
+    border-radius: 4px;
+  }
+
+  .event-stream::-webkit-scrollbar { width: 4px; }
+  .event-stream::-webkit-scrollbar-track { background: transparent; }
+  .event-stream::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .event-line {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(33,38,45,0.5);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .event-ts   { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  .event-type { flex-shrink: 0; width: 130px; }
+  .event-data { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .evt-health    { color: var(--green); }
+  .evt-kairos    { color: var(--ghost); }
+  .evt-inference { color: var(--cyan); }
+  .evt-auction   { color: var(--yellow); }
+  .evt-iron_dome { color: var(--red); }
+  .evt-default   { color: var(--muted); }
+
+  /* Metrics grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .metric-card:hover { border-color: var(--ghost); box-shadow: var(--glow-sm); }
+
+  .metric-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--ghost);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .metric-delta { font-size: 10px; margin-top: 4px; }
+  .metric-delta.up   { color: var(--green); }
+  .metric-delta.down { color: var(--red); }
+
+  /* Latency graph */
+  .graph-container {
+    position: relative;
+    height: 120px;
+    background: #010409;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  canvas#latency-chart {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* KAIROS panel */
+  .kairos-panel {
+    background: var(--surface2);
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .kairos-cycle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .kairos-cycle:last-child { border-bottom: none; }
+
+  .cycle-score {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .cycle-score.pass    { background: rgba(34,197,94,0.15);  color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .cycle-score.partial { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+  .cycle-score.fail    { background: rgba(239,68,68,0.15);  color: var(--red);    border: 1px solid rgba(239,68,68,0.3); }
+
+  .cycle-info { flex: 1; min-width: 0; }
+  .cycle-task { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cycle-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* KAIROS trigger panel */
+  .sage-trigger {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .sage-input {
+    width: 100%;
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 8px;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .sage-input:focus { border-color: var(--ghost); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-ghost {
+    background: linear-gradient(135deg, var(--ghost), var(--ghost2));
+    color: white;
+    box-shadow: 0 0 12px rgba(168,85,247,0.3);
+  }
+
+  .btn-ghost:hover { box-shadow: 0 0 20px rgba(168,85,247,0.5); transform: translateY(-1px); }
+  .btn-ghost:active { transform: translateY(0); }
+  .btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--ghost);
+    border: 1px solid var(--ghost);
+  }
+
+  .btn-outline:hover { background: rgba(168,85,247,0.1); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; padding: 0 14px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 10px 16px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active { color: var(--ghost); border-bottom-color: var(--ghost); }
+  .tab:hover  { color: var(--text); }
+
+  .tab-content { display: none; padding: 16px; }
+  .tab-content.active { display: block; }
+
+  /* Agent leaderboard */
+  .agent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .agent-row:hover { background: var(--surface2); }
+
+  .agent-rank { width: 24px; text-align: center; font-size: 11px; color: var(--muted); }
+  .agent-id   { flex: 1; font-size: 11px; color: var(--cyan); font-family: var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agent-tier {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .tier-elite     { background: rgba(168,85,247,0.15); color: var(--ghost); }
+  .tier-next_elite{ background: rgba(168,85,247,0.3);  color: #d8b4fe; }
+  .tier-standard  { background: rgba(139,148,158,0.1); color: var(--muted); }
+
+  .agent-score { font-size: 12px; font-weight: bold; width: 40px; text-align: right; }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9998;
+  }
+
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    max-width: 320px;
+    animation: slide-in 0.3s ease;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.warning { border-left: 3px solid var(--yellow); }
+  .toast.error   { border-left: 3px solid var(--red); }
+  .toast.info    { border-left: 3px solid var(--ghost); }
+
+  @keyframes slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+  }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(168,85,247,0.3);
+    border-top-color: var(--ghost);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Responsive adjustments */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { grid-row: auto; max-height: 300px; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">👻</div>
+    <div class="logo-text">
+      <h1>SOVEREIGN CORE</h1>
+      <p>HETEROGENEOUS COMPUTE GATEWAY · KAIROS AGENT ECONOMY</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="ws-indicator">
+      <div class="ws-dot" id="ws-dot"></div>
+      <span id="ws-status">DISCONNECTED</span>
+    </div>
+    <div class="uptime" id="uptime-display">UPTIME: --</div>
+    <span style="font-size:10px;color:var(--muted)">SovereignNation LLC</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <div class="panel-title">⚡ COMPUTE MESH</div>
+
+    <!-- RTX 5050 -->
+    <div class="backend-card nvidia" id="card-rtx5050">
+      <div class="backend-header">
+        <div>
+          <div class="backend-name">RTX 5050</div>
+          <div class="backend-model">gemma3:12b · 8GB VRAM</div>
+        </div>
+        <span class="status-badge unknown" id="badge-rtx5050">UNKNOWN</span>
+      </div>
+      <div class="backend-stats">
+        <div class="stat"><div class="stat-label">LATENCY</div><div class="stat-value" id="lat-rtx5050">--ms</div></div>
+        <div class="stat"><div class="stat-label">REQUESTS</div><div class="stat-value" id="req-rtx5050">0</div></div>
+        <div class="stat"><div class="stat-label">FAILURES</div><div class="stat-value" id="fail-rtx5050">0</div></div>
+        <div class="stat"><div class="stat-label">ROLE</div><div class="stat-value" style="color:var(--nvidia)">PRIMARY</div></div>
+      </div>
+      <div class="latency-bar"><div class="latency-fill" id="latbar-rtx5050" style="width:0%"></div></div>
+    </div>
+
+    <!-- Radeon 780M -->
+    <div class="backend-card amd" id="card-radeon780m">
+      <div class="backend-header">
+        <div>
+          <div class="backend-name">RADEON 780M</div>
+          <div class="backend-model">qwen2.5:7b · 4GB VRAM</div>
+        </div>
+        <span class="status-badge unknown" id="badge-radeon780m">UNKNOWN</span>
+      </div>
+      <div class="backend-stats">
+        <div class="stat"><div class="stat-label">LATENCY</div><div class="stat-value" id="lat-radeon780m">--ms</div></div>
+        <div class="stat"><div class="stat-label">REQUESTS</div><div class="stat-value" id="req-radeon780m">0</div></div>
+        <div class="stat"><div class="stat-label">FAILURES</div><div class="stat-value" id="fail-radeon780m">0</div></div>
+        <div class="stat"><div class="stat-label">ROLE</div><div class="stat-value" style="color:var(--amd)">VERIFIER</div></div>
+      </div>
+      <div class="latency-bar"><div class="latency-fill" id="latbar-radeon780m" style="width:0%"></div></div>
+    </div>
+
+    <!-- Ryzen 7 CPU -->
+    <div class="backend-card cpu" id="card-ryzen7cpu">
+      <div class="backend-header">
+        <div>
+          <div class="backend-name">RYZEN 7 CPU</div>
+          <div class="backend-model">llama3.2:3b · 15.3GB RAM</div>
+        </div>
+        <span class="status-badge unknown" id="badge-ryzen7cpu">UNKNOWN</span>
+      </div>
+      <div class="backend-stats">
+        <div class="stat"><div class="stat-label">LATENCY</div><div class="stat-value" id="lat-ryzen7cpu">--ms</div></div>
+        <div class="stat"><div class="stat-label">REQUESTS</div><div class="stat-value" id="req-ryzen7cpu">0</div></div>
+        <div class="stat"><div class="stat-label">FAILURES</div><div class="stat-value" id="fail-ryzen7cpu">0</div></div>
+        <div class="stat"><div class="stat-label">ROLE</div><div class="stat-value" style="color:var(--cpu)">FALLBACK</div></div>
+      </div>
+      <div class="latency-bar"><div class="latency-fill" id="latbar-ryzen7cpu" style="width:0%"></div></div>
+    </div>
+
+    <!-- KAIROS Trigger -->
+    <div>
+      <div class="panel-title" style="margin-bottom:10px;">⚡ TRIGGER KAIROS</div>
+      <div class="sage-trigger">
+        <textarea class="sage-input" id="sage-task" placeholder="Enter optimization task...&#10;e.g. Reduce inference latency by 20%"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <button class="btn btn-ghost" id="btn-sage" onclick="triggerSAGE()" style="flex:1">
+            <span id="sage-btn-text">▶ RUN SAGE</span>
+          </button>
+          <input type="number" id="sage-cycles" value="3" min="1" max="10"
+            style="width:48px;background:#010409;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font);padding:6px;text-align:center;font-size:12px;">
+        </div>
+        <div id="sage-result" style="margin-top:8px;font-size:10px;color:var(--muted);display:none;"></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="content">
+
+    <!-- Metrics row -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value" id="m-total-req">0</div>
+        <div class="metric-label">Total Requests</div>
+        <div class="metric-delta up" id="m-req-delta">+0 /min</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="m-healthy">0/3</div>
+        <div class="metric-label">Healthy Backends</div>
+        <div class="metric-delta" id="m-health-status">INITIALIZING</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="m-kairos">0</div>
+        <div class="metric-label">KAIROS Cycles</div>
+        <div class="metric-delta up" id="m-elite-count">0 elites</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="m-avg-lat">--</div>
+        <div class="metric-label">Avg Latency (ms)</div>
+        <div class="metric-delta" id="m-lat-trend">--</div>
+      </div>
+    </div>
+
+    <!-- Latency graph -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📈 LATENCY TIMELINE</span>
+        <span style="font-size:10px;color:var(--muted)">Last 60 events</span>
+      </div>
+      <div class="panel-body" style="padding:8px;">
+        <div class="graph-container">
+          <canvas id="latency-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs: Events / KAIROS / Agents -->
+    <div class="panel" style="flex:1;display:flex;flex-direction:column;">
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('events')">⚡ EVENT STREAM</div>
+        <div class="tab" onclick="showTab('kairos')">🧬 KAIROS CYCLES</div>
+        <div class="tab" onclick="showTab('agents')">🤖 AGENT LEADERBOARD</div>
+        <div class="tab" onclick="showTab('auction')">💰 AUCTION STATE</div>
+      </div>
+
+      <!-- Event Stream -->
+      <div class="tab-content active" id="tab-events">
+        <div class="event-stream" id="event-stream"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <button class="btn btn-outline" onclick="clearEvents()" style="font-size:10px;padding:4px 10px;">CLEAR</button>
+          <label style="font-size:10px;color:var(--muted);display:flex;gap:4px;align-items:center;">
+            <input type="checkbox" id="auto-scroll" checked> AUTO-SCROLL
+          </label>
+          <span style="font-size:10px;color:var(--muted)" id="event-count">0 events</span>
+        </div>
+      </div>
+
+      <!-- KAIROS Cycles -->
+      <div class="tab-content" id="tab-kairos">
+        <div id="kairos-cycles-list" style="max-height:300px;overflow-y:auto;">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:40px;">
+            No KAIROS cycles yet — trigger one from the sidebar
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Leaderboard -->
+      <div class="tab-content" id="tab-agents">
+        <div id="agent-list" style="max-height:300px;overflow-y:auto;">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:40px;">
+            Loading agents...
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="refreshAgents()" style="margin-top:10px;font-size:10px;padding:4px 10px;">↻ REFRESH</button>
+      </div>
+
+      <!-- Auction State -->
+      <div class="tab-content" id="tab-auction">
+        <div id="auction-state">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:40px;">
+            Waiting for auction events...
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  ws: null,
+  connected: false,
+  eventCount: 0,
+  totalRequests: 0,
+  kairosCycles: [],
+  eliteCount: 0,
+  latencyHistory: [],
+  backendStats: {},
+  reconnectDelay: 1000,
+  bootTime: Date.now(),
+};
+
+const GATEWAY = window.location.origin;
+const WS_URL  = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+              + '//' + window.location.host + '/ws/events';
+
+// ── WebSocket ──────────────────────────────────────────────────────────────
+function connectWS() {
+  try {
+    state.ws = new WebSocket(WS_URL);
+
+    state.ws.onopen = () => {
+      state.connected = true;
+      state.reconnectDelay = 1000;
+      document.getElementById('ws-dot').className = 'ws-dot connected';
+      document.getElementById('ws-status').textContent = 'LIVE';
+      toast('WebSocket connected to Sovereign Core', 'success');
+      // Request initial health snapshot
+      state.ws.send('ping');
+    };
+
+    state.ws.onmessage = (e) => {
+      try { handleEvent(JSON.parse(e.data)); }
+      catch(err) { console.warn('WS parse error', err); }
+    };
+
+    state.ws.onclose = () => {
+      state.connected = false;
+      document.getElementById('ws-dot').className = 'ws-dot';
+      document.getElementById('ws-status').textContent = 'RECONNECTING...';
+      setTimeout(connectWS, state.reconnectDelay);
+      state.reconnectDelay = Math.min(state.reconnectDelay * 1.5, 15000);
+    };
+
+    state.ws.onerror = () => {
+      document.getElementById('ws-status').textContent = 'ERROR';
+    };
+  } catch(e) {
+    setTimeout(connectWS, state.reconnectDelay);
+  }
+}
+
+// ── Event handler ──────────────────────────────────────────────────────────
+function handleEvent(evt) {
+  const type = evt.type || 'unknown';
+  const data = evt.data || {};
+  const ts   = evt.ts ? new Date(evt.ts * 1000) : new Date();
+
+  // Add to event stream
+  addEventLine(ts, type, data);
+
+  // Route to specific handlers
+  if (type === 'pong' || type === 'health_snapshot') {
+    handleHealthSnapshot(data);
+  } else if (type === 'backend_health') {
+    updateBackendCard(data.backend_id, data.status, data);
+  } else if (type === 'inference_complete') {
+    handleInference(data);
+  } else if (type === 'kairos_cycle') {
+    handleKairosCycle(data);
+  } else if (type === 'auction_result') {
+    handleAuction(data);
+  } else if (type === 'iron_dome_block') {
+    toast('⚠ Iron Dome blocked a request: ' + (data.reason || ''), 'error');
+  }
+}
+
+// ── Health snapshot ────────────────────────────────────────────────────────
+function handleHealthSnapshot(data) {
+  if (!data || !data.backends) return;
+  let healthy = 0;
+  data.backends.forEach(b => {
+    updateBackendCard(b.id || b.backend_id, b.status, b);
+    if (b.status === 'healthy') healthy++;
+  });
+  document.getElementById('m-healthy').textContent = healthy + '/3';
+  document.getElementById('m-health-status').textContent =
+    healthy === 3 ? '✓ ALL ONLINE' : healthy + ' ONLINE';
+  document.getElementById('m-health-status').className =
+    'metric-delta ' + (healthy === 3 ? 'up' : 'down');
+}
+
+function updateBackendCard(id, status, data) {
+  if (!id) return;
+  const badge = document.getElementById('badge-' + id);
+  const card  = document.getElementById('card-' + id);
+  const latEl = document.getElementById('lat-' + id);
+  const latBar= document.getElementById('latbar-' + id);
+
+  if (!badge || !card) return;
+
+  badge.textContent = status.toUpperCase();
+  badge.className = 'status-badge ' + status;
+  card.className = card.className.replace(/(healthy|unhealthy|unknown)/g, '') + ' ' + status;
+
+  if (data.last_latency_ms || data.latency_ms) {
+    const lat = data.last_latency_ms || data.latency_ms;
+    latEl.textContent = Math.round(lat) + 'ms';
+    // Bar: 0ms=0%, 500ms=100%
+    latBar.style.width = Math.min(100, (lat / 500) * 100) + '%';
+    latBar.style.background = lat < 150 ? 'var(--green)' :
+                               lat < 350 ? 'var(--yellow)' : 'var(--red)';
+  }
+
+  if (data.consecutive_failures !== undefined)
+    document.getElementById('fail-' + id).textContent = data.consecutive_failures;
+}
+
+// ── Inference ──────────────────────────────────────────────────────────────
+function handleInference(data) {
+  state.totalRequests++;
+  document.getElementById('m-total-req').textContent = state.totalRequests;
+
+  const lat = data.latency_ms || 0;
+  state.latencyHistory.push({ t: Date.now(), v: lat, backend: data.backend_id });
+  if (state.latencyHistory.length > 60) state.latencyHistory.shift();
+  drawLatencyChart();
+
+  // Update avg
+  const avg = state.latencyHistory.reduce((s, x) => s + x.v, 0) / state.latencyHistory.length;
+  document.getElementById('m-avg-lat').textContent = Math.round(avg);
+
+  // Update backend req count
+  const reqEl = document.getElementById('req-' + data.backend_id);
+  if (reqEl) reqEl.textContent = (parseInt(reqEl.textContent) || 0) + 1;
+}
+
+// ── KAIROS ─────────────────────────────────────────────────────────────────
+function handleKairosCycle(data) {
+  state.kairosCycles.unshift(data);
+  if (data.elite_promoted) {
+    state.eliteCount++;
+    document.getElementById('m-elite-count').textContent = state.eliteCount + ' elites';
+    toast('🧬 Elite agent promoted! Score: ' + (data.score || 0).toFixed(2), 'info');
+  }
+  state.kairosCycles = state.kairosCycles.slice(0, 20);
+  document.getElementById('m-kairos').textContent = state.kairosCycles.length;
+  renderKairosCycles();
+}
+
+function renderKairosCycles() {
+  const el = document.getElementById('kairos-cycles-list');
+  if (!state.kairosCycles.length) return;
+  el.innerHTML = state.kairosCycles.map(c => {
+    const score = c.score || 0;
+    const grade = score >= 0.85 ? 'pass' : score >= 0.70 ? 'partial' : 'fail';
+    const scoreLabel = (score * 100).toFixed(0) + '%';
+    return `<div class="kairos-cycle">
+      <div class="cycle-score ${grade}">${scoreLabel}</div>
+      <div class="cycle-info">
+        <div class="cycle-task">${c.task || 'Unknown task'}</div>
+        <div class="cycle-meta">
+          ${c.agent_id ? c.agent_id.substring(0,8) + '...' : '--'} ·
+          ${c.verification_verdict || 'unverified'} ·
+          ${c.elite_promoted ? '⭐ ELITE' : 'standard'} ·
+          ${c.latency_ms ? Math.round(c.latency_ms) + 'ms' : '--'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Auction ────────────────────────────────────────────────────────────────
+function handleAuction(data) {
+  document.getElementById('auction-state').innerHTML = `
+    <div style="font-size:11px;">
+      <div style="color:var(--yellow);font-weight:bold;margin-bottom:8px;">💰 LATEST AUCTION RESULT</div>
+      <div>Winner: <span style="color:var(--text)">${data.winner_id || '--'}</span></div>
+      <div>Resource: <span style="color:var(--text)">${data.resource_type || '--'}</span></div>
+      <div>Winning Votes: <span style="color:var(--text)">${data.winning_votes || '--'}</span></div>
+      <div>Payment: <span style="color:var(--text)">${data.payment_credits || '--'} credits</span></div>
+      <div style="margin-top:8px;color:var(--muted);font-size:10px;">
+        Gini coefficient: ${data.gini !== undefined ? data.gini.toFixed(3) : '--'}
+      </div>
+    </div>`;
+}
+
+// ── Event stream ───────────────────────────────────────────────────────────
+function addEventLine(ts, type, data) {
+  state.eventCount++;
+  document.getElementById('event-count').textContent = state.eventCount + ' events';
+
+  const typeColor = {
+    backend_health: 'evt-health',
+    kairos_cycle:   'evt-kairos',
+    inference_complete: 'evt-inference',
+    auction_result: 'evt-auction',
+    iron_dome_block:'evt-iron_dome',
+  }[type] || 'evt-default';
+
+  const summary = typeof data === 'object'
+    ? Object.entries(data).slice(0,3).map(([k,v]) =>
+        `${k}=${typeof v === 'number' ? v.toFixed ? v.toFixed(2) : v : String(v).substring(0,30)}`
+      ).join(' ')
+    : String(data);
+
+  const line = document.createElement('div');
+  line.className = 'event-line';
+  line.innerHTML = `
+    <span class="event-ts">${ts.toTimeString().substring(0,8)}</span>
+    <span class="event-type ${typeColor}">${type}</span>
+    <span class="event-data">${summary}</span>`;
+
+  const stream = document.getElementById('event-stream');
+  stream.appendChild(line);
+
+  // Keep max 200 lines
+  while (stream.children.length > 200) stream.removeChild(stream.firstChild);
+
+  if (document.getElementById('auto-scroll').checked)
+    stream.scrollTop = stream.scrollHeight;
+}
+
+function clearEvents() {
+  document.getElementById('event-stream').innerHTML = '';
+  state.eventCount = 0;
+  document.getElementById('event-count').textContent = '0 events';
+}
+
+// ── Latency chart ──────────────────────────────────────────────────────────
+function drawLatencyChart() {
+  const canvas = document.getElementById('latency-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width  = canvas.parentElement.offsetWidth;
+  const H = canvas.height = 120;
+  ctx.clearRect(0, 0, W, H);
+
+  const data = state.latencyHistory;
+  if (data.length < 2) return;
+
+  const max = Math.max(...data.map(d => d.v), 100);
+  const step = W / (data.length - 1);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(33,38,45,0.8)';
+  ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75].forEach(p => {
+    const y = H - p * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(139,148,158,0.5)';
+    ctx.font = '9px monospace';
+    ctx.fillText(Math.round(max * p) + 'ms', 4, y - 2);
+  });
+
+  // Line
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, '#22c55e');
+  grad.addColorStop(0.6, '#a855f7');
+  grad.addColorStop(1, '#06b6d4');
+
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = i * step;
+    const y = H - (d.v / max) * H * 0.85;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill
+  const fillGrad = ctx.createLinearGradient(0, 0, 0, H);
+  fillGrad.addColorStop(0, 'rgba(168,85,247,0.15)');
+  fillGrad.addColorStop(1, 'rgba(168,85,247,0)');
+  ctx.fillStyle = fillGrad;
+  ctx.lineTo((data.length-1)*step, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fill();
+
+  // Latest point dot
+  const last = data[data.length-1];
+  const lx = (data.length-1)*step;
+  const ly = H - (last.v / max) * H * 0.85;
+  ctx.beginPath();
+  ctx.arc(lx, ly, 4, 0, Math.PI*2);
+  ctx.fillStyle = '#a855f7';
+  ctx.fill();
+}
+
+// ── SAGE trigger ───────────────────────────────────────────────────────────
+async function triggerSAGE() {
+  const task = document.getElementById('sage-task').value.trim();
+  const cycles = parseInt(document.getElementById('sage-cycles').value) || 3;
+  if (!task) { toast('Enter a task for KAIROS to optimize', 'warning'); return; }
+
+  const btn = document.getElementById('btn-sage');
+  const btnText = document.getElementById('sage-btn-text');
+  const result = document.getElementById('sage-result');
+
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span> RUNNING...';
+  result.style.display = 'block';
+  result.textContent = 'SAGE loop started — waiting for response...';
+  result.style.color = 'var(--muted)';
+
+  try {
+    const resp = await fetch('/kairos/sage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, max_cycles: cycles }),
+    });
+    const data = await resp.json();
+
+    if (resp.ok) {
+      const score = (data.score || 0) * 100;
+      const grade = score >= 85 ? 'var(--green)' : score >= 70 ? 'var(--yellow)' : 'var(--red)';
+      result.innerHTML = `Score: <span style="color:${grade};font-weight:bold">${score.toFixed(1)}%</span> · ${data.verification_verdict || 'unverified'} · ${data.elite_promoted ? '⭐ ELITE' : 'standard'}`;
+      result.style.color = 'var(--text)';
+      handleKairosCycle(data);
+      toast('KAIROS cycle complete — score: ' + score.toFixed(1) + '%', data.elite_promoted ? 'success' : 'info');
+      showTab('kairos');
+    } else {
+      result.textContent = 'Error: ' + (data.detail || JSON.stringify(data));
+      result.style.color = 'var(--red)';
+      toast('KAIROS error: ' + (data.detail || 'unknown'), 'error');
+    }
+  } catch(e) {
+    result.textContent = 'Request failed: ' + e.message;
+    result.style.color = 'var(--red)';
+    toast('KAIROS request failed — is gateway running?', 'error');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '▶ RUN SAGE';
+  }
+}
+
+// ── Agent leaderboard ──────────────────────────────────────────────────────
+async function refreshAgents() {
+  try {
+    const resp = await fetch('/kairos/leaderboard');
+    const data = await resp.json();
+    const agents = data.agents || data || [];
+    const el = document.getElementById('agent-list');
+    if (!agents.length) {
+      el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px;">No agents yet</div>';
+      return;
+    }
+    el.innerHTML = agents.map((a, i) => `
+      <div class="agent-row">
+        <div class="agent-rank">${i+1}</div>
+        <div class="agent-id">${a.agent_id || '--'}</div>
+        <div><span class="agent-tier tier-${a.tier || 'standard'}">${a.tier || 'standard'}</span></div>
+        <div class="agent-score" style="color:${(a.score||0)>=0.85?'var(--green)':(a.score||0)>=0.70?'var(--yellow)':'var(--muted)'}">
+          ${((a.score||0)*100).toFixed(0)}%
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('agent-list').innerHTML =
+      '<div style="color:var(--red);text-align:center;padding:20px;">Failed to load agents</div>';
+  }
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['events','kairos','agents','auction'];
+    t.className = 'tab' + (names[i] === name ? ' active' : '');
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.className = 'tab-content');
+  document.getElementById('tab-' + name).className = 'tab-content active';
+  if (name === 'agents') refreshAgents();
+}
+
+// ── Toast notifications ────────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icon = {success:'✓', warning:'⚠', error:'✗', info:'ℹ'}[type] || 'ℹ';
+  el.innerHTML = `<span style="flex-shrink:0">${icon}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── Health polling (REST fallback) ─────────────────────────────────────────
+async function pollHealth() {
+  try {
+    const resp = await fetch('/health');
+    const data = await resp.json();
+    if (data.backends) handleHealthSnapshot(data);
+  } catch(e) {}
+}
+
+// ── Uptime ─────────────────────────────────────────────────────────────────
+function updateUptime() {
+  const s = Math.floor((Date.now() - state.bootTime) / 1000);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  document.getElementById('uptime-display').textContent =
+    'UPTIME: ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+connectWS();
+pollHealth();
+setInterval(pollHealth, 10000);
+setInterval(updateUptime, 1000);
+setInterval(drawLatencyChart, 5000);
+refreshAgents();
+</script>
+</body>
+</html>
