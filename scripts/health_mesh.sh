@@ -33,3 +33,8 @@ check "Ollama"           "http://localhost:11434/api/version"
 check "sovereign-core"   "${SOVEREIGN_URL}/health"
 check "GH05T3 backend"   "http://${GH05T3_HOST}:8001/api/health"
 check "GH05T3 gateway"   "http://${GH05T3_HOST}:8002/health"
+echo "---"
+if curl -sf --max-time 3 "${SOVEREIGN_URL}/v1/repos" >/tmp/mesh_repos.json 2>/dev/null; then
+  echo "Repo registry:"
+  python3 -m json.tool /tmp/mesh_repos.json 2>/dev/null | head -40 || cat /tmp/mesh_repos.json
+fi

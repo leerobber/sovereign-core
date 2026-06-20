@@ -188,6 +188,29 @@ def create_app() -> FastAPI:
             "version": "2.1.0",
         }
 
+    @app.get("/v1/repos", tags=["mesh"])
+    async def mesh_repos() -> dict:
+        """Probe sovereign ecosystem repos (GH05T3 dual-runtime aware)."""
+        try:
+            from src.orchestration.registry import RepoRegistry
+        except ImportError:
+            from orchestration.registry import RepoRegistry
+        reg = RepoRegistry()
+        statuses = await reg.probe_all()
+        return {
+            "runtime": __import__("os").environ.get("GH05T3_RUNTIME", "wsl"),
+            "repos": [
+                {
+                    "name": s.name,
+                    "role": s.role,
+                    "healthy": s.healthy,
+                    "detail": s.detail,
+                    "ports": s.ports,
+                }
+                for s in statuses
+            ],
+        }
+
     @app.get("/metrics", tags=["core"])
     async def metrics() -> PlainTextResponse:
         return PlainTextResponse(

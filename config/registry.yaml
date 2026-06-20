@@ -1,0 +1,30 @@
+# Sovereign ecosystem registry — documentation + /v1/repos probe targets.
+# GH05T3 dual runtime: set GH05T3_RUNTIME=wsl (default) or windows.
+
+sovereign_ecosystem:
+  sovereign_core:
+    role: "Inference gateway and request router"
+    port: 8000
+    health_path: "/health"
+
+  gh05t3:
+    role: "Agent backend, pipeline, and MCP server"
+    runtime_default: "wsl"
+    runtime_override_env: "GH05T3_RUNTIME"
+    gateway_url_env: "GH05T3_GATEWAY_URL"
+    ports:
+      backend: 8001
+      gateway_v3: 8002
+      supervisor: 8090
+    notes: >
+      WSL mesh (default): probe http://localhost:8002 from WSL.
+      Windows-native: GH05T3_RUNTIME=windows uses WSL default-gateway IP.
+      Never run WSL gh05t3-start AND Windows supervisor on the same ports.
+
+  agent_economy:
+    role: "Agent credit economy"
+    port: 8081
+
+  local_ai_mesh:
+    role: "Multi-model inference mesh"
+    port: 8011
