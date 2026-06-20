@@ -10,8 +10,8 @@ sovereign_ecosystem:
     role: "Inference gateway and request router"
     windows_path: "C:\\Users\\leer4\\sovereign-core"
     wsl_path: "/mnt/c/Users/leer4/sovereign-core"
-    port: 9000
-    status: "active — gateway running, older system"
+    port: 8000
+    status: "active — WSL orchestrator gateway"
     key_modules:
       - "gateway/main.py"          # FastAPI gateway entrypoint
       - "gateway/router.py"        # Latency-aware, capability-aware backend router (EMA)
@@ -38,6 +38,14 @@ sovereign_ecosystem:
     role: "Agent backend, pipeline, and MCP server"
     windows_path: "C:\\Users\\leer4\\GH05T3"
     wsl_path: "/mnt/c/Users/leer4/GH05T3"
+    health_url: "http://localhost:8002/health"
+    runtime_default: "wsl"
+    runtime_override_env: "GH05T3_RUNTIME"
+    gateway_url_env: "GH05T3_GATEWAY_URL"
+    notes: >
+      WSL mesh (default): sovereign-core probes http://localhost:8002.
+      Windows-native stack: set GH05T3_RUNTIME=windows so probes use the WSL
+      default-gateway IP (172.30.x.1) to reach Windows-bound services.
     ports:
       backend: 8001
       gateway_v3: 8002

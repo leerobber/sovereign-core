@@ -14,6 +14,39 @@ LOG = logging.getLogger("sovereign.registry")
 _ROOT = Path(__file__).resolve().parents[2]
 
 
+def _windows_host() -> str:
+    """Host reachable from WSL for Windows-native GH05T3 (override via GH05T3_WINDOWS_HOST)."""
+    import os
+    import subprocess
+    if os.environ.get("GH05T3_WINDOWS_HOST"):
+        return os.environ["GH05T3_WINDOWS_HOST"]
+    try:
+        out = subprocess.check_output(
+            ["ip", "route", "show", "default"], text=True, timeout=2,
+        )
+        parts = out.split()
+        if "via" in parts:
+            return parts[parts.index("via") + 1]
+    except Exception:
+        pass
+    return "127.0.0.1"
+
+
+def _gh05t3_gateway_url(ports: dict) -> str:
+    """GH05T3 gateway health base URL.
+
+    Default: localhost when GH05T3 runs in WSL (same network namespace).
+    Set GH05T3_RUNTIME=windows or GH05T3_GATEWAY_URL to target Windows-native stack.
+    """
+    import os
+    if url := os.environ.get("GH05T3_GATEWAY_URL"):
+        return url.rstrip("/")
+    port = ports.get("gateway_v3", 8002)
+    if os.environ.get("GH05T3_RUNTIME", "wsl").lower() == "windows":
+        return f"http://{_windows_host()}:{port}"
+    return f"http://localhost:{port}"
+
+
 @dataclass
 class RepoStatus:
     name: str
@@ -47,7 +80,7 @@ class RepoRegistry:
         if port:
             health_url = f"http://localhost:{port}/health"
         elif name == "gh05t3" and ports:
-            health_url = f"http://localhost:{ports.get('gateway_v3', 8002)}/health"
+            health_url = f"{_gh05t3_gateway_url(ports)}/health"
         elif name == "agent_economy":
             health_url = "http://localhost:8081/"
         elif name == "local_ai_mesh":

@@ -9,6 +9,11 @@ architecture_decisions:
   wsl_lineage: >
     /home/leer4/sovereign-core is the Grok Build refactor target (dev :8000).
     Windows /mnt/c/Users/leer4/sovereign-core is production gateway (:9000).
+  wsl_mesh: >
+    Default mesh runs in WSL: sovereign-core :8000, GH05T3 :8001/:8002 on localhost.
+    Do not probe GH05T3 via the Windows host IP from inside WSL (hairpin NAT fails).
+    For Windows-native GH05T3, set GH05T3_RUNTIME=windows and GH05T3_GATEWAY_URL
+    to http://<wsl-default-gateway>:8002.
   dataset_pipeline: "Structured logging → ETL → versioned JSONL → fine-tuning"
   training_strategy: "Hybrid: local RTX 5050 for small LoRA + free GPU cloud (Kaggle T4, Lightning AI) for SFT/DPO"
   inference_strategy: >
