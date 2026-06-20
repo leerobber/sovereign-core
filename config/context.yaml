@@ -1,0 +1,9 @@
+mesh:
+  gh05t3_runtime:
+    default: wsl
+    env: GH05T3_RUNTIME
+    values:
+      wsl: "GH05T3 on localhost:8001/:8002 (WSL launcher)"
+      windows: "GH05T3 via Windows supervisor; WSL probes use default-gateway IP"
+  hairpin_nat: >
+    Do not probe WSL services via Windows host IP from inside WSL — use localhost.

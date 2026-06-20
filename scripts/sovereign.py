@@ -183,7 +183,6 @@ def cmd_auction_bid(args):
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
-    global GATEWAY
     parser = argparse.ArgumentParser(
         prog="sovereign",
         description="Sovereign Core CLI — control the autonomous agent platform",
@@ -237,6 +236,7 @@ Examples:
     args = parser.parse_args()
 
     # Override gateway URL if provided
+    global GATEWAY
     GATEWAY = args.gateway
 
     dispatch = {

@@ -273,21 +273,3 @@ class GatewayRouter:
     def latency_snapshot(self) -> dict[str, float]:
         """Return current EMA latency readings keyed by backend ID."""
         return self._latency.all_latencies()
-    async def get_ordered_backends(
-        self,
-        model: str = "auto",
-        prefer: str | None = None,
-    ) -> list[str]:
-        """Return backend IDs ordered by capability + latency.
-        Called by inference.py route_inference().
-        """
-        candidates = self._select_candidates(
-            model_id=None if model == "auto" else model,
-            vram_required_gib=0.0,
-            priority_backend_id=prefer,
-        )
-        return [b.id for b in candidates]
-
-    async def record_latency(self, backend_id: str, latency_s: float) -> None:
-        """Record observed latency for EMA tracking. Called by inference.py."""
-        self._latency.record(backend_id, latency_s)

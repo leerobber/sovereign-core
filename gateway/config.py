@@ -39,7 +39,7 @@ class BackendConfig(BaseModel):
 BACKENDS: list[BackendConfig] = [
     BackendConfig(
         id="rtx5050",
-        url="http://localhost:11434",
+        url="http://localhost:8001",
         device_type=DeviceType.NVIDIA_GPU,
         vram_gib=8.0,
         weight=3.0,
@@ -47,7 +47,7 @@ BACKENDS: list[BackendConfig] = [
     ),
     BackendConfig(
         id="radeon780m",
-        url="http://localhost:11434",
+        url="http://localhost:8002",
         device_type=DeviceType.AMD_GPU,
         vram_gib=4.0,
         weight=2.0,
@@ -55,7 +55,7 @@ BACKENDS: list[BackendConfig] = [
     ),
     BackendConfig(
         id="ryzen7cpu",
-        url="http://localhost:11434",
+        url="http://localhost:8003",
         device_type=DeviceType.CPU,
         vram_gib=0.0,
         weight=1.0,
@@ -69,34 +69,6 @@ BACKEND_PRIORITY: list[str] = ["rtx5050", "radeon780m", "ryzen7cpu"]
 GPU_DEVICE_TYPES: FrozenSet[DeviceType] = frozenset(
     {DeviceType.NVIDIA_GPU, DeviceType.AMD_GPU}
 )
-
-
-# ── Silo registry — Terry's project ecosystem ─────────────────────────────────
-
-class SiloConfig(BaseModel):
-    id: str
-    url: str
-    label: str
-    role: str
-
-    @field_validator("url")
-    @classmethod
-    def url_must_have_scheme(cls, v: str) -> str:
-        if not v.startswith(("http://", "https://")):
-            raise ValueError("url must start with http:// or https://")
-        return v.rstrip("/")
-
-
-SILOS: list[SiloConfig] = [
-    SiloConfig(id="gh05t3",      url="http://localhost:8002", label="GH05T3 SwarmBus",          role="ai-companion"),
-    SiloConfig(id="jarvis",      url="http://localhost:8020", label="Jarvis Personal AI",        role="personal-assistant"),
-    SiloConfig(id="mythos",      url="http://localhost:8021", label="MYTHOS Narrative AI",       role="narrative-intelligence"),
-    SiloConfig(id="openclaw",    url="http://localhost:8022", label="openclaw Research",         role="open-automation"),
-    SiloConfig(id="verelene_v5", url="http://localhost:8023", label="verelene_v5 Personal Model", role="evolved-personal-ai"),
-    SiloConfig(id="economy",     url="http://localhost:8081", label="Agent Economy",             role="multi-agent-economy"),
-]
-
-SILO_MAP: dict[str, SiloConfig] = {s.id: s for s in SILOS}
 
 
 # ── Settings ──────────────────────────────────────────────────────────────────
