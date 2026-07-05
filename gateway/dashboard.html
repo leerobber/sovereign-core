@@ -376,6 +376,100 @@
   .cycle-task { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cycle-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
+  /* Lineage / reasoning-chain detail ("receipts" for a SAGE run) */
+  .kairos-cycle { cursor: pointer; }
+  .cycle-chevron {
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 12px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .kairos-cycle.expanded .cycle-chevron { transform: rotate(90deg); color: var(--ghost); }
+
+  .lineage-detail { display: none; padding: 10px 0 14px 52px; border-bottom: 1px solid var(--border); }
+  .lineage-detail.open { display: block; }
+  .lineage-loading { color: var(--muted); font-size: 11px; padding: 8px 0; }
+
+  .gen-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.015);
+  }
+  .gen-card.accepted { border-left-color: var(--green); box-shadow: 0 0 10px rgba(34,197,94,0.08); }
+  .gen-card.rejected { border-left-color: var(--red);   box-shadow: 0 0 10px rgba(239,68,68,0.08); }
+
+  .gen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 11px; }
+  .gen-title  { color: var(--text); font-weight: bold; }
+  .gen-ts     { color: var(--muted); font-size: 10px; margin-left: 8px; }
+
+  .outcome-pill {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  .outcome-pill.accepted { background: rgba(34,197,94,0.15); color: var(--green); }
+  .outcome-pill.rejected { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .verdict-row { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .verdict-pill {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  .verdict-pill.approve, .verdict-pill.pass    { background: rgba(34,197,94,0.15);  color: var(--green); }
+  .verdict-pill.revise,  .verdict-pill.partial { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .verdict-pill.reject,  .verdict-pill.fail    { background: rgba(239,68,68,0.15);  color: var(--red); }
+
+  .reasoning-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 8px 0 3px;
+  }
+  .reasoning-block {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 110px;
+    overflow: hidden;
+  }
+  .reasoning-block.expanded { max-height: none; }
+
+  .expand-toggle {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--ghost);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .expand-toggle:hover { text-decoration: underline; }
+
+  .score-breakdown {
+    margin-top: 8px;
+    font-size: 11px;
+    font-family: var(--font);
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+
   /* KAIROS trigger panel */
   .sage-trigger {
     background: var(--surface2);
@@ -747,6 +841,8 @@ const state = {
   backendStats: {},
   reconnectDelay: 1000,
   bootTime: Date.now(),
+  lineageCache: {},            // agent_id -> lineage_archive array (or null on fetch failure)
+  expandedAgents: new Set(),   // agent_ids currently expanded in the KAIROS Cycles list
 };
 
 const GATEWAY = window.location.origin;
@@ -798,15 +894,22 @@ function handleEvent(evt) {
   // Add to event stream
   addEventLine(ts, type, data);
 
-  // Route to specific handlers
+  // Route to specific handlers.
+  // NOTE: the real events emitted by gateway/ws.py + kairos_routes.py are
+  // dotted (kairos.cycle_complete, kairos.elite_promoted, inference.completed).
+  // backend_health / auction_result / iron_dome_block are not emitted anywhere
+  // in the codebase today -- kept here in case they're wired up later, but
+  // they're dead code in practice, same as before this fix.
   if (type === 'pong' || type === 'health_snapshot') {
     handleHealthSnapshot(data);
   } else if (type === 'backend_health') {
     updateBackendCard(data.backend_id, data.status, data);
-  } else if (type === 'inference_complete') {
+  } else if (type === 'inference.completed') {
     handleInference(data);
-  } else if (type === 'kairos_cycle') {
+  } else if (type === 'kairos.cycle_complete') {
     handleKairosCycle(data);
+  } else if (type === 'kairos.elite_promoted') {
+    markEliteInList(data.agent_id, data.score);
   } else if (type === 'auction_result') {
     handleAuction(data);
   } else if (type === 'iron_dome_block') {
@@ -876,37 +979,202 @@ function handleInference(data) {
 
 // ── KAIROS ─────────────────────────────────────────────────────────────────
 function handleKairosCycle(data) {
-  state.kairosCycles.unshift(data);
-  if (data.elite_promoted) {
+  // WS payload (kairos.cycle_complete: {agent_id, score, verdict, latency_ms})
+  // is a smaller shape than the REST SAGEResponse body -- normalize both to
+  // the same fields so renderKairosCycles() doesn't need to know the source.
+  const normalized = {
+    ...data,
+    verification_verdict: data.verification_verdict || data.verdict || 'unverified',
+    elite_promoted: data.elite_promoted || false,
+    task: data.task || '(via WS)',
+  };
+
+  // The same real cycle arrives twice: once from triggerSAGE()'s direct REST
+  // response, once from the kairos.cycle_complete WS broadcast of that same
+  // event. Merge into the existing row by agent_id instead of duplicating it.
+  const existingIdx = normalized.agent_id
+    ? state.kairosCycles.findIndex(c => c.agent_id === normalized.agent_id)
+    : -1;
+  const wasElite = existingIdx !== -1 && state.kairosCycles[existingIdx].elite_promoted;
+
+  if (existingIdx !== -1) {
+    const existing = state.kairosCycles[existingIdx];
+    state.kairosCycles[existingIdx] = {
+      ...existing,
+      ...normalized,
+      // Prefer whichever source actually has the real task text over the WS placeholder
+      task: (normalized.task && normalized.task !== '(via WS)') ? normalized.task : existing.task,
+      elite_promoted: existing.elite_promoted || normalized.elite_promoted,
+    };
+  } else {
+    state.kairosCycles.unshift(normalized);
+    state.kairosCycles = state.kairosCycles.slice(0, 20);
+  }
+
+  const isNowElite = existingIdx !== -1 ? state.kairosCycles[existingIdx].elite_promoted : normalized.elite_promoted;
+  if (isNowElite && !wasElite) {
     state.eliteCount++;
     document.getElementById('m-elite-count').textContent = state.eliteCount + ' elites';
-    toast('🧬 Elite agent promoted! Score: ' + (data.score || 0).toFixed(2), 'info');
+    toast('🧬 Elite agent promoted! Score: ' + (normalized.score || 0).toFixed(2), 'info');
   }
-  state.kairosCycles = state.kairosCycles.slice(0, 20);
+
   document.getElementById('m-kairos').textContent = state.kairosCycles.length;
   renderKairosCycles();
+}
+
+// kairos.elite_promoted arrives as a genuinely separate, later WS event
+// ({agent_id, score} only) -- find the row by agent_id and flip its flag
+// rather than expecting it to be present on the first cycle-complete event.
+function markEliteInList(agentId, score) {
+  if (!agentId) return;
+  const cycle = state.kairosCycles.find(c => c.agent_id === agentId);
+  if (cycle && !cycle.elite_promoted) {
+    cycle.elite_promoted = true;
+    state.eliteCount++;
+    document.getElementById('m-elite-count').textContent = state.eliteCount + ' elites';
+    renderKairosCycles();
+  }
+  toast('🧬 Elite agent promoted! Score: ' + (score || 0).toFixed(2), 'info');
 }
 
 function renderKairosCycles() {
   const el = document.getElementById('kairos-cycles-list');
   if (!state.kairosCycles.length) return;
-  el.innerHTML = state.kairosCycles.map(c => {
+  el.innerHTML = state.kairosCycles.map((c, i) => {
     const score = c.score || 0;
     const grade = score >= 0.85 ? 'pass' : score >= 0.70 ? 'partial' : 'fail';
     const scoreLabel = (score * 100).toFixed(0) + '%';
-    return `<div class="kairos-cycle">
+    const agentId = c.agent_id || '';
+    const isExpanded = agentId && state.expandedAgents.has(agentId);
+    return `<div class="kairos-cycle ${isExpanded ? 'expanded' : ''}" onclick="toggleLineage('${escapeHtml(agentId)}')">
+      <span class="cycle-chevron">▶</span>
       <div class="cycle-score ${grade}">${scoreLabel}</div>
       <div class="cycle-info">
-        <div class="cycle-task">${c.task || 'Unknown task'}</div>
+        <div class="cycle-task">${escapeHtml(c.task || 'Unknown task')}</div>
         <div class="cycle-meta">
-          ${c.agent_id ? c.agent_id.substring(0,8) + '...' : '--'} ·
+          ${agentId ? agentId.substring(0,8) + '...' : '--'} ·
           ${c.verification_verdict || 'unverified'} ·
           ${c.elite_promoted ? '⭐ ELITE' : 'standard'} ·
           ${c.latency_ms ? Math.round(c.latency_ms) + 'ms' : '--'}
         </div>
       </div>
+    </div>
+    <div class="lineage-detail ${isExpanded ? 'open' : ''}" id="lineage-${i}">
+      ${isExpanded ? renderLineageContent(agentId) : ''}
     </div>`;
   }).join('');
+}
+
+// ── KAIROS reasoning-chain ("receipts") view ────────────────────────────────
+// Renders the real Proposer/Critic/Verifier/Meta-agent text behind a score,
+// pulled from GET /kairos/agents/{agent_id}'s lineage_archive -- the same
+// data that's been on disk all along, just never surfaced in any UI.
+
+function toggleLineage(agentId) {
+  if (!agentId) return;
+  if (state.expandedAgents.has(agentId)) {
+    state.expandedAgents.delete(agentId);
+    renderKairosCycles();
+  } else {
+    expandLineage(agentId);
+  }
+}
+
+function expandLineage(agentId) {
+  if (!agentId || state.expandedAgents.has(agentId)) return;
+  state.expandedAgents.add(agentId);
+  if (!(agentId in state.lineageCache)) fetchAndRenderLineage(agentId);
+  renderKairosCycles();
+}
+
+async function fetchAndRenderLineage(agentId) {
+  try {
+    const resp = await fetch('/kairos/agents/' + encodeURIComponent(agentId));
+    const data = await resp.json();
+    state.lineageCache[agentId] = data.lineage_archive || [];
+  } catch (e) {
+    state.lineageCache[agentId] = null; // sentinel: fetch failed, distinct from "not fetched yet"
+  }
+  // Only re-render if still expanded -- the user may have collapsed it
+  // while the fetch was in flight.
+  if (state.expandedAgents.has(agentId)) renderKairosCycles();
+}
+
+function renderLineageContent(agentId) {
+  if (!(agentId in state.lineageCache)) return '<div class="lineage-loading">Loading reasoning chain…</div>';
+  const archive = state.lineageCache[agentId];
+  if (archive === null) return '<div style="color:var(--red);font-size:11px;">Failed to load reasoning chain.</div>';
+  if (!archive.length) return '<div style="color:var(--muted);font-size:11px;">No per-generation detail archived for this agent.</div>';
+  return archive.map(renderGenerationCard).join('');
+}
+
+const CRITIC_MULT   = { APPROVE: 1.0, REVISE: 0.8, REJECT: 0.5 };
+const VERIFIER_BASE = { PASS: 1.0, PARTIAL: 0.6, FAIL: 0.2 };
+
+function renderGenerationCard(p) {
+  const accepted = !!p.accepted;
+  const outcomeClass = accepted ? 'accepted' : 'rejected';
+  const outcomeLabel = accepted ? 'ACCEPTED' : 'REJECTED';
+  const verifierVerdict = (p.verifier_verdict || '').toUpperCase();
+  const criticVerdict = (p.critic_verdict || '').toUpperCase();
+
+  // Show the real scoring formula transparently when it's reconstructable,
+  // but always trust the server's own p.score/p.accepted as ground truth --
+  // heuristic-fallback entries have no critic_verdict, so fall back to a
+  // plain score line rather than a broken/NaN formula.
+  let breakdownLine = `Score: <b>${(p.score || 0).toFixed(2)}</b> → ${outcomeLabel}`;
+  const base = VERIFIER_BASE[verifierVerdict];
+  const mult = CRITIC_MULT[criticVerdict];
+  if (base !== undefined && mult !== undefined && Math.abs(base * mult - (p.score || 0)) < 0.01) {
+    breakdownLine = `${base.toFixed(2)} (${verifierVerdict}) × ${mult.toFixed(2)} (${criticVerdict}) `
+      + `= <b>${(p.score || 0).toFixed(2)}</b> → ${outcomeLabel}`;
+  }
+
+  const ts = p.timestamp ? new Date(p.timestamp).toLocaleString() : '';
+
+  let html = `<div class="gen-card ${outcomeClass}">
+    <div class="gen-header">
+      <span><span class="gen-title">Generation ${p.generation != null ? p.generation : '?'}</span><span class="gen-ts">${escapeHtml(ts)}</span></span>
+      <span class="outcome-pill ${outcomeClass}">${outcomeLabel}</span>
+    </div>
+    <div class="verdict-row">
+      ${criticVerdict ? `<span class="verdict-pill ${criticVerdict.toLowerCase()}">Critic: ${criticVerdict}</span>` : ''}
+      ${verifierVerdict ? `<span class="verdict-pill ${verifierVerdict.toLowerCase()}">Verifier: ${verifierVerdict}</span>` : ''}
+    </div>`;
+
+  html += renderReasoningBlock('Proposer Output', p.proposer_output);
+  html += renderReasoningBlock('Critic Feedback', p.critic_feedback);
+  html += renderReasoningBlock('Verifier Notes', p.verifier_notes);
+  if (p.meta_rewrite) html += renderReasoningBlock('Meta-Agent Rewrite', p.meta_rewrite);
+
+  html += `<div class="score-breakdown">${breakdownLine}</div></div>`;
+  return html;
+}
+
+let _reasoningBlockSeq = 0;
+function renderReasoningBlock(label, text) {
+  if (!text) return '';
+  const id = 'rb-' + (_reasoningBlockSeq++);
+  return `<div class="reasoning-label">${escapeHtml(label)}</div>
+    <div class="reasoning-block" id="${id}">${escapeHtml(text)}</div>
+    <span class="expand-toggle" onclick="event.stopPropagation(); toggleReasoningBlock('${id}', this)">SHOW MORE ▾</span>`;
+}
+
+function toggleReasoningBlock(id, toggleEl) {
+  const block = document.getElementById(id);
+  if (!block) return;
+  const expanded = block.classList.toggle('expanded');
+  toggleEl.textContent = expanded ? 'SHOW LESS ▴' : 'SHOW MORE ▾';
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ── Auction ────────────────────────────────────────────────────────────────
@@ -931,8 +1199,10 @@ function addEventLine(ts, type, data) {
 
   const typeColor = {
     backend_health: 'evt-health',
-    kairos_cycle:   'evt-kairos',
-    inference_complete: 'evt-inference',
+    'kairos.cycle_complete':    'evt-kairos',
+    'kairos.elite_promoted':    'evt-kairos',
+    'kairos.evolution_complete':'evt-kairos',
+    'inference.completed': 'evt-inference',
     auction_result: 'evt-auction',
     iron_dome_block:'evt-iron_dome',
   }[type] || 'evt-default';
@@ -1058,9 +1328,12 @@ async function triggerSAGE() {
       const grade = score >= 85 ? 'var(--green)' : score >= 70 ? 'var(--yellow)' : 'var(--red)';
       result.innerHTML = `Score: <span style="color:${grade};font-weight:bold">${score.toFixed(1)}%</span> · ${data.verification_verdict || 'unverified'} · ${data.elite_promoted ? '⭐ ELITE' : 'standard'}`;
       result.style.color = 'var(--text)';
-      handleKairosCycle(data);
+      handleKairosCycle({ ...data, task });
       toast('KAIROS cycle complete — score: ' + score.toFixed(1) + '%', data.elite_promoted ? 'success' : 'info');
       showTab('kairos');
+      // Auto-expand the reasoning chain for the run that just happened -- the
+      // whole point of this view is showing the receipts without an extra click.
+      if (data.agent_id) expandLineage(data.agent_id);
     } else {
       result.textContent = 'Error: ' + (data.detail || JSON.stringify(data));
       result.style.color = 'var(--red)';
