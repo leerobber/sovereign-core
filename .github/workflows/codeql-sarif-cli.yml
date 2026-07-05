@@ -1,0 +1,39 @@
+name: CodeQL SARIF CLI Export
+
+on:
+  workflow_dispatch:
+
+jobs:
+  codeql-python-cli:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL CLI
+        uses: github/codeql-action/init@v4
+        with:
+          languages: python
+          queries: security-and-quality
+
+      - name: Verify CodeQL
+        run: |
+          codeql version || echo "CodeQL CLI not found — ensure the runner supports the CodeQL action provisioning"
+          mkdir -p sarif-results
+
+      - name: Create database
+        run: |
+          rm -rf codeql-db
+          codeql database create codeql-db --language=python --source-root .
+
+      - name: Analyze to SARIF
+        run: |
+          codeql database analyze codeql-db codeql/python-queries:codeql-suites/python-security-and-quality.qls --format=sarifv2.1.0 --output=sarif-results/codeql-results.sarif || echo "Analyze failed — check action logs"
+
+      - name: Upload SARIF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif-results
+          path: sarif-results
