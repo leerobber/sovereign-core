@@ -31,18 +31,20 @@ async def system_status(request: Request) -> Dict[str, Any]:
     """Return a complete system snapshot: backends, KAIROS, auction, metrics."""
     monitor = getattr(request.app.state, "health_monitor", None)
     benchmark = getattr(request.app.state, "benchmark", None)
+    router_ = getattr(request.app.state, "router", None)
+    latency_map = router_.latency_snapshot() if router_ else {}
 
     backends = []
     if monitor:
         from gateway.config import BACKENDS
         for b in BACKENDS:
             healthy = monitor.is_healthy(b.id)
-            lat = getattr(monitor, "get_latency", lambda _: None)(b.id)
+            lat = latency_map.get(b.id)
             backends.append({
                 "name": b.id,
                 "label": b.label,
                 "healthy": healthy,
-                "latency_ms": round(lat * 1000, 2) if lat else None,
+                "latency_ms": round(lat * 1000, 2) if lat is not None else None,
                 "meta": {
                     "url": b.url,
                     "device_type": b.device_type.value,
@@ -111,6 +113,9 @@ async def backend_detail(request: Request) -> Dict[str, Any]:
     if not monitor:
         return {"error": "Health monitor not initialized"}
 
+    router_ = getattr(request.app.state, "router", None)
+    latency_map = router_.latency_snapshot() if router_ else {}
+
     from gateway.config import BACKENDS
     result = {}
     for b in BACKENDS:
@@ -129,9 +134,9 @@ async def backend_detail(request: Request) -> Dict[str, Any]:
             "last_checked": None,
         }
         if state:
-            lat = getattr(state, "last_latency_ms", None)
+            lat = latency_map.get(b.id)
             result[b.id].update({
-                "latency_ms": round(lat, 2) if lat else None,
+                "latency_ms": round(lat * 1000, 2) if lat is not None else None,
                 "consecutive_failures": getattr(state, "consecutive_failures", 0),
                 "consecutive_successes": getattr(state, "consecutive_successes", 0),
                 "last_error": getattr(state, "last_error", None),

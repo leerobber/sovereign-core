@@ -243,6 +243,17 @@
   .stat-label { color: var(--muted); }
   .stat-value { color: var(--text); font-weight: bold; }
 
+  /* Real last-error text -- shown live during a backend outage/failover */
+  .backend-error {
+    font-size: 9px;
+    color: var(--red);
+    margin-top: 6px;
+    font-family: var(--font);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   /* Latency bar */
   .latency-bar {
     height: 3px;
@@ -676,6 +687,7 @@
         <div class="stat"><div class="stat-label">ROLE</div><div class="stat-value" style="color:var(--nvidia)">PRIMARY</div></div>
       </div>
       <div class="latency-bar"><div class="latency-fill" id="latbar-rtx5050" style="width:0%"></div></div>
+      <div class="backend-error" id="err-rtx5050" style="display:none"></div>
     </div>
 
     <!-- Radeon 780M -->
@@ -694,6 +706,7 @@
         <div class="stat"><div class="stat-label">ROLE</div><div class="stat-value" style="color:var(--amd)">VERIFIER</div></div>
       </div>
       <div class="latency-bar"><div class="latency-fill" id="latbar-radeon780m" style="width:0%"></div></div>
+      <div class="backend-error" id="err-radeon780m" style="display:none"></div>
     </div>
 
     <!-- Ryzen 7 CPU -->
@@ -712,6 +725,7 @@
         <div class="stat"><div class="stat-label">ROLE</div><div class="stat-value" style="color:var(--cpu)">FALLBACK</div></div>
       </div>
       <div class="latency-bar"><div class="latency-fill" id="latbar-ryzen7cpu" style="width:0%"></div></div>
+      <div class="backend-error" id="err-ryzen7cpu" style="display:none"></div>
     </div>
 
     <!-- KAIROS Trigger -->
@@ -956,6 +970,16 @@ function updateBackendCard(id, status, data) {
 
   if (data.consecutive_failures !== undefined)
     document.getElementById('fail-' + id).textContent = data.consecutive_failures;
+
+  const errEl = document.getElementById('err-' + id);
+  if (errEl) {
+    if (data.last_error) {
+      errEl.textContent = '✗ ' + data.last_error;
+      errEl.style.display = 'block';
+    } else {
+      errEl.style.display = 'none';
+    }
+  }
 }
 
 // ── Inference ──────────────────────────────────────────────────────────────
@@ -1399,9 +1423,15 @@ function toast(msg, type='info') {
 // ── Health polling (REST fallback) ─────────────────────────────────────────
 async function pollHealth() {
   try {
-    const resp = await fetch('/health');
+    const resp = await fetch('/status/backends');
     const data = await resp.json();
-    if (data.backends) handleHealthSnapshot(data);
+    // /status/backends is a dict keyed by backend id (unlike /health, which
+    // hardcodes an empty backends list) -- adapt it into the list shape
+    // handleHealthSnapshot() already expects, reusing it unmodified.
+    if (data && !data.error) {
+      const backends = Object.entries(data).map(([id, info]) => ({ id, ...info }));
+      handleHealthSnapshot({ backends });
+    }
   } catch(e) {}
 }
 

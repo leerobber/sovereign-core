@@ -5,6 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, AsyncMock, patch
 
+from gateway.config import BACKENDS
+from gateway.health import BackendState, BackendStatus
+
 
 @pytest.fixture
 def mock_app():
@@ -16,10 +19,14 @@ def mock_app():
     monitor = MagicMock()
     monitor.is_healthy = lambda bid: bid == "rtx5050"
     monitor.get_latency = lambda bid: 0.042 if bid == "rtx5050" else None
-    monitor._states = {}
+    rtx_state = BackendState(next(b for b in BACKENDS if b.id == "rtx5050"))
+    rtx_state.status = BackendStatus.HEALTHY
+    rtx_state.consecutive_successes = 5
+    monitor._states = {"rtx5050": rtx_state}
 
     app.state.health_monitor = monitor
     app.state.router = MagicMock()
+    app.state.router.latency_snapshot = MagicMock(return_value={"rtx5050": 0.042})
     app.state.benchmark = MagicMock()
     app.state.boot_time = 0.0
 
@@ -37,6 +44,8 @@ def test_status_snapshot(mock_app):
     assert "version" in data
     assert "uptime_s" in data
     assert data["healthy_count"] >= 0
+    rtx = next(b for b in data["backends"] if b["name"] == "rtx5050")
+    assert rtx["latency_ms"] == pytest.approx(42.0)
 
 
 def test_backends_endpoint(mock_app):
@@ -45,6 +54,7 @@ def test_backends_endpoint(mock_app):
     assert r.status_code == 200
     data = r.json()
     assert isinstance(data, dict)
+    assert data["rtx5050"]["latency_ms"] == pytest.approx(42.0)
 
 
 def test_status_has_kairos_summary(mock_app):
