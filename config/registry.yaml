@@ -21,6 +21,19 @@ sovereign_ecosystem:
       Windows-native: GH05T3_RUNTIME=windows uses WSL default-gateway IP.
       Never run WSL gh05t3-start AND Windows supervisor on the same ports.
 
+  gh05t3_sovereign:
+    role: "Quantized binary/ternary transformer + evolvable genome API (GH05T3-Sovereign repo)"
+    port: 8002
+    health_path: "/health"
+    genome_api_path: "/oss/genome"
+    notes: >
+      Separate repo/process from gh05t3 above (its own gateway_v3.py, forked
+      from gh05t3's), but shares the same GATEWAY_PORT default (8002) --
+      set the GATEWAY_PORT env var on one of the two before running both on
+      the same host, or the probe below will hit whichever one bound the
+      port first. Genome endpoints (register/evaluate/evolve/list/best)
+      live under genome_api_path, e.g. GET {base_url}/oss/genome/list.
+
   agent_economy:
     role: "Agent credit economy"
     port: 8081

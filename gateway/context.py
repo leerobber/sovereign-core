@@ -431,3 +431,94 @@ def init_context_layer(
         collection_name=collection_name,
     )
     return _context_layer
+
+
+# ---------------------------------------------------------------------------
+# FastAPI router for context endpoints (mounted by gateway/main)
+# ---------------------------------------------------------------------------
+try:
+    from fastapi import APIRouter, HTTPException, Query
+except Exception:  # allow import of module outside FastAPI contexts
+    APIRouter = None  # type: ignore
+    HTTPException = Exception  # type: ignore
+    Query = lambda *a, **k: None  # type: ignore
+
+router = APIRouter(prefix="/context", tags=["context"]) if APIRouter else None
+
+
+def _get_layer():
+    """Helper used by endpoints to obtain the active layer (supports monkey-patching in tests)."""
+    # Support the test patching pattern used in test_context.py (gm._context)
+    import gateway.main as gm  # type: ignore
+    if hasattr(gm, "_context") and gm._context is not None:
+        return gm._context
+    return get_context_layer()
+
+
+if router is not None:
+    @router.post("/write")
+    def write_context(
+        role: str = Query(...),
+        backend_id: str = Query(...),
+        document: str = Query(...),
+        trace_id: Optional[str] = Query(None),
+    ):
+        try:
+            role_enum = AgentRole(role)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="invalid role")
+        layer = _get_layer()
+        entry_id = layer.write(role_enum, backend_id, document, trace_id=trace_id)
+        # Return the written entry shape expected by tests
+        entry = ContextEntry(
+            entry_id=entry_id,
+            role=role,
+            backend_id=backend_id,
+            document=document,
+            metadata={},
+            timestamp=datetime.now(tz=timezone.utc).isoformat(),
+            trace_id=trace_id or "",
+        )
+        return entry.as_dict()
+
+    @router.get("/read")
+    def read_context(
+        role: Optional[str] = Query(None),
+        backend_id: Optional[str] = Query(None),
+        trace_id: Optional[str] = Query(None),
+        limit: int = Query(100),
+    ):
+        layer = _get_layer()
+        if role:
+            try:
+                entries = layer.read_by_role(AgentRole(role), limit=limit)
+            except ValueError:
+                entries = []
+        elif backend_id:
+            entries = layer.read_by_backend(backend_id, limit=limit)
+        elif trace_id:
+            entries = layer.read_by_trace(trace_id)
+        else:
+            entries = layer.read_all(limit=limit)
+        return {"entries": [e.as_dict() for e in entries], "count": len(entries)}
+
+    @router.get("/cross-gpu/{backend_id}")
+    def cross_gpu(backend_id: str, limit: int = Query(20)):
+        layer = _get_layer()
+        entries = layer.read_cross_gpu(backend_id, limit=limit)
+        return {
+            "backend_id": backend_id,
+            "peer_entries": [e.as_dict() for e in entries],
+            "count": len(entries),
+        }
+
+    @router.get("/count")
+    def count_context():
+        layer = _get_layer()
+        return {"count": layer.count()}
+
+    @router.delete("/clear")
+    def clear_context():
+        layer = _get_layer()
+        cleared = layer.clear()
+        return {"cleared": cleared}

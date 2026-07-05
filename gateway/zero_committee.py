@@ -28,7 +28,7 @@ class CommitteeDecision:
 
 
 class ZEROCommittee:
-    GATEWAY_URL = "http://localhost:9000"
+    GATEWAY_URL = "http://localhost:8080"
     PRIMARY_BRAIN = "qwen2.5:7b"
     VERIFIER_MODEL = "deepseek-coder:6.7b"
     CONSENSUS_THRESHOLD = 7

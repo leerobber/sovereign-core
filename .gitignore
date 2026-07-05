@@ -62,3 +62,18 @@ logs/
 
 # Benchmark output
 benchmark_results/
+
+# Local-only Claude Code permission settings (personal, not shared config)
+.claude/settings.local.json
+
+# Vendored/nested repos and alternate venvs living untracked in the working
+# tree -- not this repo's source, shouldn't be committed as plain files
+llama.cpp/
+sovereign-env/
+
+# Runtime data / generated state, not source
+data/
+memory_palace/belief_hierarchy.json
+gateway.pid
+gateway_test.log.err
+ghost_protocol/ghost_sessions.json

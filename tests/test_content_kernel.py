@@ -184,7 +184,8 @@ async def test_http_polling_sensory_input_reads_feed():
     assert seen == [7]
 
 
-def test_webhook_push_bridge_maps_payload():
+@pytest.mark.asyncio
+async def test_webhook_push_bridge_maps_payload():
     sensor = PushSensoryInput("webhooks")
     bridge = WebhookPushBridge(sensor)
     kernel = ContentKernel([sensor])
@@ -195,13 +196,11 @@ def test_webhook_push_bridge_maps_payload():
 
     kernel.register_subsystem("echo", ["incoming"], handler)
 
-    async def run() -> None:
-        await kernel.start()
-        await bridge.handle_payload({"type": "incoming", "payload": {"msg": "hi"}})
-        await kernel.join()
-        await kernel.stop()
+    await kernel.start()
+    await bridge.handle_payload({"type": "incoming", "payload": {"msg": "hi"}})
+    await kernel.join()
+    await kernel.stop()
 
-    asyncio.get_event_loop().run_until_complete(run())
     assert received == ["hi"]
 
 

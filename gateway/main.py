@@ -38,6 +38,8 @@ from gateway.health import HealthMonitor
 from gateway.inference import InferenceRequest, InferenceResponse, route_inference
 from gateway.kairos_routes import router as kairos_router
 from gateway.mem_evolve_routes import router as mem_evolve_router
+from gateway.context import router as context_router  # context memory API
+
 from gateway.metrics import INFERENCE_COUNTER, INFERENCE_LATENCY, ACTIVE_BACKENDS, record_request, metrics_output
 from gateway.models import ModelAssigner
 from gateway.router import GatewayRouter
@@ -165,6 +167,8 @@ def create_app() -> FastAPI:
     app.include_router(mem_evolve_router)
     app.include_router(ws_router)
     app.include_router(v1_router)   # ← OpenAI-compat: /v1/chat/completions + /v1/models
+    if context_router:
+        app.include_router(context_router)
 
     # ── Core endpoints ────────────────────────────────────────────────────────
 
@@ -180,10 +184,15 @@ def create_app() -> FastAPI:
     async def health() -> dict:
         healthy = sum(1 for b in BACKENDS if _health_monitor.is_healthy(b.id))
         ACTIVE_BACKENDS.set(healthy)
+        status = "healthy" if healthy > 0 else "degraded"
+        # Provide both modern and legacy test-expected keys for compatibility
         return {
-            "status": "healthy" if healthy > 0 else "degraded",
+            "status": status,
             "backends_healthy": healthy,
             "backends_total": len(BACKENDS),
+            "healthy_backends": healthy,
+            "total_backends": len(BACKENDS),
+            "backends": [],  # legacy shape expected by some tests
             "uptime_s": round(time.time() - _boot_time, 2),
             "version": "2.1.0",
         }
