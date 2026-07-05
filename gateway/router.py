@@ -113,6 +113,30 @@ class GatewayRouter:
     # ------------------------------------------------------------------
     # Public routing API
     # ------------------------------------------------------------------
+    async def get_ordered_backends(
+        self,
+        model: Optional[str] = None,
+        prefer: Optional[str] = None,
+    ) -> list[BackendConfig]:
+        """Public entry point for callers (e.g. gateway/inference.py) that
+        need a real, health-filtered, latency-sorted candidate list without
+        going through route()'s HTTP call. Thin wrapper around
+        _select_candidates() -- this method didn't exist at all before,
+        callers were hitting an AttributeError on every request.
+        """
+        return self._select_candidates(
+            model_id=model,
+            vram_required_gib=0.0,
+            priority_backend_id=prefer,
+        )
+
+    async def record_latency(self, backend_id: str, latency_s: float) -> None:
+        """Record a real observed latency sample for EMA-based backend
+        sorting. Thin wrapper around the private LatencyTracker -- this
+        method didn't exist at all before, same as get_ordered_backends.
+        """
+        self._latency.record(backend_id, latency_s)
+
     async def route(
         self,
         path: str,

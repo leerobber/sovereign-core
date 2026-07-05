@@ -70,11 +70,27 @@ def _build_payload(
     }
 
 
+def _is_permanent_gateway_error(exc: Exception) -> bool:
+    """A requested model that doesn't exist on any backend will never
+    start existing mid-retry -- the gateway wraps that 404 in a 503
+    ("All backends exhausted. Last error: ... model '...' not found"),
+    so backing off up to max_time on it just delays the real failure."""
+    response = getattr(exc, "response", None)
+    if response is None:
+        return False
+    try:
+        body = response.text.lower()
+    except Exception:
+        return False
+    return "model" in body and "not found" in body
+
+
 @backoff.on_exception(
     backoff.expo,
     (requests.exceptions.RequestException, json.JSONDecodeError, KeyError),
     max_time=600,
     max_value=60,
+    giveup=_is_permanent_gateway_error,
     on_backoff=lambda details: logger.warning(
         "Gateway retry %d after %.1fs — %s",
         details["tries"], details["wait"], details.get("exception", "")

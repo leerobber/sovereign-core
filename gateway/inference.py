@@ -108,25 +108,22 @@ async def route_inference(
       3. Lowest EMA latency within each device tier
       4. GPU-only filter if require_gpu=True
     """
-    from gateway.config import BACKENDS, BACKEND_MAP, GPU_DEVICE_TYPES, DeviceType
+    from gateway.config import GPU_DEVICE_TYPES
 
     if not request_id:
         request_id = str(uuid.uuid4())
 
     t0 = time.time()
 
-    # Build candidate list
+    # Build candidate list -- real BackendConfig objects, already health-filtered
+    # and latency-sorted by GatewayRouter._select_candidates().
     candidates = await router.get_ordered_backends(
         model=req.model,
         prefer=req.prefer_backend,
     )
 
     if req.require_gpu:
-        candidates = [
-            c for c in candidates
-            if BACKEND_MAP.get(c, None) and
-               BACKEND_MAP[c].device_type in GPU_DEVICE_TYPES
-        ]
+        candidates = [c for c in candidates if c.device_type in GPU_DEVICE_TYPES]
 
     if not candidates:
         raise HTTPException(
@@ -142,17 +139,14 @@ async def route_inference(
     last_error: Optional[Exception] = None
     _seen_urls: set = set()
 
-    for backend_id in candidates:
-        backend = BACKEND_MAP.get(backend_id)
-        if not backend:
-            continue
+    for backend in candidates:
 
         # Deduplicate: skip backends that share a URL with one already tried.
         # All three sovereign backends point to localhost:11434 — one failure
         # on that URL tells us Ollama is unavailable; retrying the same URL
         # just burns timeout budget without new information.
         if backend.url in _seen_urls:
-            logger.debug("Skipping duplicate URL %s (%s)", backend.url, backend_id)
+            logger.debug("Skipping duplicate URL %s (%s)", backend.url, backend.id)
             continue
         _seen_urls.add(backend.url)
 
@@ -166,12 +160,12 @@ async def route_inference(
 
             latency_ms = (time.time() - t0) * 1000
             # Update router's EMA latency
-            await router.record_latency(backend_id, latency_ms / 1000)
+            await router.record_latency(backend.id, latency_ms / 1000)
 
             return InferenceResponse(
                 request_id=request_id,
                 model=result.get("model", req.model),
-                backend_id=backend_id,
+                backend_id=backend.id,
                 backend_label=backend.label,
                 response=result.get("response") or _extract_chat_response(result),
                 done=result.get("done", True),
@@ -183,15 +177,15 @@ async def route_inference(
 
         except asyncio.TimeoutError:
             last_error = asyncio.TimeoutError(
-                f"Backend {backend_id} timed out after {req.timeout or 30}s"
+                f"Backend {backend.id} timed out after {req.timeout or 30}s"
             )
-            logger.warning("Timeout on %s — trying next backend", backend_id)
+            logger.warning("Timeout on %s — trying next backend", backend.id)
         except aiohttp.ClientError as e:
             last_error = e
-            logger.warning("Backend %s error: %s — trying next", backend_id, e)
+            logger.warning("Backend %s error: %s — trying next", backend.id, e)
         except Exception as e:
             last_error = e
-            logger.warning("Unexpected error on %s: %s — trying next", backend_id, e)
+            logger.warning("Unexpected error on %s: %s — trying next", backend.id, e)
 
     raise HTTPException(
         status_code=503,
