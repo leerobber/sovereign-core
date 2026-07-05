@@ -226,7 +226,8 @@ class HttpPollingSensoryInput(SensoryInput):
 
     async def _run(self) -> None:
         import aiohttp
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=10.0)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             while self._running:
                 try:
                     async with session.get(self._url) as resp:

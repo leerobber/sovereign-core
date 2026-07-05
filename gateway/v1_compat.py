@@ -119,11 +119,17 @@ async def chat_completions(request: Request):
     # Extract optional model_id query param for routing hint
     model_id = request.query_params.get("model_id")
 
+    _HOP_BY_HOP = {"host", "content-length", "connection", "transfer-encoding"}
+    req_headers = {
+        k: v for k, v in request.headers.items()
+        if k.lower() not in _HOP_BY_HOP
+    }
+
     # Forward through the gateway router (uses router._session internally)
     status_code, resp_headers, resp_body = await gateway_router.route(
         path="/v1/chat/completions",
         method="POST",
-        headers=dict(request.headers),
+        headers=req_headers,
         body=body or b"{}",
         model_id=model_id,
     )
