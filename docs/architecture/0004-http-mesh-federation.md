@@ -51,3 +51,15 @@ not import" predates this specific registry addition.
 - The real `/silos` + ARSO-orchestrator-over-HTTP feature from `af224e2`
   is currently gone from `main` (see [0005](0005-main-branch-regression-incident.md))
   and would need to be deliberately re-added, not assumed still present.
+- What this registry's `gh05t3` entry is actually probing is bigger and
+  more duplicated than a single health check suggests: GH05T3 alone has
+  at least two independent evolution/genome systems of its own
+  (`OmniDNA`/`GenomicSubstrate` and a separate `oss/ecosystem` species-FSM,
+  the latter recently wired off a synthetic sandbox onto real KAIROS/ledger/Stripe
+  telemetry), on top of this repo's own KAIROS/DGM and
+  `gh05t3_sovereign`'s 5-trait system. Full inventory:
+  [GH05T3's `docs/architecture/evolution-systems-inventory.md`](https://github.com/leerobber/GH05T3/blob/main/docs/architecture/evolution-systems-inventory.md)
+  and
+  [`oss-ecosystem-live-telemetry.md`](https://github.com/leerobber/GH05T3/blob/main/docs/architecture/oss-ecosystem-live-telemetry.md).
+  None of these four systems talk to each other beyond this registry's
+  health-probe level.
