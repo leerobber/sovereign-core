@@ -144,6 +144,11 @@ SovereignCore
 └── gateway/         — Heterogeneous compute router
 ```
 
+See **[docs/architecture/](docs/architecture/README.md)** for the real,
+tested decision log — what was actually built and why, including the
+`main`-branch regression incident that was found and fixed, and the HTTP
+mesh federation pattern connecting this repo to GH05T3 / GH05T3-Sovereign.
+
 ---
 
 ## Commercial Use
