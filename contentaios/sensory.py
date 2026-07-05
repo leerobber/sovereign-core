@@ -194,3 +194,68 @@ class PollingSensoryInput(SensoryInput):
             if event is not None and self._emit is not None:
                 await self._emit(event)
             await asyncio.sleep(self._interval_s)
+
+
+class HttpPollingSensoryInput(SensoryInput):
+    """HTTP/JSON polling sensory input that fetches arrays or single events from a URL."""
+
+    def __init__(self, name: str, url: str, *, interval_s: float = 1.0) -> None:
+        self.name = name
+        self._url = url
+        self._interval_s = interval_s
+        self._runner: Optional[asyncio.Task[None]] = None
+        self._emit: Optional[EventSink] = None
+        self._running = False
+
+    async def start(self, emit: EventSink) -> None:
+        self._emit = emit
+        self._running = True
+        self._runner = asyncio.create_task(self._run())
+
+    async def stop(self) -> None:
+        self._running = False
+        if self._runner:
+            await self._runner
+            self._runner = None
+
+    async def wait_idle(self) -> None:
+        await asyncio.sleep(0)
+
+    async def _run(self) -> None:
+        import aiohttp
+        timeout = aiohttp.ClientTimeout(total=5.0)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            while self._running:
+                try:
+                    async with session.get(self._url) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            items = data if isinstance(data, list) else ([data] if data else [])
+                            for item in items:
+                                if not isinstance(item, dict):
+                                    continue
+                                ev = KernelEvent(
+                                    source=self.name,
+                                    type=item.get("type", "http.event"),
+                                    payload=item.get("payload", item),
+                                )
+                                if self._emit is not None:
+                                    await self._emit(ev)
+                except Exception:
+                    # swallow transient network issues during tests
+                    pass
+                await asyncio.sleep(self._interval_s)
+
+
+class WebhookPushBridge:
+    """Maps raw webhook payloads into PushSensoryInput events."""
+
+    def __init__(self, sensor: "PushSensoryInput") -> None:
+        self.sensor = sensor
+
+    async def handle_payload(self, payload: dict) -> None:
+        if not isinstance(payload, dict):
+            return
+        ev_type = payload.get("type", "webhook")
+        ev_payload = payload.get("payload", payload)
+        await self.sensor.push(type=ev_type, payload=ev_payload)

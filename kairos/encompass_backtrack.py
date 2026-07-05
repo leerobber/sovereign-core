@@ -33,6 +33,7 @@ class FailureReason(Enum):
     LOW_NOVELTY = "low_novelty"           # Proposal repeats something already tried
     IMPLEMENTATION_GAP = "impl_gap"       # Good idea, no clear execution path
     CONTRADICTS_VALUES = "value_conflict" # Conflicts with Strange Loop alignment check
+    LOW_SCORE = "low_score"               # Verification score below threshold (legacy compat)
     UNKNOWN = "unknown"
 
 
