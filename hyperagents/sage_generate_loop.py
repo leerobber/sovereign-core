@@ -47,6 +47,9 @@ class SAGEProposal:
     critic_feedback: str
     verifier_verdict: str          # "PASS" | "FAIL" | "PARTIAL"
     meta_rewrite: Optional[str]
+    verifier_notes: str = ""       # raw verifier output -- why it picked that verdict
+    critic_verdict: str = ""       # "APPROVE" | "REVISE" | "REJECT"
+    critic_approved: bool = False  # True iff critic_verdict == "APPROVE"
     score: float = 0.0
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     accepted: bool = False
@@ -253,10 +256,21 @@ def run_sage_loop(
             logger.info("Meta-agent rewrote loop strategy (gen %d)", gen)
 
         # ── Score & archive ───────────────────────────────────────────────────
-        # Scoring heuristic: PASS=1.0, PARTIAL=0.6, FAIL=0.2 × critic approval
+        # Scoring heuristic: PASS=1.0, PARTIAL=0.6, FAIL=0.2 base, × critic tier.
+        # The Critic's system prompt is explicitly adversarial (VERDICT:
+        # [APPROVE | REJECT | REVISE]) -- REVISE is its expected, common
+        # verdict for a proposal with real but fixable issues, not a
+        # rejection. Treating REVISE the same as REJECT (both != APPROVE)
+        # capped every score at 0.5, just under the 0.6 acceptance
+        # threshold, regardless of how sound the proposal actually was.
         base_score = {"PASS": 1.0, "PARTIAL": 0.6, "FAIL": 0.2}[verifier_verdict]
-        critic_approved = "APPROVE" in critic_text.upper()
-        score = base_score * (1.0 if critic_approved else 0.5)
+        critic_text_upper = critic_text.upper()
+        critic_verdict = "APPROVE" if "APPROVE" in critic_text_upper else (
+            "REVISE" if "REVISE" in critic_text_upper else "REJECT"
+        )
+        critic_multiplier = {"APPROVE": 1.0, "REVISE": 0.8, "REJECT": 0.5}[critic_verdict]
+        critic_approved = critic_verdict == "APPROVE"
+        score = base_score * critic_multiplier
 
         proposal = SAGEProposal(
             generation=gen,
@@ -264,14 +278,19 @@ def run_sage_loop(
             critic_feedback=critic_text,
             verifier_verdict=verifier_verdict,
             meta_rewrite=meta_text,
+            verifier_notes=verifier_text,
+            critic_approved=critic_approved,
+            critic_verdict=critic_verdict,
             score=score,
             accepted=score >= score_threshold,
         )
         archive.add(proposal)
 
         logger.info(
-            "Gen %d score=%.2f accepted=%s", gen, score, proposal.accepted
+            "Gen %d score=%.2f accepted=%s critic_verdict=%s verifier_verdict=%s",
+            gen, score, proposal.accepted, critic_verdict, verifier_verdict,
         )
+        logger.info("Verifier notes: %s", verifier_text[:500])
 
         # Update prior context for next generation
         if proposal.accepted:

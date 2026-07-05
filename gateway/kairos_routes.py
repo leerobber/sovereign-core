@@ -208,7 +208,8 @@ async def run_sage(req: SAGERequest, request: Request) -> SAGEResponse:
             elite_promoted=elite_promoted,
             proposals=proposals,
             latency_ms=round(latency_ms, 2),
-            sage_log=[{"gen": p.generation, "score": p.score, "verdict": p.verifier_verdict}
+            sage_log=[{"gen": p.generation, "score": p.score, "verdict": p.verifier_verdict,
+                       "critic_verdict": p.critic_verdict, "verifier_notes": p.verifier_notes[:500]}
                       for p in archive.proposals],
             backend_used="rtx5050+radeon780m",
         )
