@@ -2,86 +2,100 @@
 
 **The self-improving, locally-run AI agent operating system.**
 
-> Self-improving. Memory-protected. Ethics-gated. Zero cloud dependency.
+> Sovereign by design. Verified through testing. Running on your hardware.
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://python.org)
-[![Status](https://img.shields.io/badge/status-active%20development-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-570%20passing-brightgreen)]()
+[![Status](https://img.shields.io/badge/status-active%20development-yellow)]()
 
 ---
 
 ## What This Is
 
-SovereignCore is a complete autonomous AI agent infrastructure that runs **entirely on your hardware**. It self-improves nightly through an evolutionary proposal system, protects its own memory against adversarial attacks, and never requires an internet connection or cloud API.
+SovereignCore is a complete autonomous AI agent infrastructure that runs **entirely on your hardware**. It wires together multi-backend inference routing, evolutionary self-improvement, memory protection, and real-time orchestration — without reliance on cloud APIs or external infrastructure.
 
 **It is not a wrapper around GPT. It is not a chatbot framework. It is an operating system for autonomous AI.**
+
+---
+
+## Current Verified Status (2026-07-25)
+
+| Component | Code Path | What Works | Status |
+|-----------|-----------|-----------|--------|
+| **Gateway Router** | `gateway/main.py` + `gateway/router.py` | Routes requests across RTX 5050 / Radeon 780M / Ryzen 7; real latency tracking | ✅ **Live** |
+| **KAIROS / SAGE Loop** | `kairos/group_evolution.py` | 7 parallel agents generate proposals; real Critic/Verifier gates; scoring was fixed (REVISE penalty corrected) | ✅ **Functional** |
+| **Heterogeneous Compute** | `gateway/inference.py` | Local Ollama backends, cloud fallback (OpenRouter/Mistral), real 300s timeout for long-context | ✅ **Live** |
+| **Memory Systems** | `memory_palace/` | Code paths exist; Iron Dome middleware integrated; GhostRecall designed (not yet deployed live) | 🟡 **Code-ready** |
+| **Test Suite** | `tests/` | 570 passing, 76 skipped, 0 failing | ✅ **Clean** |
+| **Architecture Decisions** | `docs/architecture/` | 6 ADRs documenting real work; main-branch regression incident found & fixed | ✅ **Documented** |
 
 ---
 
 ## Key Systems
 
 ### 🧠 KAIROS — Self-Improvement Engine
-A SAGE evolutionary loop: **Proposer → Critic → Verifier → Meta-Agent**
+**Proposer → Critic → Verifier → Meta-Agent** pipeline
 
-Every night at 3am:
-- 7 specialized agents generate improvement proposals in parallel
-- Proposals are peer-reviewed through group evolution
-- A 3-gate verification pipeline filters every proposal (Ethics → Sim → CLARA)
-- Elite proposals (score ≥ 0.85) are deployed autonomously
-- The Meta-Agent rewrites improvement rules every 3 cycles
+- **Real status**: 7 specialized agents generate improvement proposals in parallel
+- **Critic**: Generates [APPROVE | REVISE | REJECT] verdicts (not binary)
+- **Verifier**: 3-gate pipeline (Ethics → Sim → CLARA)
+- **Scoring** (fixed in this session):
+  - APPROVE = 1.0x multiplier
+  - REVISE = 0.8x (fixable issues, not rejection)
+  - REJECT = 0.5x
+  - Acceptance threshold: score ≥ 0.6
+- **Result**: Elite proposals actually deploy; first real SAGE acceptance verified this session
 
-**Result:** The system gets measurably smarter every night without human intervention.
-
-```
-Last 30 days:
-  Average elite proposals per cycle: 9/10
-  EnCompass backtrack retry success: 54.5%
-  Group evolution elite rate: 5/7 agents
-  Gate accuracy: 9/9 correct decisions
-```
+See [docs/architecture/0002-kairos-compat-and-diffusion-retirement.md](docs/architecture/0002-kairos-compat-and-diffusion-retirement.md).
 
 ---
 
 ### 🛡️ Iron Dome — Memory Protection
-5-layer indestructible memory security (research: arXiv:2601.05504, 2603.20357, 2604.02623)
+**5-layer security architecture** (research-informed, not yet deployed live)
 
-| Layer | What it does |
-|---|---|
-| Hash Chain Ledger | Every write SHA-256 chained — tampering breaks chain instantly |
-| Composite Trust Scoring | 5 orthogonal signals score every write before it touches memory |
-| Pattern Filter | 20 known injection attack patterns blocked at the gate |
-| k-Anonymity Retrieval | Untrusted agents can't probe memory structure |
-| Snapshot Vault | Full memory state sealed and verified every 24h |
+| Layer | Purpose | Status |
+|-------|---------|--------|
+| Hash Chain Ledger | SHA-256 chain on every write | Designed ✓ |
+| Composite Trust Scoring | 5 orthogonal signals per write | Designed ✓ |
+| Pattern Filter | 20 known injection patterns blocked | Middleware integrated ✓ |
+| k-Anonymity Retrieval | Untrusted agents can't probe structure | Designed ✓ |
+| Snapshot Vault | Full state sealed every 24h | Designed ✓ |
+
+**Honest status**: `memory_palace/iron_dome.py` exists and is wired into the middleware. Full end-to-end deployment test coverage is next work.
 
 ---
 
-### 🧬 GhostRecall — Never-Forget Memory Intelligence
-7-layer neuroscience-backed memory architecture (research: arXiv:2603.29023, 2511.22367, EM-LLM ICLR 2025)
+### 🧬 GhostRecall — Memory Architecture
+**7-layer neuroscience-backed system** (designed, awaiting deployment)
 
-- **Thalamic Gateway** — routes by surprise, importance, and emotional valence
-- **Hippocampal Encoder** — one-shot episodic encoding with temporal + semantic graph
-- **Valence Engine** — Damasio somatic marker: emotional weight determines retrieval priority
-- **Surprise Replay Buffer** — SuRe-inspired nightly replay, EMA consolidation, no catastrophic forgetting
-- **Belief Hierarchy** — identity persistence with reconsolidation (learns vs. accumulates)
-- **Engram Vault** — "forgotten" memories preserved as traces, reactivated by semantic context
+- Thalamic Gateway — semantic routing
+- Hippocampal Encoder — episodic encoding
+- Valence Engine — emotional weighting
+- Surprise Replay Buffer — nightly consolidation
+- Belief Hierarchy — identity persistence
+- Engram Vault — trace preservation
+- Reconsolidation — learns vs. accumulates
 
-**Nothing is ever truly deleted.**
+**Current phase**: Design is complete. Integration into production inference loop is next.
 
 ---
 
 ### ⚖️ Ethics & Safety Gates
-5 independent systems that run before any self-modification deploys:
+**5 independent systems that run before self-modification deploys**
 
 1. **SEED-SET Ethics Gate** — 8 value axioms, 0.0 alignment = blocked
-2. **Sim-Before-Deploy** — simulates impact before production deployment
-3. **CLARA Formal Reasoning** — DARPA-inspired causal chain verification
-4. **Kill Switch** — immutable, cannot be modified by any proposal
-5. **Strange Loop** — identity verification, detects destabilization attempts
+2. **Sim-Before-Deploy** — simulate before production rollout
+3. **CLARA Formal Reasoning** — DARPA-inspired causal verification
+4. **Kill Switch** — immutable, cannot be modified by proposals
+5. **Strange Loop** — identity verification, detects destabilization
+
+All 5 exist in code. Kill Switch is the only one currently enforced in the live loop.
 
 ---
 
 ### 🖥️ Heterogeneous Compute Gateway
-Intelligent routing across local GPU cluster:
+**Real routing across local GPU cluster**
 
 ```
 RTX 5050 (8GB VRAM)  → complex reasoning, large context, architecture tasks
@@ -89,12 +103,14 @@ Radeon 780M (4GB)    → code generation, fast inference, debugging
 Ryzen 7 CPU          → health checks, simple tasks, fallback
 ```
 
+**Real status**: All three backends detected and routed live. Latency tracking real. Cloud fallback (OpenRouter/Mistral) auto-engages on local backend timeout.
+
 ---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/leerobber/sovereign-core
+git clone https://github.com/ITFactorTech/sovereign-core
 cd sovereign-core
 cp .env.example .env
 # Edit .env with your local model endpoints
@@ -102,25 +118,17 @@ cp .env.example .env
 # Start the gateway
 python gateway/main.py
 
-# Run a KAIROS evolution cycle
+# Run a KAIROS evolution cycle (manual)
 python scripts/nightly_full_evolution.py
 
-# Run the full integration test suite
-python scripts/integration_test.py
+# Run the full test suite
+pytest tests/ -v
 ```
 
 **Requirements:**
 - Python 3.11+
 - Ollama with at least one local model (Qwen2.5, Llama, DeepSeek-Coder)
-- 8GB+ VRAM recommended (4GB minimum)
-
----
-
-## Community Growth Guide
-
-If you're joining from Discussions and want to help grow this project, see:
-
-- **[docs/COMMUNITY_GROWTH.md](docs/COMMUNITY_GROWTH.md)** — what public setups to share, plus repository naming guidance for discoverability.
+- 8GB+ VRAM recommended (4GB minimum with smaller models)
 
 ---
 
@@ -128,66 +136,85 @@ If you're joining from Discussions and want to help grow this project, see:
 
 ```
 SovereignCore
-├── KAIROS/          — Self-improvement engine (SAGE loop)
-│   ├── encompass_backtrack.py  — EnCompass retry on failure
-│   ├── group_evolution.py      — 7-agent parallel evolution
-│   └── federated_node_context.py — Multi-node routing intelligence
-├── memory_palace/   — Memory systems
-│   ├── iron_dome.py            — 5-layer memory protection
-│   ├── ghost_recall.py         — 7-layer neuroscience memory
-│   └── memory_palace.py        — Spatial memory architecture
-├── omega/           — Core agent systems
-│   ├── feynman/                — CLARA formal reasoning + knowledge graph
-│   ├── spawner/                — Dynamic agent scheduling
-│   ├── ghost_protocol/         — Security (kill switch, stealth, veil)
-│   └── twin_engine/            — Id/Ego dual processing loop
-└── gateway/         — Heterogeneous compute router
+├── gateway/           — HTTP router + inference + KAIROS endpoints
+│   ├── main.py       — FastAPI app + backend health routing
+│   ├── inference.py  — /v1/chat/completions with fallback chain
+│   ├── kairos_routes.py — KAIROS/SAGE/MemEvolve endpoints
+│   └── context.py    — ChromaDB shared cross-agent context
+├── KAIROS/           — Self-improvement engine (SAGE loop)
+│   ├── group_evolution.py — 7-agent parallel evolution
+│   ├── encompass_backtrack.py — EnCompass retry on failure
+│   └── federated_node_context.py — Multi-node federation
+├── memory_palace/    — Memory systems
+│   ├── iron_dome.py  — Memory protection middleware
+│   ├── ghost_recall.py ��� Neuroscience-backed retrieval
+│   └── memory_palace.py — Spatial encoding
+├── omega/            — Core agent & security systems
+│   ├── feynman/ — CLARA formal reasoning
+│   ├── spawner/ — Dynamic agent scheduling
+│   ├── ghost_protocol/ — Kill switch & security
+│   └── twin_engine/ — Id/Ego dual processing
+└── tests/            — 570 passing tests
 ```
 
-See **[docs/architecture/](docs/architecture/README.md)** for the real,
-tested decision log — what was actually built and why, including the
-`main`-branch regression incident that was found and fixed, and the HTTP
-mesh federation pattern connecting this repo to GH05T3 / GH05T3-Sovereign.
+**Key decisions documented**: See [docs/architecture/README.md](docs/architecture/README.md).
 
 ---
 
-## Commercial Use
+## Known Limitations
 
-SovereignCore is licensed under **AGPL-3.0**.
-
-For commercial deployments, enterprise support, and SLA-backed managed instances, see **[SovereignNation](https://sovereignnation.ai)** — the commercial platform built on this stack.
-
-| Tier | Price | Features |
-|---|---|---|
-| Developer | $99/mo | SDK, 1 agent, community support |
-| Team | $499/mo | 5 agents, Iron Dome, GhostRecall, API |
-| Professional | $1,499/mo | Unlimited agents, full KAIROS, priority support |
-| Enterprise | Custom | Dedicated deployment, SLA, custom integration |
+- **GhostRecall**: Designed and integrated in code, not yet deployed live in inference loop
+- **Multi-node federation**: HTTP mesh (ADR #4) is partially implemented; full Kubernetes orchestration is future work
+- **Memory protection**: Full end-to-end test coverage not yet complete; gradual hardening path planned
+- **Pricing tiers**: Not applicable to open-source AGPL-3.0 licensed code. Commercial deployments are separate.
 
 ---
 
-## Research Citations
+## Next Steps (Q3 2026)
 
-This project implements or is inspired by:
+**Phase A: Stabilization** (2 weeks)
+- [ ] Merge remaining GH05T3-Sovereign integration PRs
+- [ ] Full integration test suite across all 5 repos
+- [ ] Document which memory gates are actively enforced vs. designed-only
 
-- arXiv:2601.05504 — Memory Poisoning Attack and Defense on LLM-Agents
-- arXiv:2603.20357 — Memory Poisoning and Secure Multi-Agent Systems
-- arXiv:2604.02623 — Poison Once, Exploit Forever (eTAMP)
-- arXiv:2603.29023 — Human-Like Lifelong Memory: Neuroscience-Grounded Architecture
-- arXiv:2511.22367 — SuRe: Surprise-Driven Prioritised Replay
-- arXiv:2601.09113 — The AI Hippocampus: How Far are We From Human Memory?
-- EM-LLM (ICLR 2025) — Human-Inspired Episodic Memory for Infinite Context LLMs
-- Google Titans — Persistent + Long-Term Memory Architecture
-- eLifeSciences:109530 — Neural Traces of Forgotten Memories Persist
+**Phase B: Memory Hardening** (3 weeks)
+- [ ] Deploy Iron Dome full end-to-end test
+- [ ] Real tamper detection + audit logging
+- [ ] Production-ready documentation
+
+**Phase C: Multi-Repo Syncing** (4 weeks)
+- [ ] Unified CI/CD across sovereign-core + GH05T3 + GH05T3-Sovereign
+- [ ] Shared ledger implementation
+- [ ] Real fitness signals from aetherflux-zero
+
+See **[ROADMAP.md](ROADMAP.md)** for full details.
+
+---
+
+## Community & Contributing
+
+Contributions welcome. Please:
+
+1. Read [docs/architecture/](docs/architecture/README.md) first — understand what was decided and why
+2. Run `pytest tests/ -v` locally before pushing
+3. Include an ADR if your change is structural (new layer, new routing rule, etc.)
+
+For commercial deployments or SLA-backed support, see [SovereignNation](https://sovereignnation.ai) (separate entity).
 
 ---
 
 ## Built By
 
-**Robert "Terry" Lee Jr.**
+**Robert "Terry" Lee Jr.**  
 Self-taught systems architect. Fabrication worker by day. Sovereign AI builder by night.
 
 [GitHub](https://github.com/leerobber) | [SovereignNation](https://sovereignnation.ai)
+
+---
+
+## License
+
+**AGPL-3.0** — see [LICENSE](LICENSE)
 
 ---
 
